@@ -1,0 +1,176 @@
+# Two-pack example. Replace the MACs, the API key and the WiFi secrets.
+substitutions:
+  name: van-bms
+  friendly_name: Van BMS
+
+esphome:
+  name: ${name}
+  friendly_name: ${friendly_name}
+  devices:
+    - id: pack1_live
+      name: "Pack 1 Live"
+    - id: pack1_settings
+      name: "Pack 1 Settings"
+    - id: pack2_live
+      name: "Pack 2 Live"
+    - id: pack2_settings
+      name: "Pack 2 Settings"
+
+external_components:
+  - source: github://flip555/seplos-v2-esp32-ble@main
+    components: [bms_bridge]
+
+esp32:
+  board: esp32dev
+  framework:
+    type: esp-idf
+
+logger:
+  level: INFO
+  logs:
+    esp32_ble_client: WARN
+    bms_bridge.ble: WARN
+
+api:
+  encryption:
+    key: "REPLACE_WITH_A_BASE64_KEY"
+
+ota:
+  - platform: esphome
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  manual_ip:
+    static_ip: 192.168.1.50
+    gateway: 192.168.1.1
+    subnet: 255.255.255.0
+
+esp32_ble_tracker:
+  scan_parameters:
+    interval: 1100ms
+    window: 1100ms
+  on_ble_advertise:
+    - lambda: |-
+        id(hub1)->note_advert(x.address_str(), x.get_rssi(), x.get_name(),
+                              (int) x.get_service_uuids().size());
+        id(hub2)->note_advert(x.address_str(), x.get_rssi(), x.get_name(),
+                              (int) x.get_service_uuids().size());
+
+ble_client:
+  - mac_address: "AA:BB:CC:DD:EE:01"
+    id: pack1
+  - mac_address: "AA:BB:CC:DD:EE:02"
+    id: pack2
+
+bms_bridge:
+  - id: hub1
+    transport: ble
+    ble_client_id: pack1
+    profile: seplos_v2_ble
+    address: 0x00
+    update_interval: 10s
+  - id: hub2
+    transport: ble
+    ble_client_id: pack2
+    profile: seplos_v2_ble
+    address: 0x00
+    update_interval: 11s
+
+sensor:
+  - platform: bms_bridge
+    bms_bridge_id: hub1
+    device_id: pack1_live
+    type: total_voltage
+    name: "Pack 1 voltage"
+  - platform: bms_bridge
+    bms_bridge_id: hub1
+    device_id: pack1_live
+    type: current
+    name: "Pack 1 current"
+  - platform: bms_bridge
+    bms_bridge_id: hub1
+    device_id: pack1_live
+    type: soc
+    name: "Pack 1 SOC"
+  - platform: bms_bridge
+    bms_bridge_id: hub1
+    device_id: pack1_live
+    type: cell_voltage
+    index: 1
+    name: "Pack 1 cell 1"
+  - platform: bms_bridge
+    bms_bridge_id: hub1
+    device_id: pack1_live
+    type: temperature
+    index: 1
+    name: "Pack 1 temp 1"
+  - platform: bms_bridge
+    bms_bridge_id: hub2
+    device_id: pack2_live
+    type: total_voltage
+    name: "Pack 2 voltage"
+  - platform: bms_bridge
+    bms_bridge_id: hub2
+    device_id: pack2_live
+    type: current
+    name: "Pack 2 current"
+  - platform: bms_bridge
+    bms_bridge_id: hub2
+    device_id: pack2_live
+    type: soc
+    name: "Pack 2 SOC"
+  - platform: bms_bridge
+    bms_bridge_id: hub2
+    device_id: pack2_live
+    type: cell_voltage
+    index: 1
+    name: "Pack 2 cell 1"
+  - platform: bms_bridge
+    bms_bridge_id: hub2
+    device_id: pack2_live
+    type: temperature
+    index: 1
+    name: "Pack 2 temp 1"
+  - platform: bms_bridge
+    bms_bridge_id: hub1
+    device_id: pack1_settings
+    type: setting_cell_ov_alarm
+    name: "Pack 1 cell OV alarm"
+  - platform: bms_bridge
+    bms_bridge_id: hub1
+    device_id: pack1_settings
+    type: setting_pack_ov_alarm
+    name: "Pack 1 pack OV alarm"
+  - platform: bms_bridge
+    bms_bridge_id: hub1
+    device_id: pack1_settings
+    type: setting_charge_ovp
+    name: "Pack 1 charging OVP"
+  - platform: bms_bridge
+    bms_bridge_id: hub2
+    device_id: pack2_settings
+    type: setting_cell_ov_alarm
+    name: "Pack 2 cell OV alarm"
+  - platform: bms_bridge
+    bms_bridge_id: hub2
+    device_id: pack2_settings
+    type: setting_pack_ov_alarm
+    name: "Pack 2 pack OV alarm"
+  - platform: bms_bridge
+    bms_bridge_id: hub2
+    device_id: pack2_settings
+    type: setting_charge_ovp
+    name: "Pack 2 charging OVP"
+
+text_sensor:
+  - platform: bms_bridge
+    bms_bridge_id: hub1
+    device_id: pack1_settings
+    type: settings_raw
+    name: "Pack 1 settings raw"
+  - platform: bms_bridge
+    bms_bridge_id: hub2
+    device_id: pack2_settings
+    type: settings_raw
+    name: "Pack 2 settings raw"
