@@ -109,7 +109,7 @@ cards:
               `;
             ]]]
       - type: custom:button-card
-        entity: sensor.pack1_live_pack_voltage
+        entity: sensor.pack1_live_heartbeat
         variables:
           title: "Pack 1"
         show_name: false
@@ -1510,7 +1510,7 @@ cards:
               `;
             ]]]
       - type: custom:button-card
-        entity: sensor.pack2_live_pack_voltage
+        entity: sensor.pack2_live_heartbeat
         variables:
           title: "Pack 2"
         show_name: false
@@ -2911,7 +2911,7 @@ cards:
               `;
             ]]]
       - type: custom:button-card
-        entity: sensor.pack3_live_pack_voltage
+        entity: sensor.pack3_live_heartbeat
         variables:
           title: "Pack 3"
         show_name: false
@@ -4312,7 +4312,7 @@ cards:
               `;
             ]]]
       - type: custom:button-card
-        entity: sensor.pack4_live_pack_voltage
+        entity: sensor.pack4_live_heartbeat
         variables:
           title: "Pack 4"
         show_name: false

@@ -5,6 +5,8 @@
 #include "esphome/components/binary_sensor/binary_sensor.h"
 #include "esphome/components/button/button.h"
 #include "esphome/components/text/text.h"
+#include "esphome/components/switch/switch.h"
+#include "esphome/components/number/number.h"
 
 #include <cmath>
 #include <string>
@@ -81,6 +83,28 @@ class BmsCommandText : public text::Text {
  protected:
   BmsBridge *hub_{nullptr};
   bool mac_mode_{false};
+};
+
+class BmsSwitch : public switch_::Switch {
+ public:
+  void set_hub(BmsBridge *hub) { hub_ = hub; }
+  void set_type(const std::string &t) { type_ = t; }
+  void write_state(bool state) override;
+
+ protected:
+  BmsBridge *hub_{nullptr};
+  std::string type_;
+};
+
+class BmsNumber : public number::Number {
+ public:
+  void set_hub(BmsBridge *hub) { hub_ = hub; }
+  void set_type(const std::string &t) { type_ = t; }
+  void control(float value) override;
+
+ protected:
+  BmsBridge *hub_{nullptr};
+  std::string type_;
 };
 
 }  // namespace bms_bridge

@@ -109,7 +109,7 @@ def summary(dev):
 def header(dev, title):
     L=[]; a=L.append
     a("      - type: custom:button-card")
-    a(f"        entity: {sid(dev, 'pack_voltage')}")
+    a(f"        entity: {sid(dev, 'heartbeat')}")
     a(f"        variables:\n          title: \"{title}\"")
     a("        show_name: false\n        show_state: false\n        show_icon: false")
     a("        custom_fields:")

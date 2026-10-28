@@ -17,6 +17,9 @@
 namespace esphome {
 namespace bms_bridge {
 
+// Bumped when the component behaviour changes; exposed by the version entity.
+static const char *const BMS_BRIDGE_VERSION = "0.5.0";
+
 class BleTransport;
 
 class BmsBridge : public Component {
@@ -45,6 +48,10 @@ class BmsBridge : public Component {
   void register_binary_sensor(BmsBinarySensor *b) { binary_sensors_.push_back(b); }
   void register_command_text(BmsCommandText *t) { cmd_text_ = t; }
   void register_mac_text(BmsCommandText *t) { mac_text_ = t; }
+  void register_switch(BmsSwitch *s) { switches_.push_back(s); }
+  void register_number(BmsNumber *n) { numbers_.push_back(n); }
+  void set_auto_reboot_from_ui(bool on);
+  void set_auto_reboot_timeout_min(float minutes);
 
   void run_command(const std::string &cmd);
   void run_command_from_text();
@@ -75,6 +82,7 @@ class BmsBridge : public Component {
  protected:
   void publish_(bool force = false);
   void load_saved_mac_();
+  void load_cfg_nvs_();
   void publish_stale_();
   float value_for_(const std::string &type, uint8_t index) const;
 
@@ -129,6 +137,8 @@ class BmsBridge : public Component {
   bool scan_registered_{false};
   BmsCommandText *cmd_text_{nullptr};
   BmsCommandText *mac_text_{nullptr};
+  std::vector<BmsSwitch *> switches_;
+  std::vector<BmsNumber *> numbers_;
   uint32_t mac_slot_{1};
   std::string mac_str_;
   bool auto_reboot_{false};

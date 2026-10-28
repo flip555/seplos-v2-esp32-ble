@@ -39,6 +39,7 @@ TYPES = {
     "balancing_cells": ("", 0),
     "invalid_cells": ("", 0),
     "active_events": ("", 0),
+    "heartbeat": ("s", 0),
     "cell_warning": ("", 0),
     "temp_warning": ("", 0),
     "port_voltage": ("V", 2),

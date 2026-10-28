@@ -43,8 +43,7 @@ SETTINGS = [
     ("setting_discharge_temp_low_prot","Discharge temp low prot"),("setting_discharge_temp_low_prot_rec","Discharge temp low prot rec"),
     ("setting_cell_heat","Cell heating"),("setting_cell_heat_rec","Cell heating recovery"),
 ]
-TEXTS = ["profile","model","hardware_version","software_version","status","settings_raw",
-         "alarms_raw","status_tail","crc_capture","scan_results","output","system_state","active_alarms"]
+TEXTS = ["settings_raw","scan_results","system_state","active_alarms","version"]
 BINARIES = [("charge_switch","Charge switch"),("discharge_switch","Discharge switch"),
             ("balancing","Balancing"),("alarm","Alarm")]
 
@@ -90,6 +89,7 @@ def gen(n):
             if idx is not None: a(f"    index: {idx}")
             a(f'    name: "{label}"')
         for t,nm in BASE: s(t,nm)
+        s("heartbeat", "Heartbeat")
         for c in range(1,17): s("cell_voltage", f"Cell {c}", c)
         for c in range(1,5): s("temperature", f"Temp {c}", c)
         for c in range(1,5): s("temp_warning", f"Temp {c} warning", c)
@@ -111,13 +111,21 @@ def gen(n):
     a("button:")
     a('  - platform: restart\n    name: "Restart ESP"')
     for i in range(1,n+1):
-        for t,nm in (("scan","Scan"),("settings","Read settings"),("alarms","Read alarms"),("run","Run command")):
+        for t,nm in (("scan","Scan"),("settings","Read settings")):
             a(f'  - platform: bms_bridge\n    bms_bridge_id: hub{i}\n    device_id: pack{i}_diag\n    type: {t}\n    name: "{nm}"')
     a("")
     a("text:")
     for i in range(1,n+1):
         a(f'  - platform: bms_bridge\n    bms_bridge_id: hub{i}\n    device_id: pack{i}_diag\n    type: mac\n    mode: text\n    name: "Pack MAC"')
-        a(f'  - platform: bms_bridge\n    bms_bridge_id: hub{i}\n    device_id: pack{i}_diag\n    mode: text\n    name: "BLE command"')
+
+    a("")
+    a("switch:")
+    for i in range(1,n+1):
+        a(f'  - platform: bms_bridge\n    bms_bridge_id: hub{i}\n    device_id: pack{i}_diag\n    type: auto_reboot\n    name: "Auto reboot"')
+    a("")
+    a("number:")
+    for i in range(1,n+1):
+        a(f'  - platform: bms_bridge\n    bms_bridge_id: hub{i}\n    device_id: pack{i}_diag\n    type: auto_reboot_timeout\n    name: "Auto reboot timeout"\n    unit_of_measurement: min\n    min_value: 5\n    max_value: 120\n    step: 5')
     return "\n".join(L)+"\n"
 
 if __name__ == "__main__":

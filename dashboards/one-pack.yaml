@@ -109,7 +109,7 @@ cards:
               `;
             ]]]
       - type: custom:button-card
-        entity: sensor.pack1_live_pack_voltage
+        entity: sensor.pack1_live_heartbeat
         variables:
           title: "Pack 1"
         show_name: false

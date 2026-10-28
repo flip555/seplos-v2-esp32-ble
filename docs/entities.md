@@ -88,3 +88,17 @@ optional `device_id` for sub-device grouping.
 | `alarms` | request the alarm block (`0x44`) |
 
 The console accepts `connect`, `disconnect`, `pair`, `dump` and `send <hex>`.
+
+## Switches
+
+| `type` | On when |
+|---|---|
+| `auto_reboot` | guarded auto-reboot is enabled; stored in NVS |
+
+## Numbers
+
+| `type` | Unit | Range |
+|---|---|---|
+| `auto_reboot_timeout` | min | 5-120 |
+
+Both are NVS-backed and override the YAML values at boot.

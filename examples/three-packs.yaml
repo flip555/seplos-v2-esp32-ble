@@ -260,6 +260,11 @@ sensor:
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_live
+    type: heartbeat
+    name: "Heartbeat"
+  - platform: bms_bridge
+    bms_bridge_id: hub1
+    device_id: pack1_live
     type: cell_voltage
     index: 1
     name: "Cell 1"
@@ -749,6 +754,11 @@ sensor:
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_live
+    type: heartbeat
+    name: "Heartbeat"
+  - platform: bms_bridge
+    bms_bridge_id: hub2
+    device_id: pack2_live
     type: cell_voltage
     index: 1
     name: "Cell 1"
@@ -1235,6 +1245,11 @@ sensor:
     device_id: pack3_live
     type: temp_delta
     name: "Temp spread"
+  - platform: bms_bridge
+    bms_bridge_id: hub3
+    device_id: pack3_live
+    type: heartbeat
+    name: "Heartbeat"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_live
@@ -1923,59 +1938,14 @@ binary_sensor:
 text_sensor:
   - platform: bms_bridge
     bms_bridge_id: hub1
-    device_id: pack1_diag
-    type: profile
-    name: "Profile"
-  - platform: bms_bridge
-    bms_bridge_id: hub1
-    device_id: pack1_diag
-    type: model
-    name: "Model"
-  - platform: bms_bridge
-    bms_bridge_id: hub1
-    device_id: pack1_diag
-    type: hardware_version
-    name: "Hardware version"
-  - platform: bms_bridge
-    bms_bridge_id: hub1
-    device_id: pack1_diag
-    type: software_version
-    name: "Software version"
-  - platform: bms_bridge
-    bms_bridge_id: hub1
-    device_id: pack1_diag
-    type: status
-    name: "Status"
-  - platform: bms_bridge
-    bms_bridge_id: hub1
     device_id: pack1_settings
     type: settings_raw
     name: "Settings raw"
   - platform: bms_bridge
     bms_bridge_id: hub1
-    device_id: pack1_settings
-    type: alarms_raw
-    name: "Alarms raw"
-  - platform: bms_bridge
-    bms_bridge_id: hub1
-    device_id: pack1_diag
-    type: status_tail
-    name: "Status tail"
-  - platform: bms_bridge
-    bms_bridge_id: hub1
-    device_id: pack1_diag
-    type: crc_capture
-    name: "Crc capture"
-  - platform: bms_bridge
-    bms_bridge_id: hub1
     device_id: pack1_diag
     type: scan_results
     name: "Scan results"
-  - platform: bms_bridge
-    bms_bridge_id: hub1
-    device_id: pack1_diag
-    type: output
-    name: "Output"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_diag
@@ -1987,30 +1957,10 @@ text_sensor:
     type: active_alarms
     name: "Active alarms"
   - platform: bms_bridge
-    bms_bridge_id: hub2
-    device_id: pack2_diag
-    type: profile
-    name: "Profile"
-  - platform: bms_bridge
-    bms_bridge_id: hub2
-    device_id: pack2_diag
-    type: model
-    name: "Model"
-  - platform: bms_bridge
-    bms_bridge_id: hub2
-    device_id: pack2_diag
-    type: hardware_version
-    name: "Hardware version"
-  - platform: bms_bridge
-    bms_bridge_id: hub2
-    device_id: pack2_diag
-    type: software_version
-    name: "Software version"
-  - platform: bms_bridge
-    bms_bridge_id: hub2
-    device_id: pack2_diag
-    type: status
-    name: "Status"
+    bms_bridge_id: hub1
+    device_id: pack1_diag
+    type: version
+    name: "Version"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_settings
@@ -2018,29 +1968,9 @@ text_sensor:
     name: "Settings raw"
   - platform: bms_bridge
     bms_bridge_id: hub2
-    device_id: pack2_settings
-    type: alarms_raw
-    name: "Alarms raw"
-  - platform: bms_bridge
-    bms_bridge_id: hub2
-    device_id: pack2_diag
-    type: status_tail
-    name: "Status tail"
-  - platform: bms_bridge
-    bms_bridge_id: hub2
-    device_id: pack2_diag
-    type: crc_capture
-    name: "Crc capture"
-  - platform: bms_bridge
-    bms_bridge_id: hub2
     device_id: pack2_diag
     type: scan_results
     name: "Scan results"
-  - platform: bms_bridge
-    bms_bridge_id: hub2
-    device_id: pack2_diag
-    type: output
-    name: "Output"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_diag
@@ -2052,30 +1982,10 @@ text_sensor:
     type: active_alarms
     name: "Active alarms"
   - platform: bms_bridge
-    bms_bridge_id: hub3
-    device_id: pack3_diag
-    type: profile
-    name: "Profile"
-  - platform: bms_bridge
-    bms_bridge_id: hub3
-    device_id: pack3_diag
-    type: model
-    name: "Model"
-  - platform: bms_bridge
-    bms_bridge_id: hub3
-    device_id: pack3_diag
-    type: hardware_version
-    name: "Hardware version"
-  - platform: bms_bridge
-    bms_bridge_id: hub3
-    device_id: pack3_diag
-    type: software_version
-    name: "Software version"
-  - platform: bms_bridge
-    bms_bridge_id: hub3
-    device_id: pack3_diag
-    type: status
-    name: "Status"
+    bms_bridge_id: hub2
+    device_id: pack2_diag
+    type: version
+    name: "Version"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_settings
@@ -2083,29 +1993,9 @@ text_sensor:
     name: "Settings raw"
   - platform: bms_bridge
     bms_bridge_id: hub3
-    device_id: pack3_settings
-    type: alarms_raw
-    name: "Alarms raw"
-  - platform: bms_bridge
-    bms_bridge_id: hub3
-    device_id: pack3_diag
-    type: status_tail
-    name: "Status tail"
-  - platform: bms_bridge
-    bms_bridge_id: hub3
-    device_id: pack3_diag
-    type: crc_capture
-    name: "Crc capture"
-  - platform: bms_bridge
-    bms_bridge_id: hub3
     device_id: pack3_diag
     type: scan_results
     name: "Scan results"
-  - platform: bms_bridge
-    bms_bridge_id: hub3
-    device_id: pack3_diag
-    type: output
-    name: "Output"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_diag
@@ -2116,6 +2006,11 @@ text_sensor:
     device_id: pack3_diag
     type: active_alarms
     name: "Active alarms"
+  - platform: bms_bridge
+    bms_bridge_id: hub3
+    device_id: pack3_diag
+    type: version
+    name: "Version"
 
 button:
   - platform: restart
@@ -2131,16 +2026,6 @@ button:
     type: settings
     name: "Read settings"
   - platform: bms_bridge
-    bms_bridge_id: hub1
-    device_id: pack1_diag
-    type: alarms
-    name: "Read alarms"
-  - platform: bms_bridge
-    bms_bridge_id: hub1
-    device_id: pack1_diag
-    type: run
-    name: "Run command"
-  - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_diag
     type: scan
@@ -2151,16 +2036,6 @@ button:
     type: settings
     name: "Read settings"
   - platform: bms_bridge
-    bms_bridge_id: hub2
-    device_id: pack2_diag
-    type: alarms
-    name: "Read alarms"
-  - platform: bms_bridge
-    bms_bridge_id: hub2
-    device_id: pack2_diag
-    type: run
-    name: "Run command"
-  - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_diag
     type: scan
@@ -2170,16 +2045,6 @@ button:
     device_id: pack3_diag
     type: settings
     name: "Read settings"
-  - platform: bms_bridge
-    bms_bridge_id: hub3
-    device_id: pack3_diag
-    type: alarms
-    name: "Read alarms"
-  - platform: bms_bridge
-    bms_bridge_id: hub3
-    device_id: pack3_diag
-    type: run
-    name: "Run command"
 
 text:
   - platform: bms_bridge
@@ -2189,29 +2054,60 @@ text:
     mode: text
     name: "Pack MAC"
   - platform: bms_bridge
+    bms_bridge_id: hub2
+    device_id: pack2_diag
+    type: mac
+    mode: text
+    name: "Pack MAC"
+  - platform: bms_bridge
+    bms_bridge_id: hub3
+    device_id: pack3_diag
+    type: mac
+    mode: text
+    name: "Pack MAC"
+
+switch:
+  - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_diag
-    mode: text
-    name: "BLE command"
+    type: auto_reboot
+    name: "Auto reboot"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_diag
-    type: mac
-    mode: text
-    name: "Pack MAC"
+    type: auto_reboot
+    name: "Auto reboot"
+  - platform: bms_bridge
+    bms_bridge_id: hub3
+    device_id: pack3_diag
+    type: auto_reboot
+    name: "Auto reboot"
+
+number:
+  - platform: bms_bridge
+    bms_bridge_id: hub1
+    device_id: pack1_diag
+    type: auto_reboot_timeout
+    name: "Auto reboot timeout"
+    unit_of_measurement: min
+    min_value: 5
+    max_value: 120
+    step: 5
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_diag
-    mode: text
-    name: "BLE command"
+    type: auto_reboot_timeout
+    name: "Auto reboot timeout"
+    unit_of_measurement: min
+    min_value: 5
+    max_value: 120
+    step: 5
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_diag
-    type: mac
-    mode: text
-    name: "Pack MAC"
-  - platform: bms_bridge
-    bms_bridge_id: hub3
-    device_id: pack3_diag
-    mode: text
-    name: "BLE command"
+    type: auto_reboot_timeout
+    name: "Auto reboot timeout"
+    unit_of_measurement: min
+    min_value: 5
+    max_value: 120
+    step: 5

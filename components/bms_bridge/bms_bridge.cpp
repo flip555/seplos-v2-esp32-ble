@@ -89,6 +89,7 @@ void BmsBridge::setup() {
   // useful without pressing anything.
   g_last_frame_ms = millis();
   this->load_saved_mac_();
+  this->load_cfg_nvs_();
 
   // Collect advertisements for 30 s after boot so the scan text sensor is
   this->start_scan(30000);
@@ -142,7 +143,7 @@ void BmsBridge::loop() {
   // trigger this.
   if (auto_reboot_ && !g_reboot_pending && ble_client_ != nullptr && g_last_frame_ms != 0 &&
       millis() > 1200000 && (millis() - g_last_frame_ms) > auto_reboot_timeout_ms_) {
-    uint32_t key = fnv1a_hash_extend(2166136261u, "bms_auto_reboot");
+    uint32_t key = fnv1a_hash_extend(2166136261u, "bms_auto_reboot_count");
     auto pref = global_preferences->make_preference<uint8_t>(key, true);
     uint8_t count = 0;
     pref.load(&count);
@@ -163,7 +164,7 @@ void BmsBridge::loop() {
   }
   // A full hour of live frames clears the boot-loop guard.
   if (auto_reboot_ && millis() > 3600000 && (millis() - g_last_frame_ms) < 60000) {
-    uint32_t key = fnv1a_hash_extend(2166136261u, "bms_auto_reboot");
+    uint32_t key = fnv1a_hash_extend(2166136261u, "bms_auto_reboot_count");
     auto pref = global_preferences->make_preference<uint8_t>(key, true);
     uint8_t count = 0;
     pref.load(&count);
@@ -391,6 +392,8 @@ void BmsBridge::publish_(bool force) {
     } else if (k == "system_state") {
       std::string st = i.tail_valid ? i.sys_state_name() : "Unknown";
       if (force || t->state != st) t->publish_state(st);
+    } else if (k == "version") {
+      if (force || t->state != BMS_BRIDGE_VERSION) t->publish_state(BMS_BRIDGE_VERSION);
     } else if (k == "active_alarms") {
       std::string st;
       if (i.tail_valid) {
@@ -523,6 +526,7 @@ float BmsBridge::value_for_(const std::string &type, uint8_t index) const {
   if (type == "sys_state") return i.tail_valid ? (float) i.sys_state : NAN;
   if (type == "balancing_cells") return i.tail_valid ? (float) i.balancing_count() : NAN;
   if (type == "invalid_cells") return i.tail_valid ? (float) i.invalidated_cell_count() : NAN;
+  if (type == "heartbeat") return millis() / 1000.0f;
   if (type == "active_events") return i.tail_valid ? (float) i.active_event_count() : NAN;
   if (type == "cell_warning" && index >= 1 && index <= i.cell_warnings.size())
     return (float) i.cell_warnings[index - 1];
@@ -570,6 +574,53 @@ void BmsBridge::start_scan(uint32_t window_ms) {
   scan_window_ = window_ms;
   scanning_ = true;
   ESP_LOGI(TAG, "scan started (%u ms)", (unsigned) window_ms);
+}
+
+void BmsBridge::load_cfg_nvs_() {
+  uint32_t k_en = fnv1a_hash_extend(2166136261u, "bms_auto_reboot_cfg_" + std::to_string(mac_slot_));
+  auto p_en = global_preferences->make_preference<uint8_t>(k_en, true);
+  uint8_t en = 0;
+  if (p_en.load(&en)) auto_reboot_ = en != 0;
+
+  uint32_t k_to = fnv1a_hash_extend(2166136261u, "bms_auto_reboot_to_" + std::to_string(mac_slot_));
+  auto p_to = global_preferences->make_preference<uint32_t>(k_to, true);
+  uint32_t mins = 0;
+  if (p_to.load(&mins) && mins > 0) auto_reboot_timeout_ms_ = mins * 60000u;
+
+  for (auto *s : switches_) s->publish_state(auto_reboot_);
+  for (auto *n : numbers_) n->publish_state(auto_reboot_timeout_ms_ / 60000.0f);
+  ESP_LOGI(TAG, "auto_reboot %s, timeout %u min", auto_reboot_ ? "on" : "off",
+           (unsigned) (auto_reboot_timeout_ms_ / 60000));
+}
+
+void BmsBridge::set_auto_reboot_from_ui(bool on) {
+  auto_reboot_ = on;
+  uint32_t k = fnv1a_hash_extend(2166136261u, "bms_auto_reboot_cfg_" + std::to_string(mac_slot_));
+  auto p = global_preferences->make_preference<uint8_t>(k, true);
+  uint8_t v = on ? 1 : 0;
+  p.save(&v);
+  for (auto *s : switches_) s->publish_state(on);
+}
+
+void BmsBridge::set_auto_reboot_timeout_min(float minutes) {
+  if (minutes < 1) minutes = 1;
+  if (minutes > 1440) minutes = 1440;
+  auto_reboot_timeout_ms_ = (uint32_t) (minutes * 60000.0f);
+  uint32_t k = fnv1a_hash_extend(2166136261u, "bms_auto_reboot_to_" + std::to_string(mac_slot_));
+  auto p = global_preferences->make_preference<uint32_t>(k, true);
+  uint32_t m = (uint32_t) minutes;
+  p.save(&m);
+  for (auto *n : numbers_) n->publish_state(minutes);
+}
+
+void BmsSwitch::write_state(bool state) {
+  this->publish_state(state);
+  if (hub_ != nullptr && type_ == "auto_reboot") hub_->set_auto_reboot_from_ui(state);
+}
+
+void BmsNumber::control(float value) {
+  this->publish_state(value);
+  if (hub_ != nullptr && type_ == "auto_reboot_timeout") hub_->set_auto_reboot_timeout_min(value);
 }
 
 void BmsBridge::load_saved_mac_() {
