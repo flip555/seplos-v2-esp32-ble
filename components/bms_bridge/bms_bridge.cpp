@@ -451,6 +451,8 @@ float BmsBridge::value_for_(const std::string &type, uint8_t index) const {
   if (type == "active_events") return i.tail_valid ? (float) i.active_event_count() : NAN;
   if (type == "cell_warning" && index >= 1 && index <= i.cell_warnings.size())
     return (float) i.cell_warnings[index - 1];
+  if (type == "temp_warning" && index >= 1 && index <= i.temp_warnings.size())
+    return (float) i.temp_warnings[index - 1];
   if (type == "cell_voltage_min") return i.cell_min();
   if (type == "cell_voltage_max") return i.cell_max();
   if (type == "cell_voltage_delta") return i.cell_delta();

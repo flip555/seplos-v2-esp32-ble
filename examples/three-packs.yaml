@@ -370,6 +370,30 @@ sensor:
     name: "Temp 4"
   - platform: bms_bridge
     bms_bridge_id: hub1
+    device_id: pack1_live
+    type: temp_warning
+    index: 1
+    name: "Temp 1 warning"
+  - platform: bms_bridge
+    bms_bridge_id: hub1
+    device_id: pack1_live
+    type: temp_warning
+    index: 2
+    name: "Temp 2 warning"
+  - platform: bms_bridge
+    bms_bridge_id: hub1
+    device_id: pack1_live
+    type: temp_warning
+    index: 3
+    name: "Temp 3 warning"
+  - platform: bms_bridge
+    bms_bridge_id: hub1
+    device_id: pack1_live
+    type: temp_warning
+    index: 4
+    name: "Temp 4 warning"
+  - platform: bms_bridge
+    bms_bridge_id: hub1
     device_id: pack1_settings
     type: setting_cell_ov_alarm
     name: "Cell OV alarm"
@@ -835,6 +859,30 @@ sensor:
     name: "Temp 4"
   - platform: bms_bridge
     bms_bridge_id: hub2
+    device_id: pack2_live
+    type: temp_warning
+    index: 1
+    name: "Temp 1 warning"
+  - platform: bms_bridge
+    bms_bridge_id: hub2
+    device_id: pack2_live
+    type: temp_warning
+    index: 2
+    name: "Temp 2 warning"
+  - platform: bms_bridge
+    bms_bridge_id: hub2
+    device_id: pack2_live
+    type: temp_warning
+    index: 3
+    name: "Temp 3 warning"
+  - platform: bms_bridge
+    bms_bridge_id: hub2
+    device_id: pack2_live
+    type: temp_warning
+    index: 4
+    name: "Temp 4 warning"
+  - platform: bms_bridge
+    bms_bridge_id: hub2
     device_id: pack2_settings
     type: setting_cell_ov_alarm
     name: "Cell OV alarm"
@@ -1298,6 +1346,30 @@ sensor:
     type: temperature
     index: 4
     name: "Temp 4"
+  - platform: bms_bridge
+    bms_bridge_id: hub3
+    device_id: pack3_live
+    type: temp_warning
+    index: 1
+    name: "Temp 1 warning"
+  - platform: bms_bridge
+    bms_bridge_id: hub3
+    device_id: pack3_live
+    type: temp_warning
+    index: 2
+    name: "Temp 2 warning"
+  - platform: bms_bridge
+    bms_bridge_id: hub3
+    device_id: pack3_live
+    type: temp_warning
+    index: 3
+    name: "Temp 3 warning"
+  - platform: bms_bridge
+    bms_bridge_id: hub3
+    device_id: pack3_live
+    type: temp_warning
+    index: 4
+    name: "Temp 4 warning"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_settings

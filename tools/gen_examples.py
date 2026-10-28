@@ -92,6 +92,7 @@ def gen(n):
         for t,nm in BASE: s(t,nm)
         for c in range(1,17): s("cell_voltage", f"Cell {c}", c)
         for c in range(1,5): s("temperature", f"Temp {c}", c)
+        for c in range(1,5): s("temp_warning", f"Temp {c} warning", c)
         for t,nm in SETTINGS: s(t,nm,dev="settings")
     a("")
     a("binary_sensor:")

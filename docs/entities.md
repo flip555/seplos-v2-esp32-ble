@@ -42,6 +42,7 @@ optional `device_id` for sub-device grouping.
 | `invalid_cells` | | 0 | cells flagged invalid (vendor: cell invalidation) |
 | `active_events` | | 0 | number of set event bits |
 | `cell_warning` | | 0 | required (warning byte per cell) |
+| `temp_warning` | | 0 | required (warning byte per battery temp) |
 | `setting_*` | V / °C | | read-only settings |
 
 ## Settings types
