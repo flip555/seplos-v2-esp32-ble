@@ -95,7 +95,7 @@ cards:
                 const n = parseFloat(s.state);
                 return isNaN(n) ? '—' : n.toFixed(d);
               };
-              const ts = [variables.t1, variables.t2, variables.t3, variables.t4, variables.tamb, variables.tpow]
+              const ts = [variables.t1, variables.t2, variables.t3, variables.t4]
                 .map(v).filter(x => !isNaN(x));
               const minT = ts.length ? Math.min(...ts).toFixed(1) : '—';
               const maxT = ts.length ? Math.max(...ts).toFixed(1) : '—';

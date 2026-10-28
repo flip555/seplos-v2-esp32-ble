@@ -90,7 +90,7 @@ def summary(dev):
     a("                const n = parseFloat(s.state);")
     a("                return isNaN(n) ? '—' : n.toFixed(d);")
     a("              };")
-    a("              const ts = [variables.t1, variables.t2, variables.t3, variables.t4, variables.tamb, variables.tpow]")
+    a("              const ts = [variables.t1, variables.t2, variables.t3, variables.t4]")
     a("                .map(v).filter(x => !isNaN(x));")
     a("              const minT = ts.length ? Math.min(...ts).toFixed(1) : '—';")
     a("              const maxT = ts.length ? Math.max(...ts).toFixed(1) : '—';")
