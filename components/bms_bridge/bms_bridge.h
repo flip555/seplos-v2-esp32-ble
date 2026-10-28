@@ -33,6 +33,7 @@ class BmsBridge : public Component {
   void set_web_ui(bool on) { web_ui_ = on; }
   void set_allow_writes(bool on) { allow_writes_ = on; }
   void set_ble_client(ble_client::BLEClient *c) { ble_client_ = c; }
+  void set_poll_offset(uint32_t ms) { poll_offset_ = ms; }
 
   void register_sensor(BmsSensor *s) { sensors_.push_back(s); }
   void register_text_sensor(BmsTextSensor *t) { text_sensors_.push_back(t); }
@@ -64,7 +65,8 @@ class BmsBridge : public Component {
   void on_ble_disconnect();
 
  protected:
-  void publish_();
+  void publish_(bool force = false);
+  void publish_stale_();
   float value_for_(const std::string &type, uint8_t index) const;
 
   std::string transport_{"ble"};
@@ -92,12 +94,21 @@ class BmsBridge : public Component {
   uint8_t last_seen_cid_{0};
   std::string last_raw_published_;
   std::string last_tail_published_;
+  std::string last_capture_;
+  std::string pending_out_;
   uint32_t last_rx_{0};
   uint32_t rx_chunks_{0};
   uint32_t rx_bytes_{0};
   uint32_t last_diag_{0};
   uint8_t start_samples_{0};
   bool settings_read_once_{false};
+  uint32_t poll_offset_{0};
+  uint32_t start_at_{0};
+  uint32_t last_frames_{0};
+  uint32_t last_heartbeat_{0};
+  bool force_full_{true};
+  bool stall_recovering_{false};
+  uint32_t stall_count_{0};
 
   Protocol *protocol_{nullptr};
   ble_client::BLEClient *ble_client_{nullptr};

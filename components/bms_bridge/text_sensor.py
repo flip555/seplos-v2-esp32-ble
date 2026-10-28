@@ -10,7 +10,7 @@ DEPENDENCIES = ["bms_bridge"]
 BmsTextSensor = bms_bridge_ns.class_("BmsTextSensor", text_sensor.TextSensor)
 
 TYPES = ["profile", "model", "hardware_version", "software_version", "status",
-         "scan_results", "output", "settings_raw", "alarms_raw", "status_tail"]
+         "scan_results", "output", "settings_raw", "alarms_raw", "status_tail", "crc_capture"]
 
 CONFIG_SCHEMA = text_sensor.text_sensor_schema(BmsTextSensor).extend(
     {

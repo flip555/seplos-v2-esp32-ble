@@ -12,6 +12,9 @@ namespace esphome {
 namespace bms_bridge {
 
 static const char *const TAG = "bms_bridge";
+static const uint32_t HEARTBEAT_MS = 300000;
+static const uint32_t STALL_MS = 60000;
+static const uint32_t STALL_RECOVER_MS = 3000;  // republish unchanged values every 5 min
 
 float PackInfo::cell_min() const {
   float v = NAN;
@@ -61,6 +64,7 @@ void BmsBridge::setup() {
   // Collect advertisements for 30 s after boot so the scan text sensor is
   // useful without pressing anything.
   this->start_scan(30000);
+  start_at_ = millis() + poll_offset_;
 
   ESP_LOGCONFIG(TAG, "BMS Bridge: transport=%s profile=%s address=0x%02X", transport_.c_str(),
                 protocol_ != nullptr ? protocol_->name() : "auto", address_);
@@ -76,6 +80,29 @@ void BmsBridge::loop() {
              (unsigned) (protocol_ != nullptr ? protocol_->crc_fail() : 0),
              (unsigned) (protocol_ != nullptr ? protocol_->drops() : 0),
              (protocol_ != nullptr && protocol_->info().valid) ? 1 : 0);
+    if (protocol_ != nullptr && protocol_->frames() == 0 && protocol_->buf_size() > 0)
+      ESP_LOGI(TAG, "  buf peek: %s", protocol_->buf_peek().c_str());
+  }
+  if (!pending_out_.empty()) {
+    for (auto *t : text_sensors_)
+      if (t->type() == "output") t->publish_state(pending_out_);
+    pending_out_.clear();
+  }
+  // Stall recovery: the link says connected but no frames arrive. Some BMS
+  // Bluetooth modules stop notifying after a short exchange; cycling the
+  // client recovers them (equivalent to toggling Bluetooth on the pack).
+  if (ble_client_ != nullptr && connected_ && last_rx_ != 0 && !stall_recovering_ &&
+      (millis() - last_rx_) > STALL_MS) {
+    stall_recovering_ = true;
+    stall_count_++;
+    ESP_LOGW(TAG, "no frames for %us, cycling BLE (stall #%u)", (unsigned) ((millis() - last_rx_) / 1000),
+             (unsigned) stall_count_);
+    ble_client_->set_enabled(false);
+    this->set_timeout(STALL_RECOVER_MS, [this]() {
+      if (ble_client_ != nullptr) ble_client_->set_enabled(true);
+      stall_recovering_ = false;
+      last_rx_ = millis();
+    });
   }
   // Publish any non-telemetry response (settings/alarms) for read-only mapping.
   if (protocol_ != nullptr) {
@@ -88,6 +115,13 @@ void BmsBridge::loop() {
           t->publish_state(raw);
       }
       ESP_LOGI(TAG, "cid 0x%02X: %s", cid, raw.c_str());
+      if (cid == 0x47) force_full_ = true;
+    }
+    std::string cap = protocol_->capture();
+    if (!cap.empty() && cap != last_capture_) {
+      last_capture_ = cap;
+      for (auto *t : text_sensors_)
+        if (t->type() == "crc_capture") t->publish_state(cap);
     }
     std::string tail = protocol_->status_tail_hex();
     if (!tail.empty() && tail != last_tail_published_) {
@@ -136,15 +170,37 @@ void BmsBridge::loop() {
 
   if (protocol_ == nullptr) return;
   uint32_t now = millis();
-  // Recent traffic is proof of a live link: on a second concurrent connection
-  // the CCCD completion can be missed, so connected_ alone is not reliable.
-  bool link_alive = connected_ || (last_rx_ != 0 && (now - last_rx_) < update_interval_ms_ * 3);
+
+  // Publish when new frames arrive, not on a timer. Publishing immediately
+  // after sending a poll competes with the reply burst for the main loop and
+  // the BLE event queue (88 slots).
+  uint32_t frames = protocol_->frames();
+  bool fresh = last_rx_ != 0 && (now - last_rx_) < update_interval_ms_ * 3;
+  if (frames != last_frames_) {
+    last_frames_ = frames;
+    this->publish_(false);
+    last_heartbeat_ = now;
+  } else if (force_full_) {
+    force_full_ = false;
+    this->publish_(true);
+    last_heartbeat_ = now;
+  } else if (fresh && (now - last_heartbeat_) > HEARTBEAT_MS) {
+    // Slow heartbeat so a stable pack still looks alive in history.
+    last_heartbeat_ = now;
+    this->publish_(true);
+  } else if (!fresh && protocol_->info().valid) {
+    // Link quiet: make it visibly unavailable rather than silently stale.
+    this->publish_stale_();
+  }
+
+  // Stagger the first poll of each hub so two packs do not answer together.
+  if ((int32_t) (now - start_at_) < 0) return;
+  bool link_alive = connected_ || fresh;
   if (!link_alive) return;
   if (now - last_poll_ < update_interval_ms_) return;
   last_poll_ = now;
 
   for (const auto &frame : protocol_->poll_requests()) this->send_bytes(frame);
-  this->publish_();
 }
 
 void BmsBridge::on_bytes(const uint8_t *data, size_t len) {
@@ -157,6 +213,14 @@ void BmsBridge::on_bytes(const uint8_t *data, size_t len) {
     std::string h;
     for (size_t i = 0; i < len && i < 32; i++) { snprintf(b, sizeof(b), "%02X ", data[i]); h += b; }
     ESP_LOGI(TAG, "hub %p FRAME START(%u): %s", this, (unsigned) len, h.c_str());
+  }
+  // Publish the first bytes of each frame-start chunk so a console exchange
+  // is visible over the API (logs truncate on this device).
+  if (len > 0 && data[0] == 0x7E) {
+    char hb[4];
+    std::string hx;
+    for (size_t i = 0; i < len && i < 80; i++) { snprintf(hb, sizeof(hb), "%02X ", data[i]); hx += hb; }
+    pending_out_ = "rx: " + hx;
   }
   // Sample the raw stream occasionally so a protocol mismatch is visible
   // without logging every chunk (which starves the BLE task).
@@ -189,6 +253,7 @@ void BmsBridge::on_bytes(const uint8_t *data, size_t len) {
 
 void BmsBridge::on_connected() {
   connected_ = true;
+  force_full_ = true;
   // Read the settings block once per boot (read-only) so it is populated
   // without anyone pressing a button.
   if (!settings_read_once_) {
@@ -208,19 +273,43 @@ void BmsBridge::send_raw(const uint8_t *data, size_t len) {
   ESP_LOGW(TAG, "no transport bound for send");
 }
 
-void BmsBridge::publish_() {
+void BmsBridge::publish_(bool force) {
   if (protocol_ == nullptr) return;
   const PackInfo &i = protocol_->info();
   if (!i.valid) return;
 
-  ESP_LOGI(TAG, "pack %.2fV %.2fA soc=%.1f%% cells=%u", i.total_voltage, i.current, i.soc, i.cell_count);
+  if (force)
+    ESP_LOGI(TAG, "pack %.2fV %.2fA soc=%.1f%% cells=%u (full publish)", i.total_voltage, i.current, i.soc,
+             i.cell_count);
 
-  for (auto *s : sensors_) s->publish_value(this->value_for_(s->type(), s->index()));
+  for (auto *s : sensors_) {
+    float v = this->value_for_(s->type(), s->index());
+    if (s->should_publish(v, force)) {
+      s->publish_value(v);
+      s->mark_published(v);
+    }
+  }
 
   for (auto *t : text_sensors_) {
     const std::string &k = t->type();
-    if (k == "profile") t->publish_state(protocol_->name());
-    else if (k == "status") t->publish_state(i.valid ? "ok" : "no data");
+    if (k == "profile") {
+      if (force || t->state != protocol_->name()) t->publish_state(protocol_->name());
+    } else if (k == "status") {
+      std::string st = i.valid ? "ok" : "no data";
+      if (force || t->state != st) t->publish_state(st);
+    }
+  }
+}
+
+void BmsBridge::publish_stale_() {
+  // Publish NaN once so Home Assistant shows the pack as unavailable instead
+  // of a healthy timestamp on frozen values.
+  for (auto *s : sensors_) {
+    float v = NAN;
+    if (s->should_publish(v, false)) {
+      s->publish_value(v);
+      s->mark_published(v);
+    }
   }
 }
 

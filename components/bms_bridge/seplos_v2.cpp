@@ -63,27 +63,39 @@ std::vector<std::vector<uint8_t>> SeplosV2::poll_requests() {
 
 bool SeplosV2::feed(const std::vector<uint8_t> &chunk) {
   buf_.insert(buf_.end(), chunk.begin(), chunk.end());
-
-  auto sof = std::find(buf_.begin(), buf_.end(), (uint8_t) 0x7E);
-  if (sof == buf_.end()) {
-    // No start byte in this chunk: it is a continuation of a frame already in
-    // the buffer. Keep it. (Erasing here destroyed partial frames whenever a
-    // frame arrived split across notifications.)
-    if (buf_.size() > 2048) buf_.clear();  // runaway guard
-    return false;
-  }
-  if (sof != buf_.begin()) buf_.erase(buf_.begin(), sof);
-
   bool consumed = false;
-  while (buf_.size() >= 7) {
-    size_t total = 0;
+
+  // Re-scan for the start byte after every rejected byte. Parsing forward from
+  // a misaligned position would cascade through the whole buffer (one bad
+  // frame can otherwise eat every good frame behind it).
+  while (!buf_.empty()) {
+    auto sof = std::find(buf_.begin(), buf_.end(), (uint8_t) 0x7E);
+    if (sof == buf_.end()) {
+      if (buf_.size() > 2048) buf_.clear();  // runaway guard
+      break;
+    }
+    if (sof != buf_.begin()) {
+      buf_.erase(buf_.begin(), sof);
+      consumed = true;
+    }
+    if (buf_.size() < 7) break;
 
     if (mode_ == MODE_BLE_BINARY) {
+      // Reject a false sync byte immediately instead of waiting for a bogus
+      // length to arrive. Payload bytes legitimately contain 0x7E (e.g. cell
+      // voltages near 0x0C7E), so a misaligned buffer otherwise stalls.
+      uint8_t ver = buf_[1];
+      uint8_t cid = buf_[3];
+      bool cid_ok = cid == 0x61 || cid == 0x51 || cid == 0x47 || cid == 0x42 || cid == 0x44 ||
+                    cid == 0x46 || cid == 0xA2 || cid == 0xA3 || cid == 0x80 || cid == 0x81 || cid == 0xC0;
+      if ((ver != 0x14 && ver != 0x10) || buf_[2] > 0x0F || !cid_ok) {
+        drops_++;
+        buf_.erase(buf_.begin());
+        consumed = true;
+        continue;
+      }
       uint16_t len = rd16(buf_, 5);
-      total = 10 + len;
-      // A false 0x7E inside payload yields an absurd length; without this the
-      // parser waits forever for bytes that never arrive and every real frame
-      // piles up behind it (hub goes silent while still 'receiving').
+      size_t total = 10 + len;
       if (len == 0 || total > 320) {
         drops_++;
         buf_.erase(buf_.begin());
@@ -95,16 +107,38 @@ bool SeplosV2::feed(const std::vector<uint8_t> &chunk) {
       uint16_t got = (uint16_t) ((buf_[total - 3] << 8) | buf_[total - 2]);
       if (buf_[total - 1] != 0x0D || want != got) {
         crc_fail_++;
+        if (crc_fail_ <= 6 || crc_fail_ % 40 == 0) {
+          // Record the whole candidate plus where its real terminator sits, so
+          // a per-pack layout difference is visible without a serial console.
+          size_t end0d = 0, next7e = 0;
+          for (size_t k = 7; k < buf_.size(); k++)
+            if (buf_[k] == 0x0D) { end0d = k; break; }
+          for (size_t k = 1; k < buf_.size(); k++)
+            if (buf_[k] == 0x7E) { next7e = k; break; }
+          std::string hx;
+          char hb[4];
+          for (size_t k = 0; k < buf_.size() && k < 150; k++) {
+            snprintf(hb, sizeof(hb), "%02X ", buf_[k]);
+            hx += hb;
+          }
+          char cb[720];
+          snprintf(cb, sizeof(cb), "#%u len=%u total=%u end0d=%u next7e=%u crc=%04X/%04X %s",
+                   (unsigned) crc_fail_, (unsigned) len, (unsigned) total, (unsigned) end0d,
+                   (unsigned) next7e, want, got, hx.c_str());
+          capture_ = cb;
+        }
         buf_.erase(buf_.begin());
+        consumed = true;
         continue;
       }
-      // Frame: 7E <ver> <addr> <CID2> <lchksum> <len_hi> <len_lo> <INFO> <CRC16> 0D
       std::vector<uint8_t> payload(buf_.begin() + 7, buf_.begin() + total - 3);
       this->handle_message_(buf_[3], payload);
+      buf_.erase(buf_.begin(), buf_.begin() + total);
+      consumed = true;
     } else {
       auto eof = std::find(buf_.begin() + 1, buf_.end(), (uint8_t) 0x0D);
       if (eof == buf_.end()) break;
-      total = (size_t) (eof - buf_.begin()) + 1;
+      size_t total = (size_t) (eof - buf_.begin()) + 1;
       std::vector<uint8_t> b;
       for (size_t i = 1; i + 1 < total; i += 2) {
         char hx[3] = {(char) buf_[i], (char) buf_[i + 1], 0};
@@ -114,10 +148,9 @@ bool SeplosV2::feed(const std::vector<uint8_t> &chunk) {
         std::vector<uint8_t> info(b.begin() + 6, b.size() >= 8 ? b.end() - 2 : b.end());
         this->handle_message_(b[3], info);
       }
+      buf_.erase(buf_.begin(), buf_.begin() + total);
+      consumed = true;
     }
-
-    buf_.erase(buf_.begin(), buf_.begin() + total);
-    consumed = true;
   }
   return consumed;
 }
@@ -134,6 +167,10 @@ void SeplosV2::handle_message_(uint8_t cid2, const std::vector<uint8_t> &p) {
     case 0x47:
       this->decode_settings_(p);
       break;
+    case 0xA2:
+    case 0xA3:
+      pushes_++;
+      break;
     default: {
       this->last_cid_ = cid2;
       this->last_raw_.clear();
@@ -145,6 +182,16 @@ void SeplosV2::handle_message_(uint8_t cid2, const std::vector<uint8_t> &p) {
       break;
     }
   }
+}
+
+std::string SeplosV2::buf_peek() const {
+  std::string h;
+  char b[4];
+  for (size_t i = 0; i < buf_.size() && i < 24; i++) {
+    snprintf(b, sizeof(b), "%02X ", buf_[i]);
+    h += b;
+  }
+  return h;
 }
 
 void SeplosV2::decode_settings_(const std::vector<uint8_t> &p) {

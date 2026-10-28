@@ -32,6 +32,9 @@ class SeplosV2 : public Protocol {
   size_t buf_size() const override { return buf_.size(); }
   uint32_t crc_fail() const override { return crc_fail_; }
   uint32_t drops() const override { return drops_; }
+  std::string buf_peek() const override;
+  std::string capture() const override { return capture_; }
+  uint32_t pushes() const override { return pushes_; }
 
  protected:
   void handle_message_(uint8_t cid2, const std::vector<uint8_t> &payload);
@@ -54,6 +57,8 @@ class SeplosV2 : public Protocol {
   uint32_t frames_{0};
   uint32_t crc_fail_{0};
   uint32_t drops_{0};
+  uint32_t pushes_{0};
+  std::string capture_;
 };
 
 }  // namespace bms_bridge

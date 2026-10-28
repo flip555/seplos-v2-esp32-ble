@@ -80,6 +80,9 @@ class Protocol {
   virtual size_t buf_size() const { return 0; }
   virtual uint32_t crc_fail() const { return 0; }
   virtual uint32_t drops() const { return 0; }
+  virtual std::string buf_peek() const { return ""; }
+  virtual std::string capture() const { return ""; }
+  virtual uint32_t pushes() const { return 0; }
 };
 
 // Factory. Returns nullptr for an unknown profile.

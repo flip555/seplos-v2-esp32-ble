@@ -5,6 +5,7 @@
 #include "esphome/components/button/button.h"
 #include "esphome/components/text/text.h"
 
+#include <cmath>
 #include <string>
 
 namespace esphome {
@@ -18,9 +19,22 @@ class BmsSensor : public sensor::Sensor {
   uint8_t index() const { return index_; }
   void publish_value(float v) { this->publish_state(v); }
 
+  // Dedupe: publish only when the rendered value changes. NaN compares equal
+  // to NaN so undecoded entries do not republish every cycle.
+  bool should_publish(float v, bool force) const {
+    if (force) return true;
+    bool both_nan = std::isnan(v) && std::isnan(last_);
+    if (both_nan) return false;
+    return !has_ || v != last_;
+  }
+  void mark_published(float v) { last_ = v; has_ = true; }
+  bool is_nan_published() const { return has_ && std::isnan(last_); }
+
  protected:
   std::string type_;
   uint8_t index_{0};
+  float last_{NAN};
+  bool has_{false};
 };
 
 class BmsTextSensor : public text_sensor::TextSensor {
