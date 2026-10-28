@@ -19,6 +19,8 @@ CONF_POLL_OFFSET = "poll_offset"
 CONF_READ_SETTINGS = "read_settings_on_connect"
 CONF_SETTINGS_INTERVAL = "settings_interval"
 CONF_MAC_SLOT = "mac_slot"
+CONF_AUTO_REBOOT = "auto_reboot"
+CONF_AUTO_REBOOT_TIMEOUT = "auto_reboot_timeout"
 
 bms_bridge_ns = cg.esphome_ns.namespace("bms_bridge")
 BmsBridge = bms_bridge_ns.class_("BmsBridge", cg.Component)
@@ -36,6 +38,8 @@ CONFIG_SCHEMA = cv.Schema(
         cv.Optional(CONF_READ_SETTINGS, default=False): cv.boolean,
         cv.Optional(CONF_SETTINGS_INTERVAL, default="0s"): cv.positive_time_period_milliseconds,
         cv.Optional(CONF_MAC_SLOT, default=1): cv.uint8_t,
+        cv.Optional(CONF_AUTO_REBOOT, default=False): cv.boolean,
+        cv.Optional(CONF_AUTO_REBOOT_TIMEOUT, default="15min"): cv.positive_time_period_milliseconds,
     }
 ).extend(cv.COMPONENT_SCHEMA)
 
@@ -53,6 +57,8 @@ async def to_code(config):
     cg.add(var.set_read_settings_on_connect(config[CONF_READ_SETTINGS]))
     cg.add(var.set_settings_interval(config[CONF_SETTINGS_INTERVAL].total_milliseconds))
     cg.add(var.set_mac_slot(config[CONF_MAC_SLOT]))
+    cg.add(var.set_auto_reboot(config[CONF_AUTO_REBOOT]))
+    cg.add(var.set_auto_reboot_timeout(config[CONF_AUTO_REBOOT_TIMEOUT].total_milliseconds))
 
     if CONF_BLE_CLIENT_ID in config:
         client = await cg.get_variable(config[CONF_BLE_CLIENT_ID])

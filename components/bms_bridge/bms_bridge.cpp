@@ -2,6 +2,7 @@
 
 #include "ble_transport.h"
 #include "esphome/core/log.h"
+#include "esphome/core/application.h"
 #include "esphome/core/preferences.h"
 
 #include <algorithm>
@@ -15,6 +16,12 @@ static const char *const TAG = "bms_bridge";
 static const uint32_t HEARTBEAT_MS = 300000;
 static const uint32_t STALL_MS = 60000;
 static const uint32_t STALL_RECOVER_MS = 3000;  // republish unchanged values every 5 min
+static const uint32_t STALL_HARD_MS = 30000;    // repeated stalls get a longer disconnect
+
+// Last time any hub received bytes; used by the optional auto-reboot so a
+// single dead pack can never trigger it.
+static uint32_t g_last_frame_ms = 0;
+static bool g_reboot_pending = false;
 
 // "AA:BB:CC:DD:EE:FF" -> 0xAABBCCDDEEFF (the byte order ESPHome stores).
 static bool parse_mac(const std::string &s, uint64_t &out) {
@@ -80,6 +87,7 @@ void BmsBridge::setup() {
 
   // Collect advertisements for 30 s after boot so the scan text sensor is
   // useful without pressing anything.
+  g_last_frame_ms = millis();
   this->load_saved_mac_();
 
   // Collect advertisements for 30 s after boot so the scan text sensor is
@@ -118,13 +126,54 @@ void BmsBridge::loop() {
     ESP_LOGW(TAG, "no frames for %us, cycling BLE (stall #%u)", (unsigned) ((millis() - last_rx_) / 1000),
              (unsigned) stall_count_);
     ble_client_->set_enabled(false);
-    this->set_timeout(STALL_RECOVER_MS, [this]() {
+    // After repeated stalls, hold the link down longer; toggling too quickly
+    // leaves some modules in the same wedged state.
+    uint32_t recover_ms = stall_count_ >= 3 ? STALL_HARD_MS : STALL_RECOVER_MS;
+    this->set_timeout(recover_ms, [this]() {
       if (ble_client_ != nullptr) ble_client_->set_enabled(true);
       stall_recovering_ = false;
       rx_since_enable_ = false;
       last_rx_ = millis();
     });
   }
+  // Optional last resort: reboot only when every hub has been silent for the
+  // configured window, and at most 3 times without an hour of recovery. A
+  // single offline pack keeps the other hub's frames flowing, so it cannot
+  // trigger this.
+  if (auto_reboot_ && !g_reboot_pending && ble_client_ != nullptr && g_last_frame_ms != 0 &&
+      millis() > 1200000 && (millis() - g_last_frame_ms) > auto_reboot_timeout_ms_) {
+    uint32_t key = fnv1a_hash_extend(2166136261u, "bms_auto_reboot");
+    auto pref = global_preferences->make_preference<uint8_t>(key, true);
+    uint8_t count = 0;
+    pref.load(&count);
+    if (count >= 3) {
+      if (!auto_reboot_logged_) {
+        auto_reboot_logged_ = true;
+        ESP_LOGW(TAG, "auto-reboot suppressed after %u reboots; press Restart ESP if needed",
+                 (unsigned) count);
+      }
+    } else {
+      count++;
+      pref.save(&count);
+      g_reboot_pending = true;
+      ESP_LOGE(TAG, "no frames from any hub for %us: rebooting (auto #%u)",
+               (unsigned) ((millis() - g_last_frame_ms) / 1000), (unsigned) count);
+      App.reboot();
+    }
+  }
+  // A full hour of live frames clears the boot-loop guard.
+  if (auto_reboot_ && millis() > 3600000 && (millis() - g_last_frame_ms) < 60000) {
+    uint32_t key = fnv1a_hash_extend(2166136261u, "bms_auto_reboot");
+    auto pref = global_preferences->make_preference<uint8_t>(key, true);
+    uint8_t count = 0;
+    pref.load(&count);
+    if (count != 0) {
+      count = 0;
+      pref.save(&count);
+      auto_reboot_logged_ = false;
+    }
+  }
+
   // Publish any non-telemetry response (settings/alarms) for read-only mapping.
   if (protocol_ != nullptr) {
     std::string raw = protocol_->last_raw_hex();
@@ -245,6 +294,7 @@ void BmsBridge::loop() {
 
 void BmsBridge::on_bytes(const uint8_t *data, size_t len) {
   last_rx_ = millis();
+  g_last_frame_ms = millis();
   rx_since_enable_ = true;
   rx_chunks_++;
   rx_bytes_ += len;

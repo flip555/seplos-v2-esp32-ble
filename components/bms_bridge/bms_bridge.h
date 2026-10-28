@@ -35,6 +35,8 @@ class BmsBridge : public Component {
   void set_read_settings_on_connect(bool on) { read_settings_on_connect_ = on; }
   void set_settings_interval(uint32_t ms) { settings_interval_ms_ = ms; }
   void set_mac_slot(uint32_t slot) { mac_slot_ = slot; }
+  void set_auto_reboot(bool on) { auto_reboot_ = on; }
+  void set_auto_reboot_timeout(uint32_t ms) { auto_reboot_timeout_ms_ = ms; }
   void set_ble_client(ble_client::BLEClient *c) { ble_client_ = c; }
   void set_poll_offset(uint32_t ms) { poll_offset_ = ms; }
 
@@ -129,6 +131,9 @@ class BmsBridge : public Component {
   BmsCommandText *mac_text_{nullptr};
   uint32_t mac_slot_{1};
   std::string mac_str_;
+  bool auto_reboot_{false};
+  uint32_t auto_reboot_timeout_ms_{900000};
+  bool auto_reboot_logged_{false};
   std::vector<BmsSensor *> sensors_;
   std::vector<BmsTextSensor *> text_sensors_;
   std::vector<BmsBinarySensor *> binary_sensors_;
