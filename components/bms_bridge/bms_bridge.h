@@ -108,6 +108,7 @@ class BmsBridge : public Component {
   uint32_t last_heartbeat_{0};
   bool force_full_{true};
   bool stall_recovering_{false};
+  bool rx_since_enable_{false};
   uint32_t stall_count_{0};
 
   Protocol *protocol_{nullptr};

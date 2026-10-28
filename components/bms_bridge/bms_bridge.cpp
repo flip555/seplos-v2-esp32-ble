@@ -91,7 +91,7 @@ void BmsBridge::loop() {
   // Stall recovery: the link says connected but no frames arrive. Some BMS
   // Bluetooth modules stop notifying after a short exchange; cycling the
   // client recovers them (equivalent to toggling Bluetooth on the pack).
-  if (ble_client_ != nullptr && connected_ && last_rx_ != 0 && !stall_recovering_ &&
+  if (ble_client_ != nullptr && rx_since_enable_ && !stall_recovering_ && !ble_backoff_ &&
       (millis() - last_rx_) > STALL_MS) {
     stall_recovering_ = true;
     stall_count_++;
@@ -101,6 +101,7 @@ void BmsBridge::loop() {
     this->set_timeout(STALL_RECOVER_MS, [this]() {
       if (ble_client_ != nullptr) ble_client_->set_enabled(true);
       stall_recovering_ = false;
+      rx_since_enable_ = false;
       last_rx_ = millis();
     });
   }
@@ -200,11 +201,21 @@ void BmsBridge::loop() {
   if (now - last_poll_ < update_interval_ms_) return;
   last_poll_ = now;
 
-  for (const auto &frame : protocol_->poll_requests()) this->send_bytes(frame);
+  // Serialise requests: some modules wedge if the next poll is written before
+  // the previous reply arrives. Send the first, then the second after a gap.
+  auto reqs = protocol_->poll_requests();
+  if (!reqs.empty()) this->send_bytes(reqs[0]);
+  if (reqs.size() > 1) {
+    auto second = reqs[1];
+    this->set_timeout(1500, [this, second]() {
+      if (ble_client_ != nullptr && protocol_ != nullptr) this->send_bytes(second);
+    });
+  }
 }
 
 void BmsBridge::on_bytes(const uint8_t *data, size_t len) {
   last_rx_ = millis();
+  rx_since_enable_ = true;
   rx_chunks_++;
   rx_bytes_ += len;
   if (len > 0 && data[0] == 0x7E && start_samples_ < 6) {
@@ -254,12 +265,7 @@ void BmsBridge::on_bytes(const uint8_t *data, size_t len) {
 void BmsBridge::on_connected() {
   connected_ = true;
   force_full_ = true;
-  // Read the settings block once per boot (read-only) so it is populated
-  // without anyone pressing a button.
-  if (!settings_read_once_) {
-    settings_read_once_ = true;
-    this->set_timeout(2000, [this]() { this->request_cid(0x47); });
-  }
+  // Settings are read on demand (button); no automatic request at connect.
 }
 void BmsBridge::on_disconnected() { connected_ = false; }
 
