@@ -16,6 +16,8 @@ CONF_ADDRESS = "address"
 CONF_UPDATE_INTERVAL = "update_interval"
 CONF_ALLOW_WRITES = "allow_writes"
 CONF_POLL_OFFSET = "poll_offset"
+CONF_READ_SETTINGS = "read_settings_on_connect"
+CONF_SETTINGS_INTERVAL = "settings_interval"
 
 bms_bridge_ns = cg.esphome_ns.namespace("bms_bridge")
 BmsBridge = bms_bridge_ns.class_("BmsBridge", cg.Component)
@@ -30,6 +32,8 @@ CONFIG_SCHEMA = cv.Schema(
         cv.Optional(CONF_UPDATE_INTERVAL, default="10s"): cv.update_interval,
         cv.Optional(CONF_ALLOW_WRITES, default=False): cv.boolean,
         cv.Optional(CONF_POLL_OFFSET, default="0s"): cv.positive_time_period_milliseconds,
+        cv.Optional(CONF_READ_SETTINGS, default=False): cv.boolean,
+        cv.Optional(CONF_SETTINGS_INTERVAL, default="0s"): cv.positive_time_period_milliseconds,
     }
 ).extend(cv.COMPONENT_SCHEMA)
 
@@ -44,6 +48,8 @@ async def to_code(config):
     cg.add(var.set_update_interval_ms(config[CONF_UPDATE_INTERVAL]))
     cg.add(var.set_allow_writes(config[CONF_ALLOW_WRITES]))
     cg.add(var.set_poll_offset(config[CONF_POLL_OFFSET].total_milliseconds))
+    cg.add(var.set_read_settings_on_connect(config[CONF_READ_SETTINGS]))
+    cg.add(var.set_settings_interval(config[CONF_SETTINGS_INTERVAL].total_milliseconds))
 
     if CONF_BLE_CLIENT_ID in config:
         client = await cg.get_variable(config[CONF_BLE_CLIENT_ID])

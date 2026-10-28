@@ -198,6 +198,14 @@ void BmsBridge::loop() {
   if ((int32_t) (now - start_at_) < 0) return;
   bool link_alive = connected_ || fresh;
   if (!link_alive) return;
+  // A manual/automatic request owns the link for a moment so its reply cannot
+  // collide with a scheduled poll.
+  if ((int32_t) (now - next_poll_allowed_) < 0) return;
+  if (settings_interval_ms_ > 0 && connected_ && now - last_settings_ >= settings_interval_ms_) {
+    last_settings_ = now;
+    this->request_cid(0x47);
+    return;
+  }
   if (now - last_poll_ < update_interval_ms_) return;
   last_poll_ = now;
 
@@ -265,7 +273,12 @@ void BmsBridge::on_bytes(const uint8_t *data, size_t len) {
 void BmsBridge::on_connected() {
   connected_ = true;
   force_full_ = true;
-  // Settings are read on demand (button); no automatic request at connect.
+  // The settings block is read on demand, or automatically when configured.
+  if (read_settings_on_connect_) {
+    this->set_timeout(3000, [this]() {
+      if (connected_) this->request_cid(0x47);
+    });
+  }
 }
 void BmsBridge::on_disconnected() { connected_ = false; }
 
@@ -528,6 +541,8 @@ void BmsBridge::request_cid(uint8_t cid2) {
     return;
   }
   ble_transport_->send(f.data(), f.size());
+  next_poll_allowed_ = millis() + 2500;
+  if (cid2 == 0x47) last_settings_ = millis();
   char b[24];
   snprintf(b, sizeof(b), "sent cid 0x%02X", cid2);
   this->set_output(b);

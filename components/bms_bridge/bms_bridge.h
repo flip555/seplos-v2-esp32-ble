@@ -32,6 +32,8 @@ class BmsBridge : public Component {
   void set_update_interval_ms(uint32_t ms) { update_interval_ms_ = ms; }
   void set_update_interval(uint32_t ms) { update_interval_ms_ = ms; }
   void set_allow_writes(bool on) { allow_writes_ = on; }
+  void set_read_settings_on_connect(bool on) { read_settings_on_connect_ = on; }
+  void set_settings_interval(uint32_t ms) { settings_interval_ms_ = ms; }
   void set_ble_client(ble_client::BLEClient *c) { ble_client_ = c; }
   void set_poll_offset(uint32_t ms) { poll_offset_ = ms; }
 
@@ -76,6 +78,10 @@ class BmsBridge : public Component {
   uint32_t update_interval_ms_{10000};
   uint32_t last_poll_{0};
   bool allow_writes_{false};
+  bool read_settings_on_connect_{false};
+  uint32_t settings_interval_ms_{0};
+  uint32_t last_settings_{0};
+  uint32_t next_poll_allowed_{0};
   bool connected_{false};
 
   struct AdvHit {

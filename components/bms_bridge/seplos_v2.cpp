@@ -195,12 +195,49 @@ std::string SeplosV2::buf_peek() const {
 }
 
 void SeplosV2::decode_settings_(const std::vector<uint8_t> &p) {
+  // Keep the block for diagnostics (the settings_raw text sensor).
+  last_cid_ = 0x47;
+  last_raw_.clear();
+  for (uint8_t b : p) {
+    char hx[4];
+    snprintf(hx, sizeof(hx), "%02X ", b);
+    last_raw_ += hx;
+  }
+
   // The 0x47 block: two leading bytes (word count), then 16-bit big-endian
   // words. Word 0 is the cell OV alarm, 10 the pack OV alarm, 20+ temperatures.
   settings_words_.clear();
   for (size_t i = 2; i + 1 < p.size(); i += 2)
     settings_words_.push_back((uint16_t) ((p[i] << 8) | p[i + 1]));
-  settings_valid_ = !settings_words_.empty();
+
+  // Reject implausible blocks. A stale cell-voltage block has been observed
+  // parsed as settings: every threshold reads ~3.29 V (a flat spread) and the
+  // temperatures come out around 2000 C. Publishing that is worse than
+  // showing nothing, so fail the block and let the caller retry.
+  bool ok = settings_words_.size() >= 40;
+  if (ok) {
+    for (size_t k = 20; k < 24 && k < settings_words_.size(); k++) {
+      uint16_t t = settings_words_[k];
+      if (t < 2000 || t > 4000) {
+        ok = false;
+        break;
+      }
+    }
+  }
+  if (ok) {
+    uint16_t lo = 0xFFFF, hi = 0;
+    for (size_t k = 0; k < 9 && k < settings_words_.size(); k++) {
+      lo = std::min(lo, settings_words_[k]);
+      hi = std::max(hi, settings_words_[k]);
+    }
+    if ((uint16_t) (hi - lo) < 200) ok = false;
+  }
+  if (!ok) {
+    settings_words_.clear();
+    settings_valid_ = false;
+    return;
+  }
+  settings_valid_ = true;
 }
 
 void SeplosV2::decode_manufacturer_(const std::vector<uint8_t> &p) {
