@@ -8,76 +8,39 @@ From zero to a working pack in about ten minutes, with **one flash**.
 - A Seplos / PACE V2 BMS advertising service `FF00`
 - Home Assistant connected to the ESPHome device
 
-## 2. Minimal configuration
+## 2. Start from a full example
 
-The `ble_client` needs *a* MAC to compile, but you no longer need to know the
-real one up front — the component stores it in NVS at runtime and prefers that
-value over the YAML one. Use a placeholder for the first flash:
+Don't hand-assemble the configuration: the repo ships complete, generated ones
+with the BLE tracker hook, the `ble_client`, the MAC text entity, automatic
+settings reads and every entity.
+
+| File | Packs |
+|---|---|
+| [`examples/one-pack.yaml`](../examples/one-pack.yaml) | 1 |
+| [`examples/two-packs.yaml`](../examples/two-packs.yaml) | 2 |
+| [`examples/three-packs.yaml`](../examples/three-packs.yaml) | 3 |
+| [`examples/four-packs.yaml`](../examples/four-packs.yaml) | 4 |
+
+Copy one into ESPHome and change only:
+
+- `substitutions.name` and the `esphome.devices` names
+- `wifi_ssid` / `wifi_password` in `secrets.yaml`
+- `api.encryption.key` (or remove the `encryption:` block)
+- optionally `ble_client.mac_address` — leave the placeholder to pick the MAC at
+  runtime
+
+The pieces worth knowing about:
 
 ```yaml
-substitutions:
-  name: bms-bridge
-
-esphome:
-  name: ${name}
-  friendly_name: BMS Bridge
-
-esp32:
-  board: esp32dev
-  framework:
-    type: esp-idf
-
-external_components:
-  - source: github://flip555/seplos-v2-esp32-ble@main
-    components: [bms_bridge]
-
-logger:
-api:
-ota:
-  - platform: esphome
-wifi:
-  ssid: !secret wifi_ssid
-  password: !secret wifi_password
-
-esp32_ble_tracker:
-  on_ble_advertise:
-    - lambda: |-
-        id(hub1)->note_advert(x.address_str(), x.get_rssi(), x.get_name(),
-                              (int) x.get_service_uuids().size());
-
-ble_client:
-  - mac_address: "00:00:00:00:00:00"   # replaced at runtime
-    id: pack1_client
-
-bms_bridge:
-  - id: hub1
-    transport: ble
-    ble_client_id: pack1_client
-    profile: seplos_v2_ble
-    address: 0x00
-    mac_slot: 1
-    read_settings_on_connect: true
-    settings_interval: 15min
-
 text:
   - platform: bms_bridge
     bms_bridge_id: hub1
     type: mac
     mode: text
     name: "Pack MAC"
-
-button:
-  - platform: bms_bridge
-    bms_bridge_id: hub1
-    type: scan
-    name: "Scan"
-
-text_sensor:
-  - platform: bms_bridge
-    bms_bridge_id: hub1
-    type: scan_results
-    name: "BLE scan results"
 ```
+
+One per pack; each `bms_bridge` needs a unique `mac_slot`.
 
 Flash this once.
 

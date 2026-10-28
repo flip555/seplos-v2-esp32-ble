@@ -68,6 +68,8 @@ bms_bridge:
     profile: seplos_v2_ble
     address: 0x00
     mac_slot: 1
+    read_settings_on_connect: true
+    settings_interval: 15min
     update_interval: 10s
   - id: hub2
     transport: ble
@@ -75,6 +77,8 @@ bms_bridge:
     profile: seplos_v2_ble
     address: 0x00
     mac_slot: 2
+    read_settings_on_connect: true
+    settings_interval: 15min
     update_interval: 10s
     poll_offset: 5s
 
