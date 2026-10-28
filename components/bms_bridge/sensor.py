@@ -32,7 +32,14 @@ TYPES = {
     "temperature": ("°C", 1),
     "temperature_min": ("°C", 1),
     "temperature_max": ("°C", 1),
+    "ambient_temperature": ("°C", 1),
+    "power_temperature": ("°C", 1),
     "mos_temperature": ("°C", 1),
+    "sys_state": ("", 0),
+    "balancing_cells": ("", 0),
+    "invalid_cells": ("", 0),
+    "active_events": ("", 0),
+    "cell_warning": ("", 0),
     "port_voltage": ("V", 2),
     "full_charge": ("Ah", 1),
     "full_charge_watts": ("Wh", 0),
@@ -86,7 +93,7 @@ TYPES = {
 
 
 def _validate(config):
-    if config[CONF_TYPE] in ("cell_voltage", "temperature") and CONF_INDEX not in config:
+    if config[CONF_TYPE] in ("cell_voltage", "temperature", "cell_warning") and CONF_INDEX not in config:
         raise cv.Invalid(f"'{config[CONF_TYPE]}' requires 'index'")
     unit, decimals = TYPES[config[CONF_TYPE]]
     if unit:

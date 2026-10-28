@@ -1,6 +1,11 @@
 #!/usr/bin/env python3
 """Generate Home Assistant dashboard card templates from the example entity
-names. Requires custom:button-card. Writes dashboards/*-packs.yaml."""
+names. Requires custom:button-card. Writes dashboards/*-packs.yaml.
+
+Sections per pack: summary, status strip (system state, FETs, alarms, invalid
+cells), temperature gauges, metrics grid, cell grid with min/max colouring and
+a balancing highlight.
+"""
 import os
 
 METRICS = [("State of Charge","soc"),("State of Health","soh"),("Cycles","cycles"),
@@ -8,20 +13,26 @@ METRICS = [("State of Charge","soc"),("State of Health","soh"),("Cycles","cycles
            ("Battery Watts","battery_power_port"),("Watts Remaining","remaining_energy"),("Watts Used","full_charge_remaining_wh"),
            ("Battery Amps","current"),("Ah Remaining","remaining_capacity"),("Ah Used","full_charge_remaining")]
 
-def card(n):
-    p = f"sensor.pack{n}_live"
+TEMPS = [("Temp 1","temp_1"),("Temp 2","temp_2"),("Temp 3","temp_3"),
+         ("Temp 4","temp_4"),("Ambient","environment_temperature"),("Power","power_temperature")]
+
+
+def sid(dev, suffix):
+    return f"sensor.{dev}_{suffix}"
+
+
+def summary(dev):
     L=[]; a=L.append
-    a("  - type: vertical-stack")
-    a("    cards:")
-    # summary
     a("      - type: custom:button-card")
     a("        variables:")
     for k,s in [("soc","soc"),("voltage","pack_voltage"),("current","current"),("power","battery_power_port"),
                 ("cycles","cycles"),("cell_min","min_cell"),("cell_max","max_cell"),("ah_used","full_charge_remaining")]:
-        a(f"          {k}: {p}_{s}")
-    for i in range(1,7): a(f"          t{i}: {p}_temp_{i}")
+        a(f"          {k}: {sid(dev, s)}")
+    for i in range(1,5): a(f"          t{i}: {sid(dev, f'temp_{i}')}")
+    a(f"          tamb: {sid(dev, 'environment_temperature')}")
+    a(f"          tpow: {sid(dev, 'power_temperature')}")
     a("        show_name: false")
-    a("        tap_action:\n          action: more-info\n          entity: %s_soc" % p)
+    a(f"        tap_action:\n          action: more-info\n          entity: {sid(dev, 'soc')}")
     a("        styles:")
     a("          card:")
     a("            - background-color: rgba(61,61,61,0.8)")
@@ -79,7 +90,7 @@ def card(n):
     a("                const n = parseFloat(s.state);")
     a("                return isNaN(n) ? '—' : n.toFixed(d);")
     a("              };")
-    a("              const ts = [variables.t1, variables.t2, variables.t3, variables.t4, variables.t5, variables.t6]")
+    a("              const ts = [variables.t1, variables.t2, variables.t3, variables.t4, variables.tamb, variables.tpow]")
     a("                .map(v).filter(x => !isNaN(x));")
     a("              const minT = ts.length ? Math.min(...ts).toFixed(1) : '—';")
     a("              const maxT = ts.length ? Math.max(...ts).toFixed(1) : '—';")
@@ -92,10 +103,14 @@ def card(n):
     a("                <div><ha-icon icon=\"mdi:battery-charging-100\" style=\"width:14px;height:14px;color:#8c8c8c\"></ha-icon><span style=\"margin-left:4px\">Ah Used: ${num(variables.ah_used, 2)}Ah</span></div>")
     a("              `;")
     a("            ]]]")
-    # header
+    return L
+
+
+def header(dev, title):
+    L=[]; a=L.append
     a("      - type: custom:button-card")
-    a(f"        entity: {p}_soc")
-    a("        variables:\n          title: \"Pack %d\"" % n)
+    a(f"        entity: {sid(dev, 'soc')}")
+    a(f"        variables:\n          title: \"{title}\"")
     a("        show_name: false\n        show_state: false\n        show_icon: false")
     a("        custom_fields:")
     a("          bat: |")
@@ -116,30 +131,97 @@ def card(n):
     a("          card:\n            - background: none\n            - border: none\n            - box-shadow: none\n            - padding: 0")
     a("          grid:\n            - grid-template-areas: '\"bat\"'\n            - grid-template-columns: 1fr")
     a("          custom_fields:\n            bat:\n              - justify-self: center\n              - text-align: left")
-    # metrics
+    return L
+
+
+def status(dev):
+    L=[]; a=L.append
+    a("      - type: custom:button-card")
+    a("        show_name: false\n        show_state: false\n        show_icon: false")
+    a("        variables:")
+    a(f"          state: text_sensor.{dev}_system_state")
+    a(f"          alarms: text_sensor.{dev}_active_alarms")
+    a(f"          charge: binary_sensor.{dev}_charge_switch")
+    a(f"          discharge: binary_sensor.{dev}_discharge_switch")
+    a(f"          bal: {sid(dev, 'balancing_cells')}")
+    a(f"          inv: {sid(dev, 'invalid_cells')}")
+    a("        styles:")
+    a("          card:")
+    a("            - background-color: rgba(61,61,61,0.8)")
+    a("            - border-radius: 10px")
+    a("            - padding: 8px 12px")
+    a("            - font-size: 12px")
+    a("        custom_fields:")
+    a("          info: |")
+    a("            [[[")
+    a("              const st = (e) => states[e] ? states[e].state : '—';")
+    a("              const s = st(variables.state);")
+    a("              const on = (e) => st(e) === 'on';")
+    a("              const c = on(variables.charge), d = on(variables.discharge);")
+    a("              const bal = parseFloat(st(variables.bal));")
+    a("              const inv = parseFloat(st(variables.inv));")
+    a("              const alarms = st(variables.alarms);")
+    a("              const good = (!alarms || alarms === 'none');")
+    a("              const stIcon = s === 'Charge' ? 'mdi:battery-charging' : s === 'Discharge' ? 'mdi:battery-arrow-down' : s === 'Standby' ? 'mdi:battery-clock' : s === 'Float' ? 'mdi:battery-heart' : s === 'Fully charged' ? 'mdi:battery-check' : 'mdi:battery';")
+    a("              const chip = (icon, text, col) => `<span style=\"display:inline-flex;align-items:center;margin-right:14px\"><ha-icon icon=\"${icon}\" style=\"width:15px;height:15px;color:${col}\"></ha-icon><span style=\"margin-left:3px\">${text}</span></span>`;")
+    a("              return '<div style=\"display:flex;flex-wrap:wrap;gap:2px\">' +")
+    a("                chip(stIcon, s, '#7fd1ff') +")
+    a("                chip('mdi:alpha-c-box', c ? 'FET C on' : 'FET C off', c ? '#8bc34a' : '#ff5252') +")
+    a("                chip('mdi:alpha-d-box', d ? 'FET D on' : 'FET D off', d ? '#8bc34a' : '#ff5252') +")
+    a("                chip('mdi:scale-balance', isNaN(bal) ? 'bal —' : `bal ${bal}`, bal > 0 ? '#00e5ff' : '#9e9e9e') +")
+    a("                chip('mdi:alert-circle-outline', isNaN(inv) ? 'inv —' : `inv ${inv}`, inv > 0 ? '#ff5252' : '#9e9e9e') +")
+    a("                chip(good ? 'mdi:shield-check' : 'mdi:alert', good ? 'alarms: none' : alarms, good ? '#8bc34a' : '#ff5252') +")
+    a("                '</div>';")
+    a("            ]]]")
+    return L
+
+
+def gauges(dev):
+    L=[]; a=L.append
+    a("      - type: grid\n        square: false\n        columns: 3\n        cards:")
+    for label, suf in TEMPS:
+        a("          - type: gauge")
+        a(f"            entity: {sid(dev, suf)}")
+        a(f"            name: {label}")
+        a("            needle: true")
+        a("            min: 0")
+        a("            max: 60")
+        a("            severity:\n              yellow: 15\n              green: 40\n              red: 50")
+    return L
+
+
+def metrics(dev):
+    L=[]; a=L.append
     a("      - type: grid\n        square: false\n        columns: 3\n        cards:")
     for name,suf in METRICS:
         a("          - type: custom:button-card")
-        a(f"            entity: {p}_{suf}")
+        a(f"            entity: {sid(dev, suf)}")
         a(f"            name: \"{name}\"")
         a("            show_name: true\n            show_state: true\n            show_icon: false\n            show_units: true")
         a("            tap_action:\n              action: more-info")
         a("            styles:\n              card:\n                - \"--card-background-color\": null\n              name:\n                - font-size: 0.6em\n              state:\n                - font-size: 0.8em")
-    # cells
+    return L
+
+
+def cells(dev):
+    L=[]; a=L.append
     a("      - type: grid\n        square: false\n        columns: 4\n        cards:")
     for i in range(1,17):
-        e=f"{p}_cell_{i}"
+        e = sid(dev, f"cell_{i}")
+        b = f"binary_sensor.{dev}_cell_{i}_balancing"
         a("          - type: custom:button-card")
         a(f"            entity: {e}")
         a("            name: |")
         a("              [[[")
         a(f"                const s = states['{e}'];")
-        a(f"                const sl = states['{p}_min_cell']; const sh = states['{p}_max_cell'];")
+        a(f"                const b = states['{b}'];")
+        a(f"                const sl = states['{sid(dev, 'min_cell')}']; const sh = states['{sid(dev, 'max_cell')}'];")
         a(f"                if (!s) return 'Cell {i}';")
         a("                const v = parseFloat(s.state);")
         a("                const lv = sl ? parseFloat(sl.state) : NaN;")
         a("                const hv = sh ? parseFloat(sh.state) : NaN;")
         a(f"                let n = 'Cell {i}';")
+        a("                if (b && b.state === 'on') n += ' ⚡';")
         a("                if (!isNaN(lv) && v === lv) n += ' (L)';")
         a("                if (!isNaN(hv) && v === hv) n += ' (H)';")
         a("                return n;")
@@ -153,31 +235,65 @@ def card(n):
         a("              card:\n                - \"--card-background-color\": |")
         a("                    [[[")
         a(f"                      const s = states['{e}'];")
-        a(f"                      const sl = states['{p}_min_cell']; const sh = states['{p}_max_cell'];")
+        a(f"                      const sl = states['{sid(dev, 'min_cell')}']; const sh = states['{sid(dev, 'max_cell')}'];")
         a("                      if (!s) return 'grey';")
         a("                      const v = parseFloat(s.state);")
         a("                      const lv = sl ? parseFloat(sl.state) : NaN;")
         a("                      const hv = sh ? parseFloat(sh.state) : NaN;")
-        a("                      return (!isNaN(lv) && v === lv) ? 'orange' : (!isNaN(hv) && v === hv) ? 'darkgreen' : 'green';")
+        a("                      return (!isNaN(lv) && v === lv) ? '#f9a825' : (!isNaN(hv) && v === hv) ? '#1b5e20' : '#2e7d32';")
+        a("                    ]]]")
+        a("                - color: |")
+        a("                    [[[")
+        a(f"                      const s = states['{e}'];")
+        a(f"                      const sl = states['{sid(dev, 'min_cell')}'];")
+        a("                      if (!s) return 'white';")
+        a("                      const v = parseFloat(s.state);")
+        a("                      const lv = sl ? parseFloat(sl.state) : NaN;")
+        a("                      return (!isNaN(lv) && v === lv) ? '#1a1a1a' : 'white';")
+        a("                    ]]]")
+        a("                - border: |")
+        a("                    [[[")
+        a(f"                      const b = states['{b}'];")
+        a("                      return (b && b.state === 'on') ? '3px solid #00e5ff' : '1px solid rgba(255,255,255,0.12)';")
+        a("                    ]]]")
+        a("                - box-shadow: |")
+        a("                    [[[")
+        a(f"                      const b = states['{b}'];")
+        a("                      return (b && b.state === 'on') ? '0px 0px 8px 2px #00e5ff' : 'none';")
         a("                    ]]]")
         a("              name:\n                - font-size: 0.6em\n              state:\n                - font-size: 0.7em")
-    return "\n".join(L)+"\n"
+    return L
 
-def gen(n):
-    L=[]; a=L.append
+
+def pack_card(dev, title):
+    L = ["  - type: vertical-stack", "    cards:"]
+    L += summary(dev)
+    L += header(dev, title)
+    L += status(dev)
+    L += gauges(dev)
+    L += metrics(dev)
+    L += cells(dev)
+    return "\n".join(L) + "\n"
+
+
+def gen(packs):
+    L = []
+    a = L.append
     a("# Requires custom:button-card. Paste into a dashboard as one card.")
     a("# Entity ids assume the example naming: device pack1_live, entity 'SOC'")
-    a("# -> sensor.pack1_live_soc.")
+    a("# -> sensor.pack1_live_soc. Per-cell balancing uses")
+    a("# binary_sensor.pack1_live_cell_1_balancing.")
     a("type: grid")
     a("square: false")
-    a(f"columns: {n}")
+    a(f"columns: {packs}")
     a("cards:")
-    for i in range(1,n+1):
-        L.append(card(i))
-    return "\n".join(L)+"\n"
+    for i in range(1, packs + 1):
+        L.append(pack_card(f"pack{i}_live", f"Pack {i}"))
+    return "\n".join(L) + "\n"
 
-if __name__=="__main__":
-    names={1:"one-pack.yaml",2:"two-packs.yaml",3:"three-packs.yaml",4:"four-packs.yaml"}
-    for n,fn in names.items():
-        open(os.path.join("dashboards",fn),"w").write(gen(n))
-        print("dashboards/"+fn)
+
+if __name__ == "__main__":
+    names = {1: "one-pack.yaml", 2: "two-packs.yaml", 3: "three-packs.yaml", 4: "four-packs.yaml"}
+    for n, fn in names.items():
+        open(os.path.join("dashboards", fn), "w").write(gen(n))
+        print("dashboards/" + fn)

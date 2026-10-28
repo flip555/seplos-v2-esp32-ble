@@ -2,6 +2,7 @@
 
 #include "esphome/components/sensor/sensor.h"
 #include "esphome/components/text_sensor/text_sensor.h"
+#include "esphome/components/binary_sensor/binary_sensor.h"
 #include "esphome/components/button/button.h"
 #include "esphome/components/text/text.h"
 
@@ -44,6 +45,18 @@ class BmsTextSensor : public text_sensor::TextSensor {
 
  protected:
   std::string type_;
+};
+
+class BmsBinarySensor : public binary_sensor::BinarySensor {
+ public:
+  void set_type(const std::string &t) { type_ = t; }
+  void set_index(uint8_t i) { index_ = i; }
+  const std::string &type() const { return type_; }
+  uint8_t index() const { return index_; }
+
+ protected:
+  std::string type_;
+  uint8_t index_{0};
 };
 
 class BmsBridge;

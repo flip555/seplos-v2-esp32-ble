@@ -4,7 +4,7 @@ from esphome.components import ble_client
 from esphome.const import CONF_ID
 
 DEPENDENCIES = ["esp32"]
-AUTO_LOAD = ["sensor", "text_sensor", "ble_client", "esp32_ble_tracker"]
+AUTO_LOAD = ["sensor", "text_sensor", "binary_sensor", "ble_client", "esp32_ble_tracker"]
 # One hub per battery pack; several packs may share an ESP32.
 MULTI_CONF = True
 

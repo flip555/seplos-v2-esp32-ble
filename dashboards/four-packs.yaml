@@ -1,6 +1,7 @@
 # Requires custom:button-card. Paste into a dashboard as one card.
 # Entity ids assume the example naming: device pack1_live, entity 'SOC'
-# -> sensor.pack1_live_soc.
+# -> sensor.pack1_live_soc. Per-cell balancing uses
+# binary_sensor.pack1_live_cell_1_balancing.
 type: grid
 square: false
 columns: 4
@@ -21,8 +22,8 @@ cards:
           t2: sensor.pack1_live_temp_2
           t3: sensor.pack1_live_temp_3
           t4: sensor.pack1_live_temp_4
-          t5: sensor.pack1_live_temp_5
-          t6: sensor.pack1_live_temp_6
+          tamb: sensor.pack1_live_environment_temperature
+          tpow: sensor.pack1_live_power_temperature
         show_name: false
         tap_action:
           action: more-info
@@ -94,7 +95,7 @@ cards:
                 const n = parseFloat(s.state);
                 return isNaN(n) ? '—' : n.toFixed(d);
               };
-              const ts = [variables.t1, variables.t2, variables.t3, variables.t4, variables.t5, variables.t6]
+              const ts = [variables.t1, variables.t2, variables.t3, variables.t4, variables.tamb, variables.tpow]
                 .map(v).filter(x => !isNaN(x));
               const minT = ts.length ? Math.min(...ts).toFixed(1) : '—';
               const maxT = ts.length ? Math.max(...ts).toFixed(1) : '—';
@@ -142,6 +143,109 @@ cards:
             bat:
               - justify-self: center
               - text-align: left
+      - type: custom:button-card
+        show_name: false
+        show_state: false
+        show_icon: false
+        variables:
+          state: text_sensor.pack1_live_system_state
+          alarms: text_sensor.pack1_live_active_alarms
+          charge: binary_sensor.pack1_live_charge_switch
+          discharge: binary_sensor.pack1_live_discharge_switch
+          bal: sensor.pack1_live_balancing_cells
+          inv: sensor.pack1_live_invalid_cells
+        styles:
+          card:
+            - background-color: rgba(61,61,61,0.8)
+            - border-radius: 10px
+            - padding: 8px 12px
+            - font-size: 12px
+        custom_fields:
+          info: |
+            [[[
+              const st = (e) => states[e] ? states[e].state : '—';
+              const s = st(variables.state);
+              const on = (e) => st(e) === 'on';
+              const c = on(variables.charge), d = on(variables.discharge);
+              const bal = parseFloat(st(variables.bal));
+              const inv = parseFloat(st(variables.inv));
+              const alarms = st(variables.alarms);
+              const good = (!alarms || alarms === 'none');
+              const stIcon = s === 'Charge' ? 'mdi:battery-charging' : s === 'Discharge' ? 'mdi:battery-arrow-down' : s === 'Standby' ? 'mdi:battery-clock' : s === 'Float' ? 'mdi:battery-heart' : s === 'Fully charged' ? 'mdi:battery-check' : 'mdi:battery';
+              const chip = (icon, text, col) => `<span style="display:inline-flex;align-items:center;margin-right:14px"><ha-icon icon="${icon}" style="width:15px;height:15px;color:${col}"></ha-icon><span style="margin-left:3px">${text}</span></span>`;
+              return '<div style="display:flex;flex-wrap:wrap;gap:2px">' +
+                chip(stIcon, s, '#7fd1ff') +
+                chip('mdi:alpha-c-box', c ? 'FET C on' : 'FET C off', c ? '#8bc34a' : '#ff5252') +
+                chip('mdi:alpha-d-box', d ? 'FET D on' : 'FET D off', d ? '#8bc34a' : '#ff5252') +
+                chip('mdi:scale-balance', isNaN(bal) ? 'bal —' : `bal ${bal}`, bal > 0 ? '#00e5ff' : '#9e9e9e') +
+                chip('mdi:alert-circle-outline', isNaN(inv) ? 'inv —' : `inv ${inv}`, inv > 0 ? '#ff5252' : '#9e9e9e') +
+                chip(good ? 'mdi:shield-check' : 'mdi:alert', good ? 'alarms: none' : alarms, good ? '#8bc34a' : '#ff5252') +
+                '</div>';
+            ]]]
+      - type: grid
+        square: false
+        columns: 3
+        cards:
+          - type: gauge
+            entity: sensor.pack1_live_temp_1
+            name: Temp 1
+            needle: true
+            min: 0
+            max: 60
+            severity:
+              yellow: 15
+              green: 40
+              red: 50
+          - type: gauge
+            entity: sensor.pack1_live_temp_2
+            name: Temp 2
+            needle: true
+            min: 0
+            max: 60
+            severity:
+              yellow: 15
+              green: 40
+              red: 50
+          - type: gauge
+            entity: sensor.pack1_live_temp_3
+            name: Temp 3
+            needle: true
+            min: 0
+            max: 60
+            severity:
+              yellow: 15
+              green: 40
+              red: 50
+          - type: gauge
+            entity: sensor.pack1_live_temp_4
+            name: Temp 4
+            needle: true
+            min: 0
+            max: 60
+            severity:
+              yellow: 15
+              green: 40
+              red: 50
+          - type: gauge
+            entity: sensor.pack1_live_environment_temperature
+            name: Ambient
+            needle: true
+            min: 0
+            max: 60
+            severity:
+              yellow: 15
+              green: 40
+              red: 50
+          - type: gauge
+            entity: sensor.pack1_live_power_temperature
+            name: Power
+            needle: true
+            min: 0
+            max: 60
+            severity:
+              yellow: 15
+              green: 40
+              red: 50
       - type: grid
         square: false
         columns: 3
@@ -347,12 +451,14 @@ cards:
             name: |
               [[[
                 const s = states['sensor.pack1_live_cell_1'];
+                const b = states['binary_sensor.pack1_live_cell_1_balancing'];
                 const sl = states['sensor.pack1_live_min_cell']; const sh = states['sensor.pack1_live_max_cell'];
                 if (!s) return 'Cell 1';
                 const v = parseFloat(s.state);
                 const lv = sl ? parseFloat(sl.state) : NaN;
                 const hv = sh ? parseFloat(sh.state) : NaN;
                 let n = 'Cell 1';
+                if (b && b.state === 'on') n += ' ⚡';
                 if (!isNaN(lv) && v === lv) n += ' (L)';
                 if (!isNaN(hv) && v === hv) n += ' (H)';
                 return n;
@@ -375,7 +481,26 @@ cards:
                       const v = parseFloat(s.state);
                       const lv = sl ? parseFloat(sl.state) : NaN;
                       const hv = sh ? parseFloat(sh.state) : NaN;
-                      return (!isNaN(lv) && v === lv) ? 'orange' : (!isNaN(hv) && v === hv) ? 'darkgreen' : 'green';
+                      return (!isNaN(lv) && v === lv) ? '#f9a825' : (!isNaN(hv) && v === hv) ? '#1b5e20' : '#2e7d32';
+                    ]]]
+                - color: |
+                    [[[
+                      const s = states['sensor.pack1_live_cell_1'];
+                      const sl = states['sensor.pack1_live_min_cell'];
+                      if (!s) return 'white';
+                      const v = parseFloat(s.state);
+                      const lv = sl ? parseFloat(sl.state) : NaN;
+                      return (!isNaN(lv) && v === lv) ? '#1a1a1a' : 'white';
+                    ]]]
+                - border: |
+                    [[[
+                      const b = states['binary_sensor.pack1_live_cell_1_balancing'];
+                      return (b && b.state === 'on') ? '3px solid #00e5ff' : '1px solid rgba(255,255,255,0.12)';
+                    ]]]
+                - box-shadow: |
+                    [[[
+                      const b = states['binary_sensor.pack1_live_cell_1_balancing'];
+                      return (b && b.state === 'on') ? '0px 0px 8px 2px #00e5ff' : 'none';
                     ]]]
               name:
                 - font-size: 0.6em
@@ -386,12 +511,14 @@ cards:
             name: |
               [[[
                 const s = states['sensor.pack1_live_cell_2'];
+                const b = states['binary_sensor.pack1_live_cell_2_balancing'];
                 const sl = states['sensor.pack1_live_min_cell']; const sh = states['sensor.pack1_live_max_cell'];
                 if (!s) return 'Cell 2';
                 const v = parseFloat(s.state);
                 const lv = sl ? parseFloat(sl.state) : NaN;
                 const hv = sh ? parseFloat(sh.state) : NaN;
                 let n = 'Cell 2';
+                if (b && b.state === 'on') n += ' ⚡';
                 if (!isNaN(lv) && v === lv) n += ' (L)';
                 if (!isNaN(hv) && v === hv) n += ' (H)';
                 return n;
@@ -414,7 +541,26 @@ cards:
                       const v = parseFloat(s.state);
                       const lv = sl ? parseFloat(sl.state) : NaN;
                       const hv = sh ? parseFloat(sh.state) : NaN;
-                      return (!isNaN(lv) && v === lv) ? 'orange' : (!isNaN(hv) && v === hv) ? 'darkgreen' : 'green';
+                      return (!isNaN(lv) && v === lv) ? '#f9a825' : (!isNaN(hv) && v === hv) ? '#1b5e20' : '#2e7d32';
+                    ]]]
+                - color: |
+                    [[[
+                      const s = states['sensor.pack1_live_cell_2'];
+                      const sl = states['sensor.pack1_live_min_cell'];
+                      if (!s) return 'white';
+                      const v = parseFloat(s.state);
+                      const lv = sl ? parseFloat(sl.state) : NaN;
+                      return (!isNaN(lv) && v === lv) ? '#1a1a1a' : 'white';
+                    ]]]
+                - border: |
+                    [[[
+                      const b = states['binary_sensor.pack1_live_cell_2_balancing'];
+                      return (b && b.state === 'on') ? '3px solid #00e5ff' : '1px solid rgba(255,255,255,0.12)';
+                    ]]]
+                - box-shadow: |
+                    [[[
+                      const b = states['binary_sensor.pack1_live_cell_2_balancing'];
+                      return (b && b.state === 'on') ? '0px 0px 8px 2px #00e5ff' : 'none';
                     ]]]
               name:
                 - font-size: 0.6em
@@ -425,12 +571,14 @@ cards:
             name: |
               [[[
                 const s = states['sensor.pack1_live_cell_3'];
+                const b = states['binary_sensor.pack1_live_cell_3_balancing'];
                 const sl = states['sensor.pack1_live_min_cell']; const sh = states['sensor.pack1_live_max_cell'];
                 if (!s) return 'Cell 3';
                 const v = parseFloat(s.state);
                 const lv = sl ? parseFloat(sl.state) : NaN;
                 const hv = sh ? parseFloat(sh.state) : NaN;
                 let n = 'Cell 3';
+                if (b && b.state === 'on') n += ' ⚡';
                 if (!isNaN(lv) && v === lv) n += ' (L)';
                 if (!isNaN(hv) && v === hv) n += ' (H)';
                 return n;
@@ -453,7 +601,26 @@ cards:
                       const v = parseFloat(s.state);
                       const lv = sl ? parseFloat(sl.state) : NaN;
                       const hv = sh ? parseFloat(sh.state) : NaN;
-                      return (!isNaN(lv) && v === lv) ? 'orange' : (!isNaN(hv) && v === hv) ? 'darkgreen' : 'green';
+                      return (!isNaN(lv) && v === lv) ? '#f9a825' : (!isNaN(hv) && v === hv) ? '#1b5e20' : '#2e7d32';
+                    ]]]
+                - color: |
+                    [[[
+                      const s = states['sensor.pack1_live_cell_3'];
+                      const sl = states['sensor.pack1_live_min_cell'];
+                      if (!s) return 'white';
+                      const v = parseFloat(s.state);
+                      const lv = sl ? parseFloat(sl.state) : NaN;
+                      return (!isNaN(lv) && v === lv) ? '#1a1a1a' : 'white';
+                    ]]]
+                - border: |
+                    [[[
+                      const b = states['binary_sensor.pack1_live_cell_3_balancing'];
+                      return (b && b.state === 'on') ? '3px solid #00e5ff' : '1px solid rgba(255,255,255,0.12)';
+                    ]]]
+                - box-shadow: |
+                    [[[
+                      const b = states['binary_sensor.pack1_live_cell_3_balancing'];
+                      return (b && b.state === 'on') ? '0px 0px 8px 2px #00e5ff' : 'none';
                     ]]]
               name:
                 - font-size: 0.6em
@@ -464,12 +631,14 @@ cards:
             name: |
               [[[
                 const s = states['sensor.pack1_live_cell_4'];
+                const b = states['binary_sensor.pack1_live_cell_4_balancing'];
                 const sl = states['sensor.pack1_live_min_cell']; const sh = states['sensor.pack1_live_max_cell'];
                 if (!s) return 'Cell 4';
                 const v = parseFloat(s.state);
                 const lv = sl ? parseFloat(sl.state) : NaN;
                 const hv = sh ? parseFloat(sh.state) : NaN;
                 let n = 'Cell 4';
+                if (b && b.state === 'on') n += ' ⚡';
                 if (!isNaN(lv) && v === lv) n += ' (L)';
                 if (!isNaN(hv) && v === hv) n += ' (H)';
                 return n;
@@ -492,7 +661,26 @@ cards:
                       const v = parseFloat(s.state);
                       const lv = sl ? parseFloat(sl.state) : NaN;
                       const hv = sh ? parseFloat(sh.state) : NaN;
-                      return (!isNaN(lv) && v === lv) ? 'orange' : (!isNaN(hv) && v === hv) ? 'darkgreen' : 'green';
+                      return (!isNaN(lv) && v === lv) ? '#f9a825' : (!isNaN(hv) && v === hv) ? '#1b5e20' : '#2e7d32';
+                    ]]]
+                - color: |
+                    [[[
+                      const s = states['sensor.pack1_live_cell_4'];
+                      const sl = states['sensor.pack1_live_min_cell'];
+                      if (!s) return 'white';
+                      const v = parseFloat(s.state);
+                      const lv = sl ? parseFloat(sl.state) : NaN;
+                      return (!isNaN(lv) && v === lv) ? '#1a1a1a' : 'white';
+                    ]]]
+                - border: |
+                    [[[
+                      const b = states['binary_sensor.pack1_live_cell_4_balancing'];
+                      return (b && b.state === 'on') ? '3px solid #00e5ff' : '1px solid rgba(255,255,255,0.12)';
+                    ]]]
+                - box-shadow: |
+                    [[[
+                      const b = states['binary_sensor.pack1_live_cell_4_balancing'];
+                      return (b && b.state === 'on') ? '0px 0px 8px 2px #00e5ff' : 'none';
                     ]]]
               name:
                 - font-size: 0.6em
@@ -503,12 +691,14 @@ cards:
             name: |
               [[[
                 const s = states['sensor.pack1_live_cell_5'];
+                const b = states['binary_sensor.pack1_live_cell_5_balancing'];
                 const sl = states['sensor.pack1_live_min_cell']; const sh = states['sensor.pack1_live_max_cell'];
                 if (!s) return 'Cell 5';
                 const v = parseFloat(s.state);
                 const lv = sl ? parseFloat(sl.state) : NaN;
                 const hv = sh ? parseFloat(sh.state) : NaN;
                 let n = 'Cell 5';
+                if (b && b.state === 'on') n += ' ⚡';
                 if (!isNaN(lv) && v === lv) n += ' (L)';
                 if (!isNaN(hv) && v === hv) n += ' (H)';
                 return n;
@@ -531,7 +721,26 @@ cards:
                       const v = parseFloat(s.state);
                       const lv = sl ? parseFloat(sl.state) : NaN;
                       const hv = sh ? parseFloat(sh.state) : NaN;
-                      return (!isNaN(lv) && v === lv) ? 'orange' : (!isNaN(hv) && v === hv) ? 'darkgreen' : 'green';
+                      return (!isNaN(lv) && v === lv) ? '#f9a825' : (!isNaN(hv) && v === hv) ? '#1b5e20' : '#2e7d32';
+                    ]]]
+                - color: |
+                    [[[
+                      const s = states['sensor.pack1_live_cell_5'];
+                      const sl = states['sensor.pack1_live_min_cell'];
+                      if (!s) return 'white';
+                      const v = parseFloat(s.state);
+                      const lv = sl ? parseFloat(sl.state) : NaN;
+                      return (!isNaN(lv) && v === lv) ? '#1a1a1a' : 'white';
+                    ]]]
+                - border: |
+                    [[[
+                      const b = states['binary_sensor.pack1_live_cell_5_balancing'];
+                      return (b && b.state === 'on') ? '3px solid #00e5ff' : '1px solid rgba(255,255,255,0.12)';
+                    ]]]
+                - box-shadow: |
+                    [[[
+                      const b = states['binary_sensor.pack1_live_cell_5_balancing'];
+                      return (b && b.state === 'on') ? '0px 0px 8px 2px #00e5ff' : 'none';
                     ]]]
               name:
                 - font-size: 0.6em
@@ -542,12 +751,14 @@ cards:
             name: |
               [[[
                 const s = states['sensor.pack1_live_cell_6'];
+                const b = states['binary_sensor.pack1_live_cell_6_balancing'];
                 const sl = states['sensor.pack1_live_min_cell']; const sh = states['sensor.pack1_live_max_cell'];
                 if (!s) return 'Cell 6';
                 const v = parseFloat(s.state);
                 const lv = sl ? parseFloat(sl.state) : NaN;
                 const hv = sh ? parseFloat(sh.state) : NaN;
                 let n = 'Cell 6';
+                if (b && b.state === 'on') n += ' ⚡';
                 if (!isNaN(lv) && v === lv) n += ' (L)';
                 if (!isNaN(hv) && v === hv) n += ' (H)';
                 return n;
@@ -570,7 +781,26 @@ cards:
                       const v = parseFloat(s.state);
                       const lv = sl ? parseFloat(sl.state) : NaN;
                       const hv = sh ? parseFloat(sh.state) : NaN;
-                      return (!isNaN(lv) && v === lv) ? 'orange' : (!isNaN(hv) && v === hv) ? 'darkgreen' : 'green';
+                      return (!isNaN(lv) && v === lv) ? '#f9a825' : (!isNaN(hv) && v === hv) ? '#1b5e20' : '#2e7d32';
+                    ]]]
+                - color: |
+                    [[[
+                      const s = states['sensor.pack1_live_cell_6'];
+                      const sl = states['sensor.pack1_live_min_cell'];
+                      if (!s) return 'white';
+                      const v = parseFloat(s.state);
+                      const lv = sl ? parseFloat(sl.state) : NaN;
+                      return (!isNaN(lv) && v === lv) ? '#1a1a1a' : 'white';
+                    ]]]
+                - border: |
+                    [[[
+                      const b = states['binary_sensor.pack1_live_cell_6_balancing'];
+                      return (b && b.state === 'on') ? '3px solid #00e5ff' : '1px solid rgba(255,255,255,0.12)';
+                    ]]]
+                - box-shadow: |
+                    [[[
+                      const b = states['binary_sensor.pack1_live_cell_6_balancing'];
+                      return (b && b.state === 'on') ? '0px 0px 8px 2px #00e5ff' : 'none';
                     ]]]
               name:
                 - font-size: 0.6em
@@ -581,12 +811,14 @@ cards:
             name: |
               [[[
                 const s = states['sensor.pack1_live_cell_7'];
+                const b = states['binary_sensor.pack1_live_cell_7_balancing'];
                 const sl = states['sensor.pack1_live_min_cell']; const sh = states['sensor.pack1_live_max_cell'];
                 if (!s) return 'Cell 7';
                 const v = parseFloat(s.state);
                 const lv = sl ? parseFloat(sl.state) : NaN;
                 const hv = sh ? parseFloat(sh.state) : NaN;
                 let n = 'Cell 7';
+                if (b && b.state === 'on') n += ' ⚡';
                 if (!isNaN(lv) && v === lv) n += ' (L)';
                 if (!isNaN(hv) && v === hv) n += ' (H)';
                 return n;
@@ -609,7 +841,26 @@ cards:
                       const v = parseFloat(s.state);
                       const lv = sl ? parseFloat(sl.state) : NaN;
                       const hv = sh ? parseFloat(sh.state) : NaN;
-                      return (!isNaN(lv) && v === lv) ? 'orange' : (!isNaN(hv) && v === hv) ? 'darkgreen' : 'green';
+                      return (!isNaN(lv) && v === lv) ? '#f9a825' : (!isNaN(hv) && v === hv) ? '#1b5e20' : '#2e7d32';
+                    ]]]
+                - color: |
+                    [[[
+                      const s = states['sensor.pack1_live_cell_7'];
+                      const sl = states['sensor.pack1_live_min_cell'];
+                      if (!s) return 'white';
+                      const v = parseFloat(s.state);
+                      const lv = sl ? parseFloat(sl.state) : NaN;
+                      return (!isNaN(lv) && v === lv) ? '#1a1a1a' : 'white';
+                    ]]]
+                - border: |
+                    [[[
+                      const b = states['binary_sensor.pack1_live_cell_7_balancing'];
+                      return (b && b.state === 'on') ? '3px solid #00e5ff' : '1px solid rgba(255,255,255,0.12)';
+                    ]]]
+                - box-shadow: |
+                    [[[
+                      const b = states['binary_sensor.pack1_live_cell_7_balancing'];
+                      return (b && b.state === 'on') ? '0px 0px 8px 2px #00e5ff' : 'none';
                     ]]]
               name:
                 - font-size: 0.6em
@@ -620,12 +871,14 @@ cards:
             name: |
               [[[
                 const s = states['sensor.pack1_live_cell_8'];
+                const b = states['binary_sensor.pack1_live_cell_8_balancing'];
                 const sl = states['sensor.pack1_live_min_cell']; const sh = states['sensor.pack1_live_max_cell'];
                 if (!s) return 'Cell 8';
                 const v = parseFloat(s.state);
                 const lv = sl ? parseFloat(sl.state) : NaN;
                 const hv = sh ? parseFloat(sh.state) : NaN;
                 let n = 'Cell 8';
+                if (b && b.state === 'on') n += ' ⚡';
                 if (!isNaN(lv) && v === lv) n += ' (L)';
                 if (!isNaN(hv) && v === hv) n += ' (H)';
                 return n;
@@ -648,7 +901,26 @@ cards:
                       const v = parseFloat(s.state);
                       const lv = sl ? parseFloat(sl.state) : NaN;
                       const hv = sh ? parseFloat(sh.state) : NaN;
-                      return (!isNaN(lv) && v === lv) ? 'orange' : (!isNaN(hv) && v === hv) ? 'darkgreen' : 'green';
+                      return (!isNaN(lv) && v === lv) ? '#f9a825' : (!isNaN(hv) && v === hv) ? '#1b5e20' : '#2e7d32';
+                    ]]]
+                - color: |
+                    [[[
+                      const s = states['sensor.pack1_live_cell_8'];
+                      const sl = states['sensor.pack1_live_min_cell'];
+                      if (!s) return 'white';
+                      const v = parseFloat(s.state);
+                      const lv = sl ? parseFloat(sl.state) : NaN;
+                      return (!isNaN(lv) && v === lv) ? '#1a1a1a' : 'white';
+                    ]]]
+                - border: |
+                    [[[
+                      const b = states['binary_sensor.pack1_live_cell_8_balancing'];
+                      return (b && b.state === 'on') ? '3px solid #00e5ff' : '1px solid rgba(255,255,255,0.12)';
+                    ]]]
+                - box-shadow: |
+                    [[[
+                      const b = states['binary_sensor.pack1_live_cell_8_balancing'];
+                      return (b && b.state === 'on') ? '0px 0px 8px 2px #00e5ff' : 'none';
                     ]]]
               name:
                 - font-size: 0.6em
@@ -659,12 +931,14 @@ cards:
             name: |
               [[[
                 const s = states['sensor.pack1_live_cell_9'];
+                const b = states['binary_sensor.pack1_live_cell_9_balancing'];
                 const sl = states['sensor.pack1_live_min_cell']; const sh = states['sensor.pack1_live_max_cell'];
                 if (!s) return 'Cell 9';
                 const v = parseFloat(s.state);
                 const lv = sl ? parseFloat(sl.state) : NaN;
                 const hv = sh ? parseFloat(sh.state) : NaN;
                 let n = 'Cell 9';
+                if (b && b.state === 'on') n += ' ⚡';
                 if (!isNaN(lv) && v === lv) n += ' (L)';
                 if (!isNaN(hv) && v === hv) n += ' (H)';
                 return n;
@@ -687,7 +961,26 @@ cards:
                       const v = parseFloat(s.state);
                       const lv = sl ? parseFloat(sl.state) : NaN;
                       const hv = sh ? parseFloat(sh.state) : NaN;
-                      return (!isNaN(lv) && v === lv) ? 'orange' : (!isNaN(hv) && v === hv) ? 'darkgreen' : 'green';
+                      return (!isNaN(lv) && v === lv) ? '#f9a825' : (!isNaN(hv) && v === hv) ? '#1b5e20' : '#2e7d32';
+                    ]]]
+                - color: |
+                    [[[
+                      const s = states['sensor.pack1_live_cell_9'];
+                      const sl = states['sensor.pack1_live_min_cell'];
+                      if (!s) return 'white';
+                      const v = parseFloat(s.state);
+                      const lv = sl ? parseFloat(sl.state) : NaN;
+                      return (!isNaN(lv) && v === lv) ? '#1a1a1a' : 'white';
+                    ]]]
+                - border: |
+                    [[[
+                      const b = states['binary_sensor.pack1_live_cell_9_balancing'];
+                      return (b && b.state === 'on') ? '3px solid #00e5ff' : '1px solid rgba(255,255,255,0.12)';
+                    ]]]
+                - box-shadow: |
+                    [[[
+                      const b = states['binary_sensor.pack1_live_cell_9_balancing'];
+                      return (b && b.state === 'on') ? '0px 0px 8px 2px #00e5ff' : 'none';
                     ]]]
               name:
                 - font-size: 0.6em
@@ -698,12 +991,14 @@ cards:
             name: |
               [[[
                 const s = states['sensor.pack1_live_cell_10'];
+                const b = states['binary_sensor.pack1_live_cell_10_balancing'];
                 const sl = states['sensor.pack1_live_min_cell']; const sh = states['sensor.pack1_live_max_cell'];
                 if (!s) return 'Cell 10';
                 const v = parseFloat(s.state);
                 const lv = sl ? parseFloat(sl.state) : NaN;
                 const hv = sh ? parseFloat(sh.state) : NaN;
                 let n = 'Cell 10';
+                if (b && b.state === 'on') n += ' ⚡';
                 if (!isNaN(lv) && v === lv) n += ' (L)';
                 if (!isNaN(hv) && v === hv) n += ' (H)';
                 return n;
@@ -726,7 +1021,26 @@ cards:
                       const v = parseFloat(s.state);
                       const lv = sl ? parseFloat(sl.state) : NaN;
                       const hv = sh ? parseFloat(sh.state) : NaN;
-                      return (!isNaN(lv) && v === lv) ? 'orange' : (!isNaN(hv) && v === hv) ? 'darkgreen' : 'green';
+                      return (!isNaN(lv) && v === lv) ? '#f9a825' : (!isNaN(hv) && v === hv) ? '#1b5e20' : '#2e7d32';
+                    ]]]
+                - color: |
+                    [[[
+                      const s = states['sensor.pack1_live_cell_10'];
+                      const sl = states['sensor.pack1_live_min_cell'];
+                      if (!s) return 'white';
+                      const v = parseFloat(s.state);
+                      const lv = sl ? parseFloat(sl.state) : NaN;
+                      return (!isNaN(lv) && v === lv) ? '#1a1a1a' : 'white';
+                    ]]]
+                - border: |
+                    [[[
+                      const b = states['binary_sensor.pack1_live_cell_10_balancing'];
+                      return (b && b.state === 'on') ? '3px solid #00e5ff' : '1px solid rgba(255,255,255,0.12)';
+                    ]]]
+                - box-shadow: |
+                    [[[
+                      const b = states['binary_sensor.pack1_live_cell_10_balancing'];
+                      return (b && b.state === 'on') ? '0px 0px 8px 2px #00e5ff' : 'none';
                     ]]]
               name:
                 - font-size: 0.6em
@@ -737,12 +1051,14 @@ cards:
             name: |
               [[[
                 const s = states['sensor.pack1_live_cell_11'];
+                const b = states['binary_sensor.pack1_live_cell_11_balancing'];
                 const sl = states['sensor.pack1_live_min_cell']; const sh = states['sensor.pack1_live_max_cell'];
                 if (!s) return 'Cell 11';
                 const v = parseFloat(s.state);
                 const lv = sl ? parseFloat(sl.state) : NaN;
                 const hv = sh ? parseFloat(sh.state) : NaN;
                 let n = 'Cell 11';
+                if (b && b.state === 'on') n += ' ⚡';
                 if (!isNaN(lv) && v === lv) n += ' (L)';
                 if (!isNaN(hv) && v === hv) n += ' (H)';
                 return n;
@@ -765,7 +1081,26 @@ cards:
                       const v = parseFloat(s.state);
                       const lv = sl ? parseFloat(sl.state) : NaN;
                       const hv = sh ? parseFloat(sh.state) : NaN;
-                      return (!isNaN(lv) && v === lv) ? 'orange' : (!isNaN(hv) && v === hv) ? 'darkgreen' : 'green';
+                      return (!isNaN(lv) && v === lv) ? '#f9a825' : (!isNaN(hv) && v === hv) ? '#1b5e20' : '#2e7d32';
+                    ]]]
+                - color: |
+                    [[[
+                      const s = states['sensor.pack1_live_cell_11'];
+                      const sl = states['sensor.pack1_live_min_cell'];
+                      if (!s) return 'white';
+                      const v = parseFloat(s.state);
+                      const lv = sl ? parseFloat(sl.state) : NaN;
+                      return (!isNaN(lv) && v === lv) ? '#1a1a1a' : 'white';
+                    ]]]
+                - border: |
+                    [[[
+                      const b = states['binary_sensor.pack1_live_cell_11_balancing'];
+                      return (b && b.state === 'on') ? '3px solid #00e5ff' : '1px solid rgba(255,255,255,0.12)';
+                    ]]]
+                - box-shadow: |
+                    [[[
+                      const b = states['binary_sensor.pack1_live_cell_11_balancing'];
+                      return (b && b.state === 'on') ? '0px 0px 8px 2px #00e5ff' : 'none';
                     ]]]
               name:
                 - font-size: 0.6em
@@ -776,12 +1111,14 @@ cards:
             name: |
               [[[
                 const s = states['sensor.pack1_live_cell_12'];
+                const b = states['binary_sensor.pack1_live_cell_12_balancing'];
                 const sl = states['sensor.pack1_live_min_cell']; const sh = states['sensor.pack1_live_max_cell'];
                 if (!s) return 'Cell 12';
                 const v = parseFloat(s.state);
                 const lv = sl ? parseFloat(sl.state) : NaN;
                 const hv = sh ? parseFloat(sh.state) : NaN;
                 let n = 'Cell 12';
+                if (b && b.state === 'on') n += ' ⚡';
                 if (!isNaN(lv) && v === lv) n += ' (L)';
                 if (!isNaN(hv) && v === hv) n += ' (H)';
                 return n;
@@ -804,7 +1141,26 @@ cards:
                       const v = parseFloat(s.state);
                       const lv = sl ? parseFloat(sl.state) : NaN;
                       const hv = sh ? parseFloat(sh.state) : NaN;
-                      return (!isNaN(lv) && v === lv) ? 'orange' : (!isNaN(hv) && v === hv) ? 'darkgreen' : 'green';
+                      return (!isNaN(lv) && v === lv) ? '#f9a825' : (!isNaN(hv) && v === hv) ? '#1b5e20' : '#2e7d32';
+                    ]]]
+                - color: |
+                    [[[
+                      const s = states['sensor.pack1_live_cell_12'];
+                      const sl = states['sensor.pack1_live_min_cell'];
+                      if (!s) return 'white';
+                      const v = parseFloat(s.state);
+                      const lv = sl ? parseFloat(sl.state) : NaN;
+                      return (!isNaN(lv) && v === lv) ? '#1a1a1a' : 'white';
+                    ]]]
+                - border: |
+                    [[[
+                      const b = states['binary_sensor.pack1_live_cell_12_balancing'];
+                      return (b && b.state === 'on') ? '3px solid #00e5ff' : '1px solid rgba(255,255,255,0.12)';
+                    ]]]
+                - box-shadow: |
+                    [[[
+                      const b = states['binary_sensor.pack1_live_cell_12_balancing'];
+                      return (b && b.state === 'on') ? '0px 0px 8px 2px #00e5ff' : 'none';
                     ]]]
               name:
                 - font-size: 0.6em
@@ -815,12 +1171,14 @@ cards:
             name: |
               [[[
                 const s = states['sensor.pack1_live_cell_13'];
+                const b = states['binary_sensor.pack1_live_cell_13_balancing'];
                 const sl = states['sensor.pack1_live_min_cell']; const sh = states['sensor.pack1_live_max_cell'];
                 if (!s) return 'Cell 13';
                 const v = parseFloat(s.state);
                 const lv = sl ? parseFloat(sl.state) : NaN;
                 const hv = sh ? parseFloat(sh.state) : NaN;
                 let n = 'Cell 13';
+                if (b && b.state === 'on') n += ' ⚡';
                 if (!isNaN(lv) && v === lv) n += ' (L)';
                 if (!isNaN(hv) && v === hv) n += ' (H)';
                 return n;
@@ -843,7 +1201,26 @@ cards:
                       const v = parseFloat(s.state);
                       const lv = sl ? parseFloat(sl.state) : NaN;
                       const hv = sh ? parseFloat(sh.state) : NaN;
-                      return (!isNaN(lv) && v === lv) ? 'orange' : (!isNaN(hv) && v === hv) ? 'darkgreen' : 'green';
+                      return (!isNaN(lv) && v === lv) ? '#f9a825' : (!isNaN(hv) && v === hv) ? '#1b5e20' : '#2e7d32';
+                    ]]]
+                - color: |
+                    [[[
+                      const s = states['sensor.pack1_live_cell_13'];
+                      const sl = states['sensor.pack1_live_min_cell'];
+                      if (!s) return 'white';
+                      const v = parseFloat(s.state);
+                      const lv = sl ? parseFloat(sl.state) : NaN;
+                      return (!isNaN(lv) && v === lv) ? '#1a1a1a' : 'white';
+                    ]]]
+                - border: |
+                    [[[
+                      const b = states['binary_sensor.pack1_live_cell_13_balancing'];
+                      return (b && b.state === 'on') ? '3px solid #00e5ff' : '1px solid rgba(255,255,255,0.12)';
+                    ]]]
+                - box-shadow: |
+                    [[[
+                      const b = states['binary_sensor.pack1_live_cell_13_balancing'];
+                      return (b && b.state === 'on') ? '0px 0px 8px 2px #00e5ff' : 'none';
                     ]]]
               name:
                 - font-size: 0.6em
@@ -854,12 +1231,14 @@ cards:
             name: |
               [[[
                 const s = states['sensor.pack1_live_cell_14'];
+                const b = states['binary_sensor.pack1_live_cell_14_balancing'];
                 const sl = states['sensor.pack1_live_min_cell']; const sh = states['sensor.pack1_live_max_cell'];
                 if (!s) return 'Cell 14';
                 const v = parseFloat(s.state);
                 const lv = sl ? parseFloat(sl.state) : NaN;
                 const hv = sh ? parseFloat(sh.state) : NaN;
                 let n = 'Cell 14';
+                if (b && b.state === 'on') n += ' ⚡';
                 if (!isNaN(lv) && v === lv) n += ' (L)';
                 if (!isNaN(hv) && v === hv) n += ' (H)';
                 return n;
@@ -882,7 +1261,26 @@ cards:
                       const v = parseFloat(s.state);
                       const lv = sl ? parseFloat(sl.state) : NaN;
                       const hv = sh ? parseFloat(sh.state) : NaN;
-                      return (!isNaN(lv) && v === lv) ? 'orange' : (!isNaN(hv) && v === hv) ? 'darkgreen' : 'green';
+                      return (!isNaN(lv) && v === lv) ? '#f9a825' : (!isNaN(hv) && v === hv) ? '#1b5e20' : '#2e7d32';
+                    ]]]
+                - color: |
+                    [[[
+                      const s = states['sensor.pack1_live_cell_14'];
+                      const sl = states['sensor.pack1_live_min_cell'];
+                      if (!s) return 'white';
+                      const v = parseFloat(s.state);
+                      const lv = sl ? parseFloat(sl.state) : NaN;
+                      return (!isNaN(lv) && v === lv) ? '#1a1a1a' : 'white';
+                    ]]]
+                - border: |
+                    [[[
+                      const b = states['binary_sensor.pack1_live_cell_14_balancing'];
+                      return (b && b.state === 'on') ? '3px solid #00e5ff' : '1px solid rgba(255,255,255,0.12)';
+                    ]]]
+                - box-shadow: |
+                    [[[
+                      const b = states['binary_sensor.pack1_live_cell_14_balancing'];
+                      return (b && b.state === 'on') ? '0px 0px 8px 2px #00e5ff' : 'none';
                     ]]]
               name:
                 - font-size: 0.6em
@@ -893,12 +1291,14 @@ cards:
             name: |
               [[[
                 const s = states['sensor.pack1_live_cell_15'];
+                const b = states['binary_sensor.pack1_live_cell_15_balancing'];
                 const sl = states['sensor.pack1_live_min_cell']; const sh = states['sensor.pack1_live_max_cell'];
                 if (!s) return 'Cell 15';
                 const v = parseFloat(s.state);
                 const lv = sl ? parseFloat(sl.state) : NaN;
                 const hv = sh ? parseFloat(sh.state) : NaN;
                 let n = 'Cell 15';
+                if (b && b.state === 'on') n += ' ⚡';
                 if (!isNaN(lv) && v === lv) n += ' (L)';
                 if (!isNaN(hv) && v === hv) n += ' (H)';
                 return n;
@@ -921,7 +1321,26 @@ cards:
                       const v = parseFloat(s.state);
                       const lv = sl ? parseFloat(sl.state) : NaN;
                       const hv = sh ? parseFloat(sh.state) : NaN;
-                      return (!isNaN(lv) && v === lv) ? 'orange' : (!isNaN(hv) && v === hv) ? 'darkgreen' : 'green';
+                      return (!isNaN(lv) && v === lv) ? '#f9a825' : (!isNaN(hv) && v === hv) ? '#1b5e20' : '#2e7d32';
+                    ]]]
+                - color: |
+                    [[[
+                      const s = states['sensor.pack1_live_cell_15'];
+                      const sl = states['sensor.pack1_live_min_cell'];
+                      if (!s) return 'white';
+                      const v = parseFloat(s.state);
+                      const lv = sl ? parseFloat(sl.state) : NaN;
+                      return (!isNaN(lv) && v === lv) ? '#1a1a1a' : 'white';
+                    ]]]
+                - border: |
+                    [[[
+                      const b = states['binary_sensor.pack1_live_cell_15_balancing'];
+                      return (b && b.state === 'on') ? '3px solid #00e5ff' : '1px solid rgba(255,255,255,0.12)';
+                    ]]]
+                - box-shadow: |
+                    [[[
+                      const b = states['binary_sensor.pack1_live_cell_15_balancing'];
+                      return (b && b.state === 'on') ? '0px 0px 8px 2px #00e5ff' : 'none';
                     ]]]
               name:
                 - font-size: 0.6em
@@ -932,12 +1351,14 @@ cards:
             name: |
               [[[
                 const s = states['sensor.pack1_live_cell_16'];
+                const b = states['binary_sensor.pack1_live_cell_16_balancing'];
                 const sl = states['sensor.pack1_live_min_cell']; const sh = states['sensor.pack1_live_max_cell'];
                 if (!s) return 'Cell 16';
                 const v = parseFloat(s.state);
                 const lv = sl ? parseFloat(sl.state) : NaN;
                 const hv = sh ? parseFloat(sh.state) : NaN;
                 let n = 'Cell 16';
+                if (b && b.state === 'on') n += ' ⚡';
                 if (!isNaN(lv) && v === lv) n += ' (L)';
                 if (!isNaN(hv) && v === hv) n += ' (H)';
                 return n;
@@ -960,7 +1381,26 @@ cards:
                       const v = parseFloat(s.state);
                       const lv = sl ? parseFloat(sl.state) : NaN;
                       const hv = sh ? parseFloat(sh.state) : NaN;
-                      return (!isNaN(lv) && v === lv) ? 'orange' : (!isNaN(hv) && v === hv) ? 'darkgreen' : 'green';
+                      return (!isNaN(lv) && v === lv) ? '#f9a825' : (!isNaN(hv) && v === hv) ? '#1b5e20' : '#2e7d32';
+                    ]]]
+                - color: |
+                    [[[
+                      const s = states['sensor.pack1_live_cell_16'];
+                      const sl = states['sensor.pack1_live_min_cell'];
+                      if (!s) return 'white';
+                      const v = parseFloat(s.state);
+                      const lv = sl ? parseFloat(sl.state) : NaN;
+                      return (!isNaN(lv) && v === lv) ? '#1a1a1a' : 'white';
+                    ]]]
+                - border: |
+                    [[[
+                      const b = states['binary_sensor.pack1_live_cell_16_balancing'];
+                      return (b && b.state === 'on') ? '3px solid #00e5ff' : '1px solid rgba(255,255,255,0.12)';
+                    ]]]
+                - box-shadow: |
+                    [[[
+                      const b = states['binary_sensor.pack1_live_cell_16_balancing'];
+                      return (b && b.state === 'on') ? '0px 0px 8px 2px #00e5ff' : 'none';
                     ]]]
               name:
                 - font-size: 0.6em
@@ -983,8 +1423,8 @@ cards:
           t2: sensor.pack2_live_temp_2
           t3: sensor.pack2_live_temp_3
           t4: sensor.pack2_live_temp_4
-          t5: sensor.pack2_live_temp_5
-          t6: sensor.pack2_live_temp_6
+          tamb: sensor.pack2_live_environment_temperature
+          tpow: sensor.pack2_live_power_temperature
         show_name: false
         tap_action:
           action: more-info
@@ -1056,7 +1496,7 @@ cards:
                 const n = parseFloat(s.state);
                 return isNaN(n) ? '—' : n.toFixed(d);
               };
-              const ts = [variables.t1, variables.t2, variables.t3, variables.t4, variables.t5, variables.t6]
+              const ts = [variables.t1, variables.t2, variables.t3, variables.t4, variables.tamb, variables.tpow]
                 .map(v).filter(x => !isNaN(x));
               const minT = ts.length ? Math.min(...ts).toFixed(1) : '—';
               const maxT = ts.length ? Math.max(...ts).toFixed(1) : '—';
@@ -1104,6 +1544,109 @@ cards:
             bat:
               - justify-self: center
               - text-align: left
+      - type: custom:button-card
+        show_name: false
+        show_state: false
+        show_icon: false
+        variables:
+          state: text_sensor.pack2_live_system_state
+          alarms: text_sensor.pack2_live_active_alarms
+          charge: binary_sensor.pack2_live_charge_switch
+          discharge: binary_sensor.pack2_live_discharge_switch
+          bal: sensor.pack2_live_balancing_cells
+          inv: sensor.pack2_live_invalid_cells
+        styles:
+          card:
+            - background-color: rgba(61,61,61,0.8)
+            - border-radius: 10px
+            - padding: 8px 12px
+            - font-size: 12px
+        custom_fields:
+          info: |
+            [[[
+              const st = (e) => states[e] ? states[e].state : '—';
+              const s = st(variables.state);
+              const on = (e) => st(e) === 'on';
+              const c = on(variables.charge), d = on(variables.discharge);
+              const bal = parseFloat(st(variables.bal));
+              const inv = parseFloat(st(variables.inv));
+              const alarms = st(variables.alarms);
+              const good = (!alarms || alarms === 'none');
+              const stIcon = s === 'Charge' ? 'mdi:battery-charging' : s === 'Discharge' ? 'mdi:battery-arrow-down' : s === 'Standby' ? 'mdi:battery-clock' : s === 'Float' ? 'mdi:battery-heart' : s === 'Fully charged' ? 'mdi:battery-check' : 'mdi:battery';
+              const chip = (icon, text, col) => `<span style="display:inline-flex;align-items:center;margin-right:14px"><ha-icon icon="${icon}" style="width:15px;height:15px;color:${col}"></ha-icon><span style="margin-left:3px">${text}</span></span>`;
+              return '<div style="display:flex;flex-wrap:wrap;gap:2px">' +
+                chip(stIcon, s, '#7fd1ff') +
+                chip('mdi:alpha-c-box', c ? 'FET C on' : 'FET C off', c ? '#8bc34a' : '#ff5252') +
+                chip('mdi:alpha-d-box', d ? 'FET D on' : 'FET D off', d ? '#8bc34a' : '#ff5252') +
+                chip('mdi:scale-balance', isNaN(bal) ? 'bal —' : `bal ${bal}`, bal > 0 ? '#00e5ff' : '#9e9e9e') +
+                chip('mdi:alert-circle-outline', isNaN(inv) ? 'inv —' : `inv ${inv}`, inv > 0 ? '#ff5252' : '#9e9e9e') +
+                chip(good ? 'mdi:shield-check' : 'mdi:alert', good ? 'alarms: none' : alarms, good ? '#8bc34a' : '#ff5252') +
+                '</div>';
+            ]]]
+      - type: grid
+        square: false
+        columns: 3
+        cards:
+          - type: gauge
+            entity: sensor.pack2_live_temp_1
+            name: Temp 1
+            needle: true
+            min: 0
+            max: 60
+            severity:
+              yellow: 15
+              green: 40
+              red: 50
+          - type: gauge
+            entity: sensor.pack2_live_temp_2
+            name: Temp 2
+            needle: true
+            min: 0
+            max: 60
+            severity:
+              yellow: 15
+              green: 40
+              red: 50
+          - type: gauge
+            entity: sensor.pack2_live_temp_3
+            name: Temp 3
+            needle: true
+            min: 0
+            max: 60
+            severity:
+              yellow: 15
+              green: 40
+              red: 50
+          - type: gauge
+            entity: sensor.pack2_live_temp_4
+            name: Temp 4
+            needle: true
+            min: 0
+            max: 60
+            severity:
+              yellow: 15
+              green: 40
+              red: 50
+          - type: gauge
+            entity: sensor.pack2_live_environment_temperature
+            name: Ambient
+            needle: true
+            min: 0
+            max: 60
+            severity:
+              yellow: 15
+              green: 40
+              red: 50
+          - type: gauge
+            entity: sensor.pack2_live_power_temperature
+            name: Power
+            needle: true
+            min: 0
+            max: 60
+            severity:
+              yellow: 15
+              green: 40
+              red: 50
       - type: grid
         square: false
         columns: 3
@@ -1309,12 +1852,14 @@ cards:
             name: |
               [[[
                 const s = states['sensor.pack2_live_cell_1'];
+                const b = states['binary_sensor.pack2_live_cell_1_balancing'];
                 const sl = states['sensor.pack2_live_min_cell']; const sh = states['sensor.pack2_live_max_cell'];
                 if (!s) return 'Cell 1';
                 const v = parseFloat(s.state);
                 const lv = sl ? parseFloat(sl.state) : NaN;
                 const hv = sh ? parseFloat(sh.state) : NaN;
                 let n = 'Cell 1';
+                if (b && b.state === 'on') n += ' ⚡';
                 if (!isNaN(lv) && v === lv) n += ' (L)';
                 if (!isNaN(hv) && v === hv) n += ' (H)';
                 return n;
@@ -1337,7 +1882,26 @@ cards:
                       const v = parseFloat(s.state);
                       const lv = sl ? parseFloat(sl.state) : NaN;
                       const hv = sh ? parseFloat(sh.state) : NaN;
-                      return (!isNaN(lv) && v === lv) ? 'orange' : (!isNaN(hv) && v === hv) ? 'darkgreen' : 'green';
+                      return (!isNaN(lv) && v === lv) ? '#f9a825' : (!isNaN(hv) && v === hv) ? '#1b5e20' : '#2e7d32';
+                    ]]]
+                - color: |
+                    [[[
+                      const s = states['sensor.pack2_live_cell_1'];
+                      const sl = states['sensor.pack2_live_min_cell'];
+                      if (!s) return 'white';
+                      const v = parseFloat(s.state);
+                      const lv = sl ? parseFloat(sl.state) : NaN;
+                      return (!isNaN(lv) && v === lv) ? '#1a1a1a' : 'white';
+                    ]]]
+                - border: |
+                    [[[
+                      const b = states['binary_sensor.pack2_live_cell_1_balancing'];
+                      return (b && b.state === 'on') ? '3px solid #00e5ff' : '1px solid rgba(255,255,255,0.12)';
+                    ]]]
+                - box-shadow: |
+                    [[[
+                      const b = states['binary_sensor.pack2_live_cell_1_balancing'];
+                      return (b && b.state === 'on') ? '0px 0px 8px 2px #00e5ff' : 'none';
                     ]]]
               name:
                 - font-size: 0.6em
@@ -1348,12 +1912,14 @@ cards:
             name: |
               [[[
                 const s = states['sensor.pack2_live_cell_2'];
+                const b = states['binary_sensor.pack2_live_cell_2_balancing'];
                 const sl = states['sensor.pack2_live_min_cell']; const sh = states['sensor.pack2_live_max_cell'];
                 if (!s) return 'Cell 2';
                 const v = parseFloat(s.state);
                 const lv = sl ? parseFloat(sl.state) : NaN;
                 const hv = sh ? parseFloat(sh.state) : NaN;
                 let n = 'Cell 2';
+                if (b && b.state === 'on') n += ' ⚡';
                 if (!isNaN(lv) && v === lv) n += ' (L)';
                 if (!isNaN(hv) && v === hv) n += ' (H)';
                 return n;
@@ -1376,7 +1942,26 @@ cards:
                       const v = parseFloat(s.state);
                       const lv = sl ? parseFloat(sl.state) : NaN;
                       const hv = sh ? parseFloat(sh.state) : NaN;
-                      return (!isNaN(lv) && v === lv) ? 'orange' : (!isNaN(hv) && v === hv) ? 'darkgreen' : 'green';
+                      return (!isNaN(lv) && v === lv) ? '#f9a825' : (!isNaN(hv) && v === hv) ? '#1b5e20' : '#2e7d32';
+                    ]]]
+                - color: |
+                    [[[
+                      const s = states['sensor.pack2_live_cell_2'];
+                      const sl = states['sensor.pack2_live_min_cell'];
+                      if (!s) return 'white';
+                      const v = parseFloat(s.state);
+                      const lv = sl ? parseFloat(sl.state) : NaN;
+                      return (!isNaN(lv) && v === lv) ? '#1a1a1a' : 'white';
+                    ]]]
+                - border: |
+                    [[[
+                      const b = states['binary_sensor.pack2_live_cell_2_balancing'];
+                      return (b && b.state === 'on') ? '3px solid #00e5ff' : '1px solid rgba(255,255,255,0.12)';
+                    ]]]
+                - box-shadow: |
+                    [[[
+                      const b = states['binary_sensor.pack2_live_cell_2_balancing'];
+                      return (b && b.state === 'on') ? '0px 0px 8px 2px #00e5ff' : 'none';
                     ]]]
               name:
                 - font-size: 0.6em
@@ -1387,12 +1972,14 @@ cards:
             name: |
               [[[
                 const s = states['sensor.pack2_live_cell_3'];
+                const b = states['binary_sensor.pack2_live_cell_3_balancing'];
                 const sl = states['sensor.pack2_live_min_cell']; const sh = states['sensor.pack2_live_max_cell'];
                 if (!s) return 'Cell 3';
                 const v = parseFloat(s.state);
                 const lv = sl ? parseFloat(sl.state) : NaN;
                 const hv = sh ? parseFloat(sh.state) : NaN;
                 let n = 'Cell 3';
+                if (b && b.state === 'on') n += ' ⚡';
                 if (!isNaN(lv) && v === lv) n += ' (L)';
                 if (!isNaN(hv) && v === hv) n += ' (H)';
                 return n;
@@ -1415,7 +2002,26 @@ cards:
                       const v = parseFloat(s.state);
                       const lv = sl ? parseFloat(sl.state) : NaN;
                       const hv = sh ? parseFloat(sh.state) : NaN;
-                      return (!isNaN(lv) && v === lv) ? 'orange' : (!isNaN(hv) && v === hv) ? 'darkgreen' : 'green';
+                      return (!isNaN(lv) && v === lv) ? '#f9a825' : (!isNaN(hv) && v === hv) ? '#1b5e20' : '#2e7d32';
+                    ]]]
+                - color: |
+                    [[[
+                      const s = states['sensor.pack2_live_cell_3'];
+                      const sl = states['sensor.pack2_live_min_cell'];
+                      if (!s) return 'white';
+                      const v = parseFloat(s.state);
+                      const lv = sl ? parseFloat(sl.state) : NaN;
+                      return (!isNaN(lv) && v === lv) ? '#1a1a1a' : 'white';
+                    ]]]
+                - border: |
+                    [[[
+                      const b = states['binary_sensor.pack2_live_cell_3_balancing'];
+                      return (b && b.state === 'on') ? '3px solid #00e5ff' : '1px solid rgba(255,255,255,0.12)';
+                    ]]]
+                - box-shadow: |
+                    [[[
+                      const b = states['binary_sensor.pack2_live_cell_3_balancing'];
+                      return (b && b.state === 'on') ? '0px 0px 8px 2px #00e5ff' : 'none';
                     ]]]
               name:
                 - font-size: 0.6em
@@ -1426,12 +2032,14 @@ cards:
             name: |
               [[[
                 const s = states['sensor.pack2_live_cell_4'];
+                const b = states['binary_sensor.pack2_live_cell_4_balancing'];
                 const sl = states['sensor.pack2_live_min_cell']; const sh = states['sensor.pack2_live_max_cell'];
                 if (!s) return 'Cell 4';
                 const v = parseFloat(s.state);
                 const lv = sl ? parseFloat(sl.state) : NaN;
                 const hv = sh ? parseFloat(sh.state) : NaN;
                 let n = 'Cell 4';
+                if (b && b.state === 'on') n += ' ⚡';
                 if (!isNaN(lv) && v === lv) n += ' (L)';
                 if (!isNaN(hv) && v === hv) n += ' (H)';
                 return n;
@@ -1454,7 +2062,26 @@ cards:
                       const v = parseFloat(s.state);
                       const lv = sl ? parseFloat(sl.state) : NaN;
                       const hv = sh ? parseFloat(sh.state) : NaN;
-                      return (!isNaN(lv) && v === lv) ? 'orange' : (!isNaN(hv) && v === hv) ? 'darkgreen' : 'green';
+                      return (!isNaN(lv) && v === lv) ? '#f9a825' : (!isNaN(hv) && v === hv) ? '#1b5e20' : '#2e7d32';
+                    ]]]
+                - color: |
+                    [[[
+                      const s = states['sensor.pack2_live_cell_4'];
+                      const sl = states['sensor.pack2_live_min_cell'];
+                      if (!s) return 'white';
+                      const v = parseFloat(s.state);
+                      const lv = sl ? parseFloat(sl.state) : NaN;
+                      return (!isNaN(lv) && v === lv) ? '#1a1a1a' : 'white';
+                    ]]]
+                - border: |
+                    [[[
+                      const b = states['binary_sensor.pack2_live_cell_4_balancing'];
+                      return (b && b.state === 'on') ? '3px solid #00e5ff' : '1px solid rgba(255,255,255,0.12)';
+                    ]]]
+                - box-shadow: |
+                    [[[
+                      const b = states['binary_sensor.pack2_live_cell_4_balancing'];
+                      return (b && b.state === 'on') ? '0px 0px 8px 2px #00e5ff' : 'none';
                     ]]]
               name:
                 - font-size: 0.6em
@@ -1465,12 +2092,14 @@ cards:
             name: |
               [[[
                 const s = states['sensor.pack2_live_cell_5'];
+                const b = states['binary_sensor.pack2_live_cell_5_balancing'];
                 const sl = states['sensor.pack2_live_min_cell']; const sh = states['sensor.pack2_live_max_cell'];
                 if (!s) return 'Cell 5';
                 const v = parseFloat(s.state);
                 const lv = sl ? parseFloat(sl.state) : NaN;
                 const hv = sh ? parseFloat(sh.state) : NaN;
                 let n = 'Cell 5';
+                if (b && b.state === 'on') n += ' ⚡';
                 if (!isNaN(lv) && v === lv) n += ' (L)';
                 if (!isNaN(hv) && v === hv) n += ' (H)';
                 return n;
@@ -1493,7 +2122,26 @@ cards:
                       const v = parseFloat(s.state);
                       const lv = sl ? parseFloat(sl.state) : NaN;
                       const hv = sh ? parseFloat(sh.state) : NaN;
-                      return (!isNaN(lv) && v === lv) ? 'orange' : (!isNaN(hv) && v === hv) ? 'darkgreen' : 'green';
+                      return (!isNaN(lv) && v === lv) ? '#f9a825' : (!isNaN(hv) && v === hv) ? '#1b5e20' : '#2e7d32';
+                    ]]]
+                - color: |
+                    [[[
+                      const s = states['sensor.pack2_live_cell_5'];
+                      const sl = states['sensor.pack2_live_min_cell'];
+                      if (!s) return 'white';
+                      const v = parseFloat(s.state);
+                      const lv = sl ? parseFloat(sl.state) : NaN;
+                      return (!isNaN(lv) && v === lv) ? '#1a1a1a' : 'white';
+                    ]]]
+                - border: |
+                    [[[
+                      const b = states['binary_sensor.pack2_live_cell_5_balancing'];
+                      return (b && b.state === 'on') ? '3px solid #00e5ff' : '1px solid rgba(255,255,255,0.12)';
+                    ]]]
+                - box-shadow: |
+                    [[[
+                      const b = states['binary_sensor.pack2_live_cell_5_balancing'];
+                      return (b && b.state === 'on') ? '0px 0px 8px 2px #00e5ff' : 'none';
                     ]]]
               name:
                 - font-size: 0.6em
@@ -1504,12 +2152,14 @@ cards:
             name: |
               [[[
                 const s = states['sensor.pack2_live_cell_6'];
+                const b = states['binary_sensor.pack2_live_cell_6_balancing'];
                 const sl = states['sensor.pack2_live_min_cell']; const sh = states['sensor.pack2_live_max_cell'];
                 if (!s) return 'Cell 6';
                 const v = parseFloat(s.state);
                 const lv = sl ? parseFloat(sl.state) : NaN;
                 const hv = sh ? parseFloat(sh.state) : NaN;
                 let n = 'Cell 6';
+                if (b && b.state === 'on') n += ' ⚡';
                 if (!isNaN(lv) && v === lv) n += ' (L)';
                 if (!isNaN(hv) && v === hv) n += ' (H)';
                 return n;
@@ -1532,7 +2182,26 @@ cards:
                       const v = parseFloat(s.state);
                       const lv = sl ? parseFloat(sl.state) : NaN;
                       const hv = sh ? parseFloat(sh.state) : NaN;
-                      return (!isNaN(lv) && v === lv) ? 'orange' : (!isNaN(hv) && v === hv) ? 'darkgreen' : 'green';
+                      return (!isNaN(lv) && v === lv) ? '#f9a825' : (!isNaN(hv) && v === hv) ? '#1b5e20' : '#2e7d32';
+                    ]]]
+                - color: |
+                    [[[
+                      const s = states['sensor.pack2_live_cell_6'];
+                      const sl = states['sensor.pack2_live_min_cell'];
+                      if (!s) return 'white';
+                      const v = parseFloat(s.state);
+                      const lv = sl ? parseFloat(sl.state) : NaN;
+                      return (!isNaN(lv) && v === lv) ? '#1a1a1a' : 'white';
+                    ]]]
+                - border: |
+                    [[[
+                      const b = states['binary_sensor.pack2_live_cell_6_balancing'];
+                      return (b && b.state === 'on') ? '3px solid #00e5ff' : '1px solid rgba(255,255,255,0.12)';
+                    ]]]
+                - box-shadow: |
+                    [[[
+                      const b = states['binary_sensor.pack2_live_cell_6_balancing'];
+                      return (b && b.state === 'on') ? '0px 0px 8px 2px #00e5ff' : 'none';
                     ]]]
               name:
                 - font-size: 0.6em
@@ -1543,12 +2212,14 @@ cards:
             name: |
               [[[
                 const s = states['sensor.pack2_live_cell_7'];
+                const b = states['binary_sensor.pack2_live_cell_7_balancing'];
                 const sl = states['sensor.pack2_live_min_cell']; const sh = states['sensor.pack2_live_max_cell'];
                 if (!s) return 'Cell 7';
                 const v = parseFloat(s.state);
                 const lv = sl ? parseFloat(sl.state) : NaN;
                 const hv = sh ? parseFloat(sh.state) : NaN;
                 let n = 'Cell 7';
+                if (b && b.state === 'on') n += ' ⚡';
                 if (!isNaN(lv) && v === lv) n += ' (L)';
                 if (!isNaN(hv) && v === hv) n += ' (H)';
                 return n;
@@ -1571,7 +2242,26 @@ cards:
                       const v = parseFloat(s.state);
                       const lv = sl ? parseFloat(sl.state) : NaN;
                       const hv = sh ? parseFloat(sh.state) : NaN;
-                      return (!isNaN(lv) && v === lv) ? 'orange' : (!isNaN(hv) && v === hv) ? 'darkgreen' : 'green';
+                      return (!isNaN(lv) && v === lv) ? '#f9a825' : (!isNaN(hv) && v === hv) ? '#1b5e20' : '#2e7d32';
+                    ]]]
+                - color: |
+                    [[[
+                      const s = states['sensor.pack2_live_cell_7'];
+                      const sl = states['sensor.pack2_live_min_cell'];
+                      if (!s) return 'white';
+                      const v = parseFloat(s.state);
+                      const lv = sl ? parseFloat(sl.state) : NaN;
+                      return (!isNaN(lv) && v === lv) ? '#1a1a1a' : 'white';
+                    ]]]
+                - border: |
+                    [[[
+                      const b = states['binary_sensor.pack2_live_cell_7_balancing'];
+                      return (b && b.state === 'on') ? '3px solid #00e5ff' : '1px solid rgba(255,255,255,0.12)';
+                    ]]]
+                - box-shadow: |
+                    [[[
+                      const b = states['binary_sensor.pack2_live_cell_7_balancing'];
+                      return (b && b.state === 'on') ? '0px 0px 8px 2px #00e5ff' : 'none';
                     ]]]
               name:
                 - font-size: 0.6em
@@ -1582,12 +2272,14 @@ cards:
             name: |
               [[[
                 const s = states['sensor.pack2_live_cell_8'];
+                const b = states['binary_sensor.pack2_live_cell_8_balancing'];
                 const sl = states['sensor.pack2_live_min_cell']; const sh = states['sensor.pack2_live_max_cell'];
                 if (!s) return 'Cell 8';
                 const v = parseFloat(s.state);
                 const lv = sl ? parseFloat(sl.state) : NaN;
                 const hv = sh ? parseFloat(sh.state) : NaN;
                 let n = 'Cell 8';
+                if (b && b.state === 'on') n += ' ⚡';
                 if (!isNaN(lv) && v === lv) n += ' (L)';
                 if (!isNaN(hv) && v === hv) n += ' (H)';
                 return n;
@@ -1610,7 +2302,26 @@ cards:
                       const v = parseFloat(s.state);
                       const lv = sl ? parseFloat(sl.state) : NaN;
                       const hv = sh ? parseFloat(sh.state) : NaN;
-                      return (!isNaN(lv) && v === lv) ? 'orange' : (!isNaN(hv) && v === hv) ? 'darkgreen' : 'green';
+                      return (!isNaN(lv) && v === lv) ? '#f9a825' : (!isNaN(hv) && v === hv) ? '#1b5e20' : '#2e7d32';
+                    ]]]
+                - color: |
+                    [[[
+                      const s = states['sensor.pack2_live_cell_8'];
+                      const sl = states['sensor.pack2_live_min_cell'];
+                      if (!s) return 'white';
+                      const v = parseFloat(s.state);
+                      const lv = sl ? parseFloat(sl.state) : NaN;
+                      return (!isNaN(lv) && v === lv) ? '#1a1a1a' : 'white';
+                    ]]]
+                - border: |
+                    [[[
+                      const b = states['binary_sensor.pack2_live_cell_8_balancing'];
+                      return (b && b.state === 'on') ? '3px solid #00e5ff' : '1px solid rgba(255,255,255,0.12)';
+                    ]]]
+                - box-shadow: |
+                    [[[
+                      const b = states['binary_sensor.pack2_live_cell_8_balancing'];
+                      return (b && b.state === 'on') ? '0px 0px 8px 2px #00e5ff' : 'none';
                     ]]]
               name:
                 - font-size: 0.6em
@@ -1621,12 +2332,14 @@ cards:
             name: |
               [[[
                 const s = states['sensor.pack2_live_cell_9'];
+                const b = states['binary_sensor.pack2_live_cell_9_balancing'];
                 const sl = states['sensor.pack2_live_min_cell']; const sh = states['sensor.pack2_live_max_cell'];
                 if (!s) return 'Cell 9';
                 const v = parseFloat(s.state);
                 const lv = sl ? parseFloat(sl.state) : NaN;
                 const hv = sh ? parseFloat(sh.state) : NaN;
                 let n = 'Cell 9';
+                if (b && b.state === 'on') n += ' ⚡';
                 if (!isNaN(lv) && v === lv) n += ' (L)';
                 if (!isNaN(hv) && v === hv) n += ' (H)';
                 return n;
@@ -1649,7 +2362,26 @@ cards:
                       const v = parseFloat(s.state);
                       const lv = sl ? parseFloat(sl.state) : NaN;
                       const hv = sh ? parseFloat(sh.state) : NaN;
-                      return (!isNaN(lv) && v === lv) ? 'orange' : (!isNaN(hv) && v === hv) ? 'darkgreen' : 'green';
+                      return (!isNaN(lv) && v === lv) ? '#f9a825' : (!isNaN(hv) && v === hv) ? '#1b5e20' : '#2e7d32';
+                    ]]]
+                - color: |
+                    [[[
+                      const s = states['sensor.pack2_live_cell_9'];
+                      const sl = states['sensor.pack2_live_min_cell'];
+                      if (!s) return 'white';
+                      const v = parseFloat(s.state);
+                      const lv = sl ? parseFloat(sl.state) : NaN;
+                      return (!isNaN(lv) && v === lv) ? '#1a1a1a' : 'white';
+                    ]]]
+                - border: |
+                    [[[
+                      const b = states['binary_sensor.pack2_live_cell_9_balancing'];
+                      return (b && b.state === 'on') ? '3px solid #00e5ff' : '1px solid rgba(255,255,255,0.12)';
+                    ]]]
+                - box-shadow: |
+                    [[[
+                      const b = states['binary_sensor.pack2_live_cell_9_balancing'];
+                      return (b && b.state === 'on') ? '0px 0px 8px 2px #00e5ff' : 'none';
                     ]]]
               name:
                 - font-size: 0.6em
@@ -1660,12 +2392,14 @@ cards:
             name: |
               [[[
                 const s = states['sensor.pack2_live_cell_10'];
+                const b = states['binary_sensor.pack2_live_cell_10_balancing'];
                 const sl = states['sensor.pack2_live_min_cell']; const sh = states['sensor.pack2_live_max_cell'];
                 if (!s) return 'Cell 10';
                 const v = parseFloat(s.state);
                 const lv = sl ? parseFloat(sl.state) : NaN;
                 const hv = sh ? parseFloat(sh.state) : NaN;
                 let n = 'Cell 10';
+                if (b && b.state === 'on') n += ' ⚡';
                 if (!isNaN(lv) && v === lv) n += ' (L)';
                 if (!isNaN(hv) && v === hv) n += ' (H)';
                 return n;
@@ -1688,7 +2422,26 @@ cards:
                       const v = parseFloat(s.state);
                       const lv = sl ? parseFloat(sl.state) : NaN;
                       const hv = sh ? parseFloat(sh.state) : NaN;
-                      return (!isNaN(lv) && v === lv) ? 'orange' : (!isNaN(hv) && v === hv) ? 'darkgreen' : 'green';
+                      return (!isNaN(lv) && v === lv) ? '#f9a825' : (!isNaN(hv) && v === hv) ? '#1b5e20' : '#2e7d32';
+                    ]]]
+                - color: |
+                    [[[
+                      const s = states['sensor.pack2_live_cell_10'];
+                      const sl = states['sensor.pack2_live_min_cell'];
+                      if (!s) return 'white';
+                      const v = parseFloat(s.state);
+                      const lv = sl ? parseFloat(sl.state) : NaN;
+                      return (!isNaN(lv) && v === lv) ? '#1a1a1a' : 'white';
+                    ]]]
+                - border: |
+                    [[[
+                      const b = states['binary_sensor.pack2_live_cell_10_balancing'];
+                      return (b && b.state === 'on') ? '3px solid #00e5ff' : '1px solid rgba(255,255,255,0.12)';
+                    ]]]
+                - box-shadow: |
+                    [[[
+                      const b = states['binary_sensor.pack2_live_cell_10_balancing'];
+                      return (b && b.state === 'on') ? '0px 0px 8px 2px #00e5ff' : 'none';
                     ]]]
               name:
                 - font-size: 0.6em
@@ -1699,12 +2452,14 @@ cards:
             name: |
               [[[
                 const s = states['sensor.pack2_live_cell_11'];
+                const b = states['binary_sensor.pack2_live_cell_11_balancing'];
                 const sl = states['sensor.pack2_live_min_cell']; const sh = states['sensor.pack2_live_max_cell'];
                 if (!s) return 'Cell 11';
                 const v = parseFloat(s.state);
                 const lv = sl ? parseFloat(sl.state) : NaN;
                 const hv = sh ? parseFloat(sh.state) : NaN;
                 let n = 'Cell 11';
+                if (b && b.state === 'on') n += ' ⚡';
                 if (!isNaN(lv) && v === lv) n += ' (L)';
                 if (!isNaN(hv) && v === hv) n += ' (H)';
                 return n;
@@ -1727,7 +2482,26 @@ cards:
                       const v = parseFloat(s.state);
                       const lv = sl ? parseFloat(sl.state) : NaN;
                       const hv = sh ? parseFloat(sh.state) : NaN;
-                      return (!isNaN(lv) && v === lv) ? 'orange' : (!isNaN(hv) && v === hv) ? 'darkgreen' : 'green';
+                      return (!isNaN(lv) && v === lv) ? '#f9a825' : (!isNaN(hv) && v === hv) ? '#1b5e20' : '#2e7d32';
+                    ]]]
+                - color: |
+                    [[[
+                      const s = states['sensor.pack2_live_cell_11'];
+                      const sl = states['sensor.pack2_live_min_cell'];
+                      if (!s) return 'white';
+                      const v = parseFloat(s.state);
+                      const lv = sl ? parseFloat(sl.state) : NaN;
+                      return (!isNaN(lv) && v === lv) ? '#1a1a1a' : 'white';
+                    ]]]
+                - border: |
+                    [[[
+                      const b = states['binary_sensor.pack2_live_cell_11_balancing'];
+                      return (b && b.state === 'on') ? '3px solid #00e5ff' : '1px solid rgba(255,255,255,0.12)';
+                    ]]]
+                - box-shadow: |
+                    [[[
+                      const b = states['binary_sensor.pack2_live_cell_11_balancing'];
+                      return (b && b.state === 'on') ? '0px 0px 8px 2px #00e5ff' : 'none';
                     ]]]
               name:
                 - font-size: 0.6em
@@ -1738,12 +2512,14 @@ cards:
             name: |
               [[[
                 const s = states['sensor.pack2_live_cell_12'];
+                const b = states['binary_sensor.pack2_live_cell_12_balancing'];
                 const sl = states['sensor.pack2_live_min_cell']; const sh = states['sensor.pack2_live_max_cell'];
                 if (!s) return 'Cell 12';
                 const v = parseFloat(s.state);
                 const lv = sl ? parseFloat(sl.state) : NaN;
                 const hv = sh ? parseFloat(sh.state) : NaN;
                 let n = 'Cell 12';
+                if (b && b.state === 'on') n += ' ⚡';
                 if (!isNaN(lv) && v === lv) n += ' (L)';
                 if (!isNaN(hv) && v === hv) n += ' (H)';
                 return n;
@@ -1766,7 +2542,26 @@ cards:
                       const v = parseFloat(s.state);
                       const lv = sl ? parseFloat(sl.state) : NaN;
                       const hv = sh ? parseFloat(sh.state) : NaN;
-                      return (!isNaN(lv) && v === lv) ? 'orange' : (!isNaN(hv) && v === hv) ? 'darkgreen' : 'green';
+                      return (!isNaN(lv) && v === lv) ? '#f9a825' : (!isNaN(hv) && v === hv) ? '#1b5e20' : '#2e7d32';
+                    ]]]
+                - color: |
+                    [[[
+                      const s = states['sensor.pack2_live_cell_12'];
+                      const sl = states['sensor.pack2_live_min_cell'];
+                      if (!s) return 'white';
+                      const v = parseFloat(s.state);
+                      const lv = sl ? parseFloat(sl.state) : NaN;
+                      return (!isNaN(lv) && v === lv) ? '#1a1a1a' : 'white';
+                    ]]]
+                - border: |
+                    [[[
+                      const b = states['binary_sensor.pack2_live_cell_12_balancing'];
+                      return (b && b.state === 'on') ? '3px solid #00e5ff' : '1px solid rgba(255,255,255,0.12)';
+                    ]]]
+                - box-shadow: |
+                    [[[
+                      const b = states['binary_sensor.pack2_live_cell_12_balancing'];
+                      return (b && b.state === 'on') ? '0px 0px 8px 2px #00e5ff' : 'none';
                     ]]]
               name:
                 - font-size: 0.6em
@@ -1777,12 +2572,14 @@ cards:
             name: |
               [[[
                 const s = states['sensor.pack2_live_cell_13'];
+                const b = states['binary_sensor.pack2_live_cell_13_balancing'];
                 const sl = states['sensor.pack2_live_min_cell']; const sh = states['sensor.pack2_live_max_cell'];
                 if (!s) return 'Cell 13';
                 const v = parseFloat(s.state);
                 const lv = sl ? parseFloat(sl.state) : NaN;
                 const hv = sh ? parseFloat(sh.state) : NaN;
                 let n = 'Cell 13';
+                if (b && b.state === 'on') n += ' ⚡';
                 if (!isNaN(lv) && v === lv) n += ' (L)';
                 if (!isNaN(hv) && v === hv) n += ' (H)';
                 return n;
@@ -1805,7 +2602,26 @@ cards:
                       const v = parseFloat(s.state);
                       const lv = sl ? parseFloat(sl.state) : NaN;
                       const hv = sh ? parseFloat(sh.state) : NaN;
-                      return (!isNaN(lv) && v === lv) ? 'orange' : (!isNaN(hv) && v === hv) ? 'darkgreen' : 'green';
+                      return (!isNaN(lv) && v === lv) ? '#f9a825' : (!isNaN(hv) && v === hv) ? '#1b5e20' : '#2e7d32';
+                    ]]]
+                - color: |
+                    [[[
+                      const s = states['sensor.pack2_live_cell_13'];
+                      const sl = states['sensor.pack2_live_min_cell'];
+                      if (!s) return 'white';
+                      const v = parseFloat(s.state);
+                      const lv = sl ? parseFloat(sl.state) : NaN;
+                      return (!isNaN(lv) && v === lv) ? '#1a1a1a' : 'white';
+                    ]]]
+                - border: |
+                    [[[
+                      const b = states['binary_sensor.pack2_live_cell_13_balancing'];
+                      return (b && b.state === 'on') ? '3px solid #00e5ff' : '1px solid rgba(255,255,255,0.12)';
+                    ]]]
+                - box-shadow: |
+                    [[[
+                      const b = states['binary_sensor.pack2_live_cell_13_balancing'];
+                      return (b && b.state === 'on') ? '0px 0px 8px 2px #00e5ff' : 'none';
                     ]]]
               name:
                 - font-size: 0.6em
@@ -1816,12 +2632,14 @@ cards:
             name: |
               [[[
                 const s = states['sensor.pack2_live_cell_14'];
+                const b = states['binary_sensor.pack2_live_cell_14_balancing'];
                 const sl = states['sensor.pack2_live_min_cell']; const sh = states['sensor.pack2_live_max_cell'];
                 if (!s) return 'Cell 14';
                 const v = parseFloat(s.state);
                 const lv = sl ? parseFloat(sl.state) : NaN;
                 const hv = sh ? parseFloat(sh.state) : NaN;
                 let n = 'Cell 14';
+                if (b && b.state === 'on') n += ' ⚡';
                 if (!isNaN(lv) && v === lv) n += ' (L)';
                 if (!isNaN(hv) && v === hv) n += ' (H)';
                 return n;
@@ -1844,7 +2662,26 @@ cards:
                       const v = parseFloat(s.state);
                       const lv = sl ? parseFloat(sl.state) : NaN;
                       const hv = sh ? parseFloat(sh.state) : NaN;
-                      return (!isNaN(lv) && v === lv) ? 'orange' : (!isNaN(hv) && v === hv) ? 'darkgreen' : 'green';
+                      return (!isNaN(lv) && v === lv) ? '#f9a825' : (!isNaN(hv) && v === hv) ? '#1b5e20' : '#2e7d32';
+                    ]]]
+                - color: |
+                    [[[
+                      const s = states['sensor.pack2_live_cell_14'];
+                      const sl = states['sensor.pack2_live_min_cell'];
+                      if (!s) return 'white';
+                      const v = parseFloat(s.state);
+                      const lv = sl ? parseFloat(sl.state) : NaN;
+                      return (!isNaN(lv) && v === lv) ? '#1a1a1a' : 'white';
+                    ]]]
+                - border: |
+                    [[[
+                      const b = states['binary_sensor.pack2_live_cell_14_balancing'];
+                      return (b && b.state === 'on') ? '3px solid #00e5ff' : '1px solid rgba(255,255,255,0.12)';
+                    ]]]
+                - box-shadow: |
+                    [[[
+                      const b = states['binary_sensor.pack2_live_cell_14_balancing'];
+                      return (b && b.state === 'on') ? '0px 0px 8px 2px #00e5ff' : 'none';
                     ]]]
               name:
                 - font-size: 0.6em
@@ -1855,12 +2692,14 @@ cards:
             name: |
               [[[
                 const s = states['sensor.pack2_live_cell_15'];
+                const b = states['binary_sensor.pack2_live_cell_15_balancing'];
                 const sl = states['sensor.pack2_live_min_cell']; const sh = states['sensor.pack2_live_max_cell'];
                 if (!s) return 'Cell 15';
                 const v = parseFloat(s.state);
                 const lv = sl ? parseFloat(sl.state) : NaN;
                 const hv = sh ? parseFloat(sh.state) : NaN;
                 let n = 'Cell 15';
+                if (b && b.state === 'on') n += ' ⚡';
                 if (!isNaN(lv) && v === lv) n += ' (L)';
                 if (!isNaN(hv) && v === hv) n += ' (H)';
                 return n;
@@ -1883,7 +2722,26 @@ cards:
                       const v = parseFloat(s.state);
                       const lv = sl ? parseFloat(sl.state) : NaN;
                       const hv = sh ? parseFloat(sh.state) : NaN;
-                      return (!isNaN(lv) && v === lv) ? 'orange' : (!isNaN(hv) && v === hv) ? 'darkgreen' : 'green';
+                      return (!isNaN(lv) && v === lv) ? '#f9a825' : (!isNaN(hv) && v === hv) ? '#1b5e20' : '#2e7d32';
+                    ]]]
+                - color: |
+                    [[[
+                      const s = states['sensor.pack2_live_cell_15'];
+                      const sl = states['sensor.pack2_live_min_cell'];
+                      if (!s) return 'white';
+                      const v = parseFloat(s.state);
+                      const lv = sl ? parseFloat(sl.state) : NaN;
+                      return (!isNaN(lv) && v === lv) ? '#1a1a1a' : 'white';
+                    ]]]
+                - border: |
+                    [[[
+                      const b = states['binary_sensor.pack2_live_cell_15_balancing'];
+                      return (b && b.state === 'on') ? '3px solid #00e5ff' : '1px solid rgba(255,255,255,0.12)';
+                    ]]]
+                - box-shadow: |
+                    [[[
+                      const b = states['binary_sensor.pack2_live_cell_15_balancing'];
+                      return (b && b.state === 'on') ? '0px 0px 8px 2px #00e5ff' : 'none';
                     ]]]
               name:
                 - font-size: 0.6em
@@ -1894,12 +2752,14 @@ cards:
             name: |
               [[[
                 const s = states['sensor.pack2_live_cell_16'];
+                const b = states['binary_sensor.pack2_live_cell_16_balancing'];
                 const sl = states['sensor.pack2_live_min_cell']; const sh = states['sensor.pack2_live_max_cell'];
                 if (!s) return 'Cell 16';
                 const v = parseFloat(s.state);
                 const lv = sl ? parseFloat(sl.state) : NaN;
                 const hv = sh ? parseFloat(sh.state) : NaN;
                 let n = 'Cell 16';
+                if (b && b.state === 'on') n += ' ⚡';
                 if (!isNaN(lv) && v === lv) n += ' (L)';
                 if (!isNaN(hv) && v === hv) n += ' (H)';
                 return n;
@@ -1922,7 +2782,26 @@ cards:
                       const v = parseFloat(s.state);
                       const lv = sl ? parseFloat(sl.state) : NaN;
                       const hv = sh ? parseFloat(sh.state) : NaN;
-                      return (!isNaN(lv) && v === lv) ? 'orange' : (!isNaN(hv) && v === hv) ? 'darkgreen' : 'green';
+                      return (!isNaN(lv) && v === lv) ? '#f9a825' : (!isNaN(hv) && v === hv) ? '#1b5e20' : '#2e7d32';
+                    ]]]
+                - color: |
+                    [[[
+                      const s = states['sensor.pack2_live_cell_16'];
+                      const sl = states['sensor.pack2_live_min_cell'];
+                      if (!s) return 'white';
+                      const v = parseFloat(s.state);
+                      const lv = sl ? parseFloat(sl.state) : NaN;
+                      return (!isNaN(lv) && v === lv) ? '#1a1a1a' : 'white';
+                    ]]]
+                - border: |
+                    [[[
+                      const b = states['binary_sensor.pack2_live_cell_16_balancing'];
+                      return (b && b.state === 'on') ? '3px solid #00e5ff' : '1px solid rgba(255,255,255,0.12)';
+                    ]]]
+                - box-shadow: |
+                    [[[
+                      const b = states['binary_sensor.pack2_live_cell_16_balancing'];
+                      return (b && b.state === 'on') ? '0px 0px 8px 2px #00e5ff' : 'none';
                     ]]]
               name:
                 - font-size: 0.6em
@@ -1945,8 +2824,8 @@ cards:
           t2: sensor.pack3_live_temp_2
           t3: sensor.pack3_live_temp_3
           t4: sensor.pack3_live_temp_4
-          t5: sensor.pack3_live_temp_5
-          t6: sensor.pack3_live_temp_6
+          tamb: sensor.pack3_live_environment_temperature
+          tpow: sensor.pack3_live_power_temperature
         show_name: false
         tap_action:
           action: more-info
@@ -2018,7 +2897,7 @@ cards:
                 const n = parseFloat(s.state);
                 return isNaN(n) ? '—' : n.toFixed(d);
               };
-              const ts = [variables.t1, variables.t2, variables.t3, variables.t4, variables.t5, variables.t6]
+              const ts = [variables.t1, variables.t2, variables.t3, variables.t4, variables.tamb, variables.tpow]
                 .map(v).filter(x => !isNaN(x));
               const minT = ts.length ? Math.min(...ts).toFixed(1) : '—';
               const maxT = ts.length ? Math.max(...ts).toFixed(1) : '—';
@@ -2066,6 +2945,109 @@ cards:
             bat:
               - justify-self: center
               - text-align: left
+      - type: custom:button-card
+        show_name: false
+        show_state: false
+        show_icon: false
+        variables:
+          state: text_sensor.pack3_live_system_state
+          alarms: text_sensor.pack3_live_active_alarms
+          charge: binary_sensor.pack3_live_charge_switch
+          discharge: binary_sensor.pack3_live_discharge_switch
+          bal: sensor.pack3_live_balancing_cells
+          inv: sensor.pack3_live_invalid_cells
+        styles:
+          card:
+            - background-color: rgba(61,61,61,0.8)
+            - border-radius: 10px
+            - padding: 8px 12px
+            - font-size: 12px
+        custom_fields:
+          info: |
+            [[[
+              const st = (e) => states[e] ? states[e].state : '—';
+              const s = st(variables.state);
+              const on = (e) => st(e) === 'on';
+              const c = on(variables.charge), d = on(variables.discharge);
+              const bal = parseFloat(st(variables.bal));
+              const inv = parseFloat(st(variables.inv));
+              const alarms = st(variables.alarms);
+              const good = (!alarms || alarms === 'none');
+              const stIcon = s === 'Charge' ? 'mdi:battery-charging' : s === 'Discharge' ? 'mdi:battery-arrow-down' : s === 'Standby' ? 'mdi:battery-clock' : s === 'Float' ? 'mdi:battery-heart' : s === 'Fully charged' ? 'mdi:battery-check' : 'mdi:battery';
+              const chip = (icon, text, col) => `<span style="display:inline-flex;align-items:center;margin-right:14px"><ha-icon icon="${icon}" style="width:15px;height:15px;color:${col}"></ha-icon><span style="margin-left:3px">${text}</span></span>`;
+              return '<div style="display:flex;flex-wrap:wrap;gap:2px">' +
+                chip(stIcon, s, '#7fd1ff') +
+                chip('mdi:alpha-c-box', c ? 'FET C on' : 'FET C off', c ? '#8bc34a' : '#ff5252') +
+                chip('mdi:alpha-d-box', d ? 'FET D on' : 'FET D off', d ? '#8bc34a' : '#ff5252') +
+                chip('mdi:scale-balance', isNaN(bal) ? 'bal —' : `bal ${bal}`, bal > 0 ? '#00e5ff' : '#9e9e9e') +
+                chip('mdi:alert-circle-outline', isNaN(inv) ? 'inv —' : `inv ${inv}`, inv > 0 ? '#ff5252' : '#9e9e9e') +
+                chip(good ? 'mdi:shield-check' : 'mdi:alert', good ? 'alarms: none' : alarms, good ? '#8bc34a' : '#ff5252') +
+                '</div>';
+            ]]]
+      - type: grid
+        square: false
+        columns: 3
+        cards:
+          - type: gauge
+            entity: sensor.pack3_live_temp_1
+            name: Temp 1
+            needle: true
+            min: 0
+            max: 60
+            severity:
+              yellow: 15
+              green: 40
+              red: 50
+          - type: gauge
+            entity: sensor.pack3_live_temp_2
+            name: Temp 2
+            needle: true
+            min: 0
+            max: 60
+            severity:
+              yellow: 15
+              green: 40
+              red: 50
+          - type: gauge
+            entity: sensor.pack3_live_temp_3
+            name: Temp 3
+            needle: true
+            min: 0
+            max: 60
+            severity:
+              yellow: 15
+              green: 40
+              red: 50
+          - type: gauge
+            entity: sensor.pack3_live_temp_4
+            name: Temp 4
+            needle: true
+            min: 0
+            max: 60
+            severity:
+              yellow: 15
+              green: 40
+              red: 50
+          - type: gauge
+            entity: sensor.pack3_live_environment_temperature
+            name: Ambient
+            needle: true
+            min: 0
+            max: 60
+            severity:
+              yellow: 15
+              green: 40
+              red: 50
+          - type: gauge
+            entity: sensor.pack3_live_power_temperature
+            name: Power
+            needle: true
+            min: 0
+            max: 60
+            severity:
+              yellow: 15
+              green: 40
+              red: 50
       - type: grid
         square: false
         columns: 3
@@ -2271,12 +3253,14 @@ cards:
             name: |
               [[[
                 const s = states['sensor.pack3_live_cell_1'];
+                const b = states['binary_sensor.pack3_live_cell_1_balancing'];
                 const sl = states['sensor.pack3_live_min_cell']; const sh = states['sensor.pack3_live_max_cell'];
                 if (!s) return 'Cell 1';
                 const v = parseFloat(s.state);
                 const lv = sl ? parseFloat(sl.state) : NaN;
                 const hv = sh ? parseFloat(sh.state) : NaN;
                 let n = 'Cell 1';
+                if (b && b.state === 'on') n += ' ⚡';
                 if (!isNaN(lv) && v === lv) n += ' (L)';
                 if (!isNaN(hv) && v === hv) n += ' (H)';
                 return n;
@@ -2299,7 +3283,26 @@ cards:
                       const v = parseFloat(s.state);
                       const lv = sl ? parseFloat(sl.state) : NaN;
                       const hv = sh ? parseFloat(sh.state) : NaN;
-                      return (!isNaN(lv) && v === lv) ? 'orange' : (!isNaN(hv) && v === hv) ? 'darkgreen' : 'green';
+                      return (!isNaN(lv) && v === lv) ? '#f9a825' : (!isNaN(hv) && v === hv) ? '#1b5e20' : '#2e7d32';
+                    ]]]
+                - color: |
+                    [[[
+                      const s = states['sensor.pack3_live_cell_1'];
+                      const sl = states['sensor.pack3_live_min_cell'];
+                      if (!s) return 'white';
+                      const v = parseFloat(s.state);
+                      const lv = sl ? parseFloat(sl.state) : NaN;
+                      return (!isNaN(lv) && v === lv) ? '#1a1a1a' : 'white';
+                    ]]]
+                - border: |
+                    [[[
+                      const b = states['binary_sensor.pack3_live_cell_1_balancing'];
+                      return (b && b.state === 'on') ? '3px solid #00e5ff' : '1px solid rgba(255,255,255,0.12)';
+                    ]]]
+                - box-shadow: |
+                    [[[
+                      const b = states['binary_sensor.pack3_live_cell_1_balancing'];
+                      return (b && b.state === 'on') ? '0px 0px 8px 2px #00e5ff' : 'none';
                     ]]]
               name:
                 - font-size: 0.6em
@@ -2310,12 +3313,14 @@ cards:
             name: |
               [[[
                 const s = states['sensor.pack3_live_cell_2'];
+                const b = states['binary_sensor.pack3_live_cell_2_balancing'];
                 const sl = states['sensor.pack3_live_min_cell']; const sh = states['sensor.pack3_live_max_cell'];
                 if (!s) return 'Cell 2';
                 const v = parseFloat(s.state);
                 const lv = sl ? parseFloat(sl.state) : NaN;
                 const hv = sh ? parseFloat(sh.state) : NaN;
                 let n = 'Cell 2';
+                if (b && b.state === 'on') n += ' ⚡';
                 if (!isNaN(lv) && v === lv) n += ' (L)';
                 if (!isNaN(hv) && v === hv) n += ' (H)';
                 return n;
@@ -2338,7 +3343,26 @@ cards:
                       const v = parseFloat(s.state);
                       const lv = sl ? parseFloat(sl.state) : NaN;
                       const hv = sh ? parseFloat(sh.state) : NaN;
-                      return (!isNaN(lv) && v === lv) ? 'orange' : (!isNaN(hv) && v === hv) ? 'darkgreen' : 'green';
+                      return (!isNaN(lv) && v === lv) ? '#f9a825' : (!isNaN(hv) && v === hv) ? '#1b5e20' : '#2e7d32';
+                    ]]]
+                - color: |
+                    [[[
+                      const s = states['sensor.pack3_live_cell_2'];
+                      const sl = states['sensor.pack3_live_min_cell'];
+                      if (!s) return 'white';
+                      const v = parseFloat(s.state);
+                      const lv = sl ? parseFloat(sl.state) : NaN;
+                      return (!isNaN(lv) && v === lv) ? '#1a1a1a' : 'white';
+                    ]]]
+                - border: |
+                    [[[
+                      const b = states['binary_sensor.pack3_live_cell_2_balancing'];
+                      return (b && b.state === 'on') ? '3px solid #00e5ff' : '1px solid rgba(255,255,255,0.12)';
+                    ]]]
+                - box-shadow: |
+                    [[[
+                      const b = states['binary_sensor.pack3_live_cell_2_balancing'];
+                      return (b && b.state === 'on') ? '0px 0px 8px 2px #00e5ff' : 'none';
                     ]]]
               name:
                 - font-size: 0.6em
@@ -2349,12 +3373,14 @@ cards:
             name: |
               [[[
                 const s = states['sensor.pack3_live_cell_3'];
+                const b = states['binary_sensor.pack3_live_cell_3_balancing'];
                 const sl = states['sensor.pack3_live_min_cell']; const sh = states['sensor.pack3_live_max_cell'];
                 if (!s) return 'Cell 3';
                 const v = parseFloat(s.state);
                 const lv = sl ? parseFloat(sl.state) : NaN;
                 const hv = sh ? parseFloat(sh.state) : NaN;
                 let n = 'Cell 3';
+                if (b && b.state === 'on') n += ' ⚡';
                 if (!isNaN(lv) && v === lv) n += ' (L)';
                 if (!isNaN(hv) && v === hv) n += ' (H)';
                 return n;
@@ -2377,7 +3403,26 @@ cards:
                       const v = parseFloat(s.state);
                       const lv = sl ? parseFloat(sl.state) : NaN;
                       const hv = sh ? parseFloat(sh.state) : NaN;
-                      return (!isNaN(lv) && v === lv) ? 'orange' : (!isNaN(hv) && v === hv) ? 'darkgreen' : 'green';
+                      return (!isNaN(lv) && v === lv) ? '#f9a825' : (!isNaN(hv) && v === hv) ? '#1b5e20' : '#2e7d32';
+                    ]]]
+                - color: |
+                    [[[
+                      const s = states['sensor.pack3_live_cell_3'];
+                      const sl = states['sensor.pack3_live_min_cell'];
+                      if (!s) return 'white';
+                      const v = parseFloat(s.state);
+                      const lv = sl ? parseFloat(sl.state) : NaN;
+                      return (!isNaN(lv) && v === lv) ? '#1a1a1a' : 'white';
+                    ]]]
+                - border: |
+                    [[[
+                      const b = states['binary_sensor.pack3_live_cell_3_balancing'];
+                      return (b && b.state === 'on') ? '3px solid #00e5ff' : '1px solid rgba(255,255,255,0.12)';
+                    ]]]
+                - box-shadow: |
+                    [[[
+                      const b = states['binary_sensor.pack3_live_cell_3_balancing'];
+                      return (b && b.state === 'on') ? '0px 0px 8px 2px #00e5ff' : 'none';
                     ]]]
               name:
                 - font-size: 0.6em
@@ -2388,12 +3433,14 @@ cards:
             name: |
               [[[
                 const s = states['sensor.pack3_live_cell_4'];
+                const b = states['binary_sensor.pack3_live_cell_4_balancing'];
                 const sl = states['sensor.pack3_live_min_cell']; const sh = states['sensor.pack3_live_max_cell'];
                 if (!s) return 'Cell 4';
                 const v = parseFloat(s.state);
                 const lv = sl ? parseFloat(sl.state) : NaN;
                 const hv = sh ? parseFloat(sh.state) : NaN;
                 let n = 'Cell 4';
+                if (b && b.state === 'on') n += ' ⚡';
                 if (!isNaN(lv) && v === lv) n += ' (L)';
                 if (!isNaN(hv) && v === hv) n += ' (H)';
                 return n;
@@ -2416,7 +3463,26 @@ cards:
                       const v = parseFloat(s.state);
                       const lv = sl ? parseFloat(sl.state) : NaN;
                       const hv = sh ? parseFloat(sh.state) : NaN;
-                      return (!isNaN(lv) && v === lv) ? 'orange' : (!isNaN(hv) && v === hv) ? 'darkgreen' : 'green';
+                      return (!isNaN(lv) && v === lv) ? '#f9a825' : (!isNaN(hv) && v === hv) ? '#1b5e20' : '#2e7d32';
+                    ]]]
+                - color: |
+                    [[[
+                      const s = states['sensor.pack3_live_cell_4'];
+                      const sl = states['sensor.pack3_live_min_cell'];
+                      if (!s) return 'white';
+                      const v = parseFloat(s.state);
+                      const lv = sl ? parseFloat(sl.state) : NaN;
+                      return (!isNaN(lv) && v === lv) ? '#1a1a1a' : 'white';
+                    ]]]
+                - border: |
+                    [[[
+                      const b = states['binary_sensor.pack3_live_cell_4_balancing'];
+                      return (b && b.state === 'on') ? '3px solid #00e5ff' : '1px solid rgba(255,255,255,0.12)';
+                    ]]]
+                - box-shadow: |
+                    [[[
+                      const b = states['binary_sensor.pack3_live_cell_4_balancing'];
+                      return (b && b.state === 'on') ? '0px 0px 8px 2px #00e5ff' : 'none';
                     ]]]
               name:
                 - font-size: 0.6em
@@ -2427,12 +3493,14 @@ cards:
             name: |
               [[[
                 const s = states['sensor.pack3_live_cell_5'];
+                const b = states['binary_sensor.pack3_live_cell_5_balancing'];
                 const sl = states['sensor.pack3_live_min_cell']; const sh = states['sensor.pack3_live_max_cell'];
                 if (!s) return 'Cell 5';
                 const v = parseFloat(s.state);
                 const lv = sl ? parseFloat(sl.state) : NaN;
                 const hv = sh ? parseFloat(sh.state) : NaN;
                 let n = 'Cell 5';
+                if (b && b.state === 'on') n += ' ⚡';
                 if (!isNaN(lv) && v === lv) n += ' (L)';
                 if (!isNaN(hv) && v === hv) n += ' (H)';
                 return n;
@@ -2455,7 +3523,26 @@ cards:
                       const v = parseFloat(s.state);
                       const lv = sl ? parseFloat(sl.state) : NaN;
                       const hv = sh ? parseFloat(sh.state) : NaN;
-                      return (!isNaN(lv) && v === lv) ? 'orange' : (!isNaN(hv) && v === hv) ? 'darkgreen' : 'green';
+                      return (!isNaN(lv) && v === lv) ? '#f9a825' : (!isNaN(hv) && v === hv) ? '#1b5e20' : '#2e7d32';
+                    ]]]
+                - color: |
+                    [[[
+                      const s = states['sensor.pack3_live_cell_5'];
+                      const sl = states['sensor.pack3_live_min_cell'];
+                      if (!s) return 'white';
+                      const v = parseFloat(s.state);
+                      const lv = sl ? parseFloat(sl.state) : NaN;
+                      return (!isNaN(lv) && v === lv) ? '#1a1a1a' : 'white';
+                    ]]]
+                - border: |
+                    [[[
+                      const b = states['binary_sensor.pack3_live_cell_5_balancing'];
+                      return (b && b.state === 'on') ? '3px solid #00e5ff' : '1px solid rgba(255,255,255,0.12)';
+                    ]]]
+                - box-shadow: |
+                    [[[
+                      const b = states['binary_sensor.pack3_live_cell_5_balancing'];
+                      return (b && b.state === 'on') ? '0px 0px 8px 2px #00e5ff' : 'none';
                     ]]]
               name:
                 - font-size: 0.6em
@@ -2466,12 +3553,14 @@ cards:
             name: |
               [[[
                 const s = states['sensor.pack3_live_cell_6'];
+                const b = states['binary_sensor.pack3_live_cell_6_balancing'];
                 const sl = states['sensor.pack3_live_min_cell']; const sh = states['sensor.pack3_live_max_cell'];
                 if (!s) return 'Cell 6';
                 const v = parseFloat(s.state);
                 const lv = sl ? parseFloat(sl.state) : NaN;
                 const hv = sh ? parseFloat(sh.state) : NaN;
                 let n = 'Cell 6';
+                if (b && b.state === 'on') n += ' ⚡';
                 if (!isNaN(lv) && v === lv) n += ' (L)';
                 if (!isNaN(hv) && v === hv) n += ' (H)';
                 return n;
@@ -2494,7 +3583,26 @@ cards:
                       const v = parseFloat(s.state);
                       const lv = sl ? parseFloat(sl.state) : NaN;
                       const hv = sh ? parseFloat(sh.state) : NaN;
-                      return (!isNaN(lv) && v === lv) ? 'orange' : (!isNaN(hv) && v === hv) ? 'darkgreen' : 'green';
+                      return (!isNaN(lv) && v === lv) ? '#f9a825' : (!isNaN(hv) && v === hv) ? '#1b5e20' : '#2e7d32';
+                    ]]]
+                - color: |
+                    [[[
+                      const s = states['sensor.pack3_live_cell_6'];
+                      const sl = states['sensor.pack3_live_min_cell'];
+                      if (!s) return 'white';
+                      const v = parseFloat(s.state);
+                      const lv = sl ? parseFloat(sl.state) : NaN;
+                      return (!isNaN(lv) && v === lv) ? '#1a1a1a' : 'white';
+                    ]]]
+                - border: |
+                    [[[
+                      const b = states['binary_sensor.pack3_live_cell_6_balancing'];
+                      return (b && b.state === 'on') ? '3px solid #00e5ff' : '1px solid rgba(255,255,255,0.12)';
+                    ]]]
+                - box-shadow: |
+                    [[[
+                      const b = states['binary_sensor.pack3_live_cell_6_balancing'];
+                      return (b && b.state === 'on') ? '0px 0px 8px 2px #00e5ff' : 'none';
                     ]]]
               name:
                 - font-size: 0.6em
@@ -2505,12 +3613,14 @@ cards:
             name: |
               [[[
                 const s = states['sensor.pack3_live_cell_7'];
+                const b = states['binary_sensor.pack3_live_cell_7_balancing'];
                 const sl = states['sensor.pack3_live_min_cell']; const sh = states['sensor.pack3_live_max_cell'];
                 if (!s) return 'Cell 7';
                 const v = parseFloat(s.state);
                 const lv = sl ? parseFloat(sl.state) : NaN;
                 const hv = sh ? parseFloat(sh.state) : NaN;
                 let n = 'Cell 7';
+                if (b && b.state === 'on') n += ' ⚡';
                 if (!isNaN(lv) && v === lv) n += ' (L)';
                 if (!isNaN(hv) && v === hv) n += ' (H)';
                 return n;
@@ -2533,7 +3643,26 @@ cards:
                       const v = parseFloat(s.state);
                       const lv = sl ? parseFloat(sl.state) : NaN;
                       const hv = sh ? parseFloat(sh.state) : NaN;
-                      return (!isNaN(lv) && v === lv) ? 'orange' : (!isNaN(hv) && v === hv) ? 'darkgreen' : 'green';
+                      return (!isNaN(lv) && v === lv) ? '#f9a825' : (!isNaN(hv) && v === hv) ? '#1b5e20' : '#2e7d32';
+                    ]]]
+                - color: |
+                    [[[
+                      const s = states['sensor.pack3_live_cell_7'];
+                      const sl = states['sensor.pack3_live_min_cell'];
+                      if (!s) return 'white';
+                      const v = parseFloat(s.state);
+                      const lv = sl ? parseFloat(sl.state) : NaN;
+                      return (!isNaN(lv) && v === lv) ? '#1a1a1a' : 'white';
+                    ]]]
+                - border: |
+                    [[[
+                      const b = states['binary_sensor.pack3_live_cell_7_balancing'];
+                      return (b && b.state === 'on') ? '3px solid #00e5ff' : '1px solid rgba(255,255,255,0.12)';
+                    ]]]
+                - box-shadow: |
+                    [[[
+                      const b = states['binary_sensor.pack3_live_cell_7_balancing'];
+                      return (b && b.state === 'on') ? '0px 0px 8px 2px #00e5ff' : 'none';
                     ]]]
               name:
                 - font-size: 0.6em
@@ -2544,12 +3673,14 @@ cards:
             name: |
               [[[
                 const s = states['sensor.pack3_live_cell_8'];
+                const b = states['binary_sensor.pack3_live_cell_8_balancing'];
                 const sl = states['sensor.pack3_live_min_cell']; const sh = states['sensor.pack3_live_max_cell'];
                 if (!s) return 'Cell 8';
                 const v = parseFloat(s.state);
                 const lv = sl ? parseFloat(sl.state) : NaN;
                 const hv = sh ? parseFloat(sh.state) : NaN;
                 let n = 'Cell 8';
+                if (b && b.state === 'on') n += ' ⚡';
                 if (!isNaN(lv) && v === lv) n += ' (L)';
                 if (!isNaN(hv) && v === hv) n += ' (H)';
                 return n;
@@ -2572,7 +3703,26 @@ cards:
                       const v = parseFloat(s.state);
                       const lv = sl ? parseFloat(sl.state) : NaN;
                       const hv = sh ? parseFloat(sh.state) : NaN;
-                      return (!isNaN(lv) && v === lv) ? 'orange' : (!isNaN(hv) && v === hv) ? 'darkgreen' : 'green';
+                      return (!isNaN(lv) && v === lv) ? '#f9a825' : (!isNaN(hv) && v === hv) ? '#1b5e20' : '#2e7d32';
+                    ]]]
+                - color: |
+                    [[[
+                      const s = states['sensor.pack3_live_cell_8'];
+                      const sl = states['sensor.pack3_live_min_cell'];
+                      if (!s) return 'white';
+                      const v = parseFloat(s.state);
+                      const lv = sl ? parseFloat(sl.state) : NaN;
+                      return (!isNaN(lv) && v === lv) ? '#1a1a1a' : 'white';
+                    ]]]
+                - border: |
+                    [[[
+                      const b = states['binary_sensor.pack3_live_cell_8_balancing'];
+                      return (b && b.state === 'on') ? '3px solid #00e5ff' : '1px solid rgba(255,255,255,0.12)';
+                    ]]]
+                - box-shadow: |
+                    [[[
+                      const b = states['binary_sensor.pack3_live_cell_8_balancing'];
+                      return (b && b.state === 'on') ? '0px 0px 8px 2px #00e5ff' : 'none';
                     ]]]
               name:
                 - font-size: 0.6em
@@ -2583,12 +3733,14 @@ cards:
             name: |
               [[[
                 const s = states['sensor.pack3_live_cell_9'];
+                const b = states['binary_sensor.pack3_live_cell_9_balancing'];
                 const sl = states['sensor.pack3_live_min_cell']; const sh = states['sensor.pack3_live_max_cell'];
                 if (!s) return 'Cell 9';
                 const v = parseFloat(s.state);
                 const lv = sl ? parseFloat(sl.state) : NaN;
                 const hv = sh ? parseFloat(sh.state) : NaN;
                 let n = 'Cell 9';
+                if (b && b.state === 'on') n += ' ⚡';
                 if (!isNaN(lv) && v === lv) n += ' (L)';
                 if (!isNaN(hv) && v === hv) n += ' (H)';
                 return n;
@@ -2611,7 +3763,26 @@ cards:
                       const v = parseFloat(s.state);
                       const lv = sl ? parseFloat(sl.state) : NaN;
                       const hv = sh ? parseFloat(sh.state) : NaN;
-                      return (!isNaN(lv) && v === lv) ? 'orange' : (!isNaN(hv) && v === hv) ? 'darkgreen' : 'green';
+                      return (!isNaN(lv) && v === lv) ? '#f9a825' : (!isNaN(hv) && v === hv) ? '#1b5e20' : '#2e7d32';
+                    ]]]
+                - color: |
+                    [[[
+                      const s = states['sensor.pack3_live_cell_9'];
+                      const sl = states['sensor.pack3_live_min_cell'];
+                      if (!s) return 'white';
+                      const v = parseFloat(s.state);
+                      const lv = sl ? parseFloat(sl.state) : NaN;
+                      return (!isNaN(lv) && v === lv) ? '#1a1a1a' : 'white';
+                    ]]]
+                - border: |
+                    [[[
+                      const b = states['binary_sensor.pack3_live_cell_9_balancing'];
+                      return (b && b.state === 'on') ? '3px solid #00e5ff' : '1px solid rgba(255,255,255,0.12)';
+                    ]]]
+                - box-shadow: |
+                    [[[
+                      const b = states['binary_sensor.pack3_live_cell_9_balancing'];
+                      return (b && b.state === 'on') ? '0px 0px 8px 2px #00e5ff' : 'none';
                     ]]]
               name:
                 - font-size: 0.6em
@@ -2622,12 +3793,14 @@ cards:
             name: |
               [[[
                 const s = states['sensor.pack3_live_cell_10'];
+                const b = states['binary_sensor.pack3_live_cell_10_balancing'];
                 const sl = states['sensor.pack3_live_min_cell']; const sh = states['sensor.pack3_live_max_cell'];
                 if (!s) return 'Cell 10';
                 const v = parseFloat(s.state);
                 const lv = sl ? parseFloat(sl.state) : NaN;
                 const hv = sh ? parseFloat(sh.state) : NaN;
                 let n = 'Cell 10';
+                if (b && b.state === 'on') n += ' ⚡';
                 if (!isNaN(lv) && v === lv) n += ' (L)';
                 if (!isNaN(hv) && v === hv) n += ' (H)';
                 return n;
@@ -2650,7 +3823,26 @@ cards:
                       const v = parseFloat(s.state);
                       const lv = sl ? parseFloat(sl.state) : NaN;
                       const hv = sh ? parseFloat(sh.state) : NaN;
-                      return (!isNaN(lv) && v === lv) ? 'orange' : (!isNaN(hv) && v === hv) ? 'darkgreen' : 'green';
+                      return (!isNaN(lv) && v === lv) ? '#f9a825' : (!isNaN(hv) && v === hv) ? '#1b5e20' : '#2e7d32';
+                    ]]]
+                - color: |
+                    [[[
+                      const s = states['sensor.pack3_live_cell_10'];
+                      const sl = states['sensor.pack3_live_min_cell'];
+                      if (!s) return 'white';
+                      const v = parseFloat(s.state);
+                      const lv = sl ? parseFloat(sl.state) : NaN;
+                      return (!isNaN(lv) && v === lv) ? '#1a1a1a' : 'white';
+                    ]]]
+                - border: |
+                    [[[
+                      const b = states['binary_sensor.pack3_live_cell_10_balancing'];
+                      return (b && b.state === 'on') ? '3px solid #00e5ff' : '1px solid rgba(255,255,255,0.12)';
+                    ]]]
+                - box-shadow: |
+                    [[[
+                      const b = states['binary_sensor.pack3_live_cell_10_balancing'];
+                      return (b && b.state === 'on') ? '0px 0px 8px 2px #00e5ff' : 'none';
                     ]]]
               name:
                 - font-size: 0.6em
@@ -2661,12 +3853,14 @@ cards:
             name: |
               [[[
                 const s = states['sensor.pack3_live_cell_11'];
+                const b = states['binary_sensor.pack3_live_cell_11_balancing'];
                 const sl = states['sensor.pack3_live_min_cell']; const sh = states['sensor.pack3_live_max_cell'];
                 if (!s) return 'Cell 11';
                 const v = parseFloat(s.state);
                 const lv = sl ? parseFloat(sl.state) : NaN;
                 const hv = sh ? parseFloat(sh.state) : NaN;
                 let n = 'Cell 11';
+                if (b && b.state === 'on') n += ' ⚡';
                 if (!isNaN(lv) && v === lv) n += ' (L)';
                 if (!isNaN(hv) && v === hv) n += ' (H)';
                 return n;
@@ -2689,7 +3883,26 @@ cards:
                       const v = parseFloat(s.state);
                       const lv = sl ? parseFloat(sl.state) : NaN;
                       const hv = sh ? parseFloat(sh.state) : NaN;
-                      return (!isNaN(lv) && v === lv) ? 'orange' : (!isNaN(hv) && v === hv) ? 'darkgreen' : 'green';
+                      return (!isNaN(lv) && v === lv) ? '#f9a825' : (!isNaN(hv) && v === hv) ? '#1b5e20' : '#2e7d32';
+                    ]]]
+                - color: |
+                    [[[
+                      const s = states['sensor.pack3_live_cell_11'];
+                      const sl = states['sensor.pack3_live_min_cell'];
+                      if (!s) return 'white';
+                      const v = parseFloat(s.state);
+                      const lv = sl ? parseFloat(sl.state) : NaN;
+                      return (!isNaN(lv) && v === lv) ? '#1a1a1a' : 'white';
+                    ]]]
+                - border: |
+                    [[[
+                      const b = states['binary_sensor.pack3_live_cell_11_balancing'];
+                      return (b && b.state === 'on') ? '3px solid #00e5ff' : '1px solid rgba(255,255,255,0.12)';
+                    ]]]
+                - box-shadow: |
+                    [[[
+                      const b = states['binary_sensor.pack3_live_cell_11_balancing'];
+                      return (b && b.state === 'on') ? '0px 0px 8px 2px #00e5ff' : 'none';
                     ]]]
               name:
                 - font-size: 0.6em
@@ -2700,12 +3913,14 @@ cards:
             name: |
               [[[
                 const s = states['sensor.pack3_live_cell_12'];
+                const b = states['binary_sensor.pack3_live_cell_12_balancing'];
                 const sl = states['sensor.pack3_live_min_cell']; const sh = states['sensor.pack3_live_max_cell'];
                 if (!s) return 'Cell 12';
                 const v = parseFloat(s.state);
                 const lv = sl ? parseFloat(sl.state) : NaN;
                 const hv = sh ? parseFloat(sh.state) : NaN;
                 let n = 'Cell 12';
+                if (b && b.state === 'on') n += ' ⚡';
                 if (!isNaN(lv) && v === lv) n += ' (L)';
                 if (!isNaN(hv) && v === hv) n += ' (H)';
                 return n;
@@ -2728,7 +3943,26 @@ cards:
                       const v = parseFloat(s.state);
                       const lv = sl ? parseFloat(sl.state) : NaN;
                       const hv = sh ? parseFloat(sh.state) : NaN;
-                      return (!isNaN(lv) && v === lv) ? 'orange' : (!isNaN(hv) && v === hv) ? 'darkgreen' : 'green';
+                      return (!isNaN(lv) && v === lv) ? '#f9a825' : (!isNaN(hv) && v === hv) ? '#1b5e20' : '#2e7d32';
+                    ]]]
+                - color: |
+                    [[[
+                      const s = states['sensor.pack3_live_cell_12'];
+                      const sl = states['sensor.pack3_live_min_cell'];
+                      if (!s) return 'white';
+                      const v = parseFloat(s.state);
+                      const lv = sl ? parseFloat(sl.state) : NaN;
+                      return (!isNaN(lv) && v === lv) ? '#1a1a1a' : 'white';
+                    ]]]
+                - border: |
+                    [[[
+                      const b = states['binary_sensor.pack3_live_cell_12_balancing'];
+                      return (b && b.state === 'on') ? '3px solid #00e5ff' : '1px solid rgba(255,255,255,0.12)';
+                    ]]]
+                - box-shadow: |
+                    [[[
+                      const b = states['binary_sensor.pack3_live_cell_12_balancing'];
+                      return (b && b.state === 'on') ? '0px 0px 8px 2px #00e5ff' : 'none';
                     ]]]
               name:
                 - font-size: 0.6em
@@ -2739,12 +3973,14 @@ cards:
             name: |
               [[[
                 const s = states['sensor.pack3_live_cell_13'];
+                const b = states['binary_sensor.pack3_live_cell_13_balancing'];
                 const sl = states['sensor.pack3_live_min_cell']; const sh = states['sensor.pack3_live_max_cell'];
                 if (!s) return 'Cell 13';
                 const v = parseFloat(s.state);
                 const lv = sl ? parseFloat(sl.state) : NaN;
                 const hv = sh ? parseFloat(sh.state) : NaN;
                 let n = 'Cell 13';
+                if (b && b.state === 'on') n += ' ⚡';
                 if (!isNaN(lv) && v === lv) n += ' (L)';
                 if (!isNaN(hv) && v === hv) n += ' (H)';
                 return n;
@@ -2767,7 +4003,26 @@ cards:
                       const v = parseFloat(s.state);
                       const lv = sl ? parseFloat(sl.state) : NaN;
                       const hv = sh ? parseFloat(sh.state) : NaN;
-                      return (!isNaN(lv) && v === lv) ? 'orange' : (!isNaN(hv) && v === hv) ? 'darkgreen' : 'green';
+                      return (!isNaN(lv) && v === lv) ? '#f9a825' : (!isNaN(hv) && v === hv) ? '#1b5e20' : '#2e7d32';
+                    ]]]
+                - color: |
+                    [[[
+                      const s = states['sensor.pack3_live_cell_13'];
+                      const sl = states['sensor.pack3_live_min_cell'];
+                      if (!s) return 'white';
+                      const v = parseFloat(s.state);
+                      const lv = sl ? parseFloat(sl.state) : NaN;
+                      return (!isNaN(lv) && v === lv) ? '#1a1a1a' : 'white';
+                    ]]]
+                - border: |
+                    [[[
+                      const b = states['binary_sensor.pack3_live_cell_13_balancing'];
+                      return (b && b.state === 'on') ? '3px solid #00e5ff' : '1px solid rgba(255,255,255,0.12)';
+                    ]]]
+                - box-shadow: |
+                    [[[
+                      const b = states['binary_sensor.pack3_live_cell_13_balancing'];
+                      return (b && b.state === 'on') ? '0px 0px 8px 2px #00e5ff' : 'none';
                     ]]]
               name:
                 - font-size: 0.6em
@@ -2778,12 +4033,14 @@ cards:
             name: |
               [[[
                 const s = states['sensor.pack3_live_cell_14'];
+                const b = states['binary_sensor.pack3_live_cell_14_balancing'];
                 const sl = states['sensor.pack3_live_min_cell']; const sh = states['sensor.pack3_live_max_cell'];
                 if (!s) return 'Cell 14';
                 const v = parseFloat(s.state);
                 const lv = sl ? parseFloat(sl.state) : NaN;
                 const hv = sh ? parseFloat(sh.state) : NaN;
                 let n = 'Cell 14';
+                if (b && b.state === 'on') n += ' ⚡';
                 if (!isNaN(lv) && v === lv) n += ' (L)';
                 if (!isNaN(hv) && v === hv) n += ' (H)';
                 return n;
@@ -2806,7 +4063,26 @@ cards:
                       const v = parseFloat(s.state);
                       const lv = sl ? parseFloat(sl.state) : NaN;
                       const hv = sh ? parseFloat(sh.state) : NaN;
-                      return (!isNaN(lv) && v === lv) ? 'orange' : (!isNaN(hv) && v === hv) ? 'darkgreen' : 'green';
+                      return (!isNaN(lv) && v === lv) ? '#f9a825' : (!isNaN(hv) && v === hv) ? '#1b5e20' : '#2e7d32';
+                    ]]]
+                - color: |
+                    [[[
+                      const s = states['sensor.pack3_live_cell_14'];
+                      const sl = states['sensor.pack3_live_min_cell'];
+                      if (!s) return 'white';
+                      const v = parseFloat(s.state);
+                      const lv = sl ? parseFloat(sl.state) : NaN;
+                      return (!isNaN(lv) && v === lv) ? '#1a1a1a' : 'white';
+                    ]]]
+                - border: |
+                    [[[
+                      const b = states['binary_sensor.pack3_live_cell_14_balancing'];
+                      return (b && b.state === 'on') ? '3px solid #00e5ff' : '1px solid rgba(255,255,255,0.12)';
+                    ]]]
+                - box-shadow: |
+                    [[[
+                      const b = states['binary_sensor.pack3_live_cell_14_balancing'];
+                      return (b && b.state === 'on') ? '0px 0px 8px 2px #00e5ff' : 'none';
                     ]]]
               name:
                 - font-size: 0.6em
@@ -2817,12 +4093,14 @@ cards:
             name: |
               [[[
                 const s = states['sensor.pack3_live_cell_15'];
+                const b = states['binary_sensor.pack3_live_cell_15_balancing'];
                 const sl = states['sensor.pack3_live_min_cell']; const sh = states['sensor.pack3_live_max_cell'];
                 if (!s) return 'Cell 15';
                 const v = parseFloat(s.state);
                 const lv = sl ? parseFloat(sl.state) : NaN;
                 const hv = sh ? parseFloat(sh.state) : NaN;
                 let n = 'Cell 15';
+                if (b && b.state === 'on') n += ' ⚡';
                 if (!isNaN(lv) && v === lv) n += ' (L)';
                 if (!isNaN(hv) && v === hv) n += ' (H)';
                 return n;
@@ -2845,7 +4123,26 @@ cards:
                       const v = parseFloat(s.state);
                       const lv = sl ? parseFloat(sl.state) : NaN;
                       const hv = sh ? parseFloat(sh.state) : NaN;
-                      return (!isNaN(lv) && v === lv) ? 'orange' : (!isNaN(hv) && v === hv) ? 'darkgreen' : 'green';
+                      return (!isNaN(lv) && v === lv) ? '#f9a825' : (!isNaN(hv) && v === hv) ? '#1b5e20' : '#2e7d32';
+                    ]]]
+                - color: |
+                    [[[
+                      const s = states['sensor.pack3_live_cell_15'];
+                      const sl = states['sensor.pack3_live_min_cell'];
+                      if (!s) return 'white';
+                      const v = parseFloat(s.state);
+                      const lv = sl ? parseFloat(sl.state) : NaN;
+                      return (!isNaN(lv) && v === lv) ? '#1a1a1a' : 'white';
+                    ]]]
+                - border: |
+                    [[[
+                      const b = states['binary_sensor.pack3_live_cell_15_balancing'];
+                      return (b && b.state === 'on') ? '3px solid #00e5ff' : '1px solid rgba(255,255,255,0.12)';
+                    ]]]
+                - box-shadow: |
+                    [[[
+                      const b = states['binary_sensor.pack3_live_cell_15_balancing'];
+                      return (b && b.state === 'on') ? '0px 0px 8px 2px #00e5ff' : 'none';
                     ]]]
               name:
                 - font-size: 0.6em
@@ -2856,12 +4153,14 @@ cards:
             name: |
               [[[
                 const s = states['sensor.pack3_live_cell_16'];
+                const b = states['binary_sensor.pack3_live_cell_16_balancing'];
                 const sl = states['sensor.pack3_live_min_cell']; const sh = states['sensor.pack3_live_max_cell'];
                 if (!s) return 'Cell 16';
                 const v = parseFloat(s.state);
                 const lv = sl ? parseFloat(sl.state) : NaN;
                 const hv = sh ? parseFloat(sh.state) : NaN;
                 let n = 'Cell 16';
+                if (b && b.state === 'on') n += ' ⚡';
                 if (!isNaN(lv) && v === lv) n += ' (L)';
                 if (!isNaN(hv) && v === hv) n += ' (H)';
                 return n;
@@ -2884,7 +4183,26 @@ cards:
                       const v = parseFloat(s.state);
                       const lv = sl ? parseFloat(sl.state) : NaN;
                       const hv = sh ? parseFloat(sh.state) : NaN;
-                      return (!isNaN(lv) && v === lv) ? 'orange' : (!isNaN(hv) && v === hv) ? 'darkgreen' : 'green';
+                      return (!isNaN(lv) && v === lv) ? '#f9a825' : (!isNaN(hv) && v === hv) ? '#1b5e20' : '#2e7d32';
+                    ]]]
+                - color: |
+                    [[[
+                      const s = states['sensor.pack3_live_cell_16'];
+                      const sl = states['sensor.pack3_live_min_cell'];
+                      if (!s) return 'white';
+                      const v = parseFloat(s.state);
+                      const lv = sl ? parseFloat(sl.state) : NaN;
+                      return (!isNaN(lv) && v === lv) ? '#1a1a1a' : 'white';
+                    ]]]
+                - border: |
+                    [[[
+                      const b = states['binary_sensor.pack3_live_cell_16_balancing'];
+                      return (b && b.state === 'on') ? '3px solid #00e5ff' : '1px solid rgba(255,255,255,0.12)';
+                    ]]]
+                - box-shadow: |
+                    [[[
+                      const b = states['binary_sensor.pack3_live_cell_16_balancing'];
+                      return (b && b.state === 'on') ? '0px 0px 8px 2px #00e5ff' : 'none';
                     ]]]
               name:
                 - font-size: 0.6em
@@ -2907,8 +4225,8 @@ cards:
           t2: sensor.pack4_live_temp_2
           t3: sensor.pack4_live_temp_3
           t4: sensor.pack4_live_temp_4
-          t5: sensor.pack4_live_temp_5
-          t6: sensor.pack4_live_temp_6
+          tamb: sensor.pack4_live_environment_temperature
+          tpow: sensor.pack4_live_power_temperature
         show_name: false
         tap_action:
           action: more-info
@@ -2980,7 +4298,7 @@ cards:
                 const n = parseFloat(s.state);
                 return isNaN(n) ? '—' : n.toFixed(d);
               };
-              const ts = [variables.t1, variables.t2, variables.t3, variables.t4, variables.t5, variables.t6]
+              const ts = [variables.t1, variables.t2, variables.t3, variables.t4, variables.tamb, variables.tpow]
                 .map(v).filter(x => !isNaN(x));
               const minT = ts.length ? Math.min(...ts).toFixed(1) : '—';
               const maxT = ts.length ? Math.max(...ts).toFixed(1) : '—';
@@ -3028,6 +4346,109 @@ cards:
             bat:
               - justify-self: center
               - text-align: left
+      - type: custom:button-card
+        show_name: false
+        show_state: false
+        show_icon: false
+        variables:
+          state: text_sensor.pack4_live_system_state
+          alarms: text_sensor.pack4_live_active_alarms
+          charge: binary_sensor.pack4_live_charge_switch
+          discharge: binary_sensor.pack4_live_discharge_switch
+          bal: sensor.pack4_live_balancing_cells
+          inv: sensor.pack4_live_invalid_cells
+        styles:
+          card:
+            - background-color: rgba(61,61,61,0.8)
+            - border-radius: 10px
+            - padding: 8px 12px
+            - font-size: 12px
+        custom_fields:
+          info: |
+            [[[
+              const st = (e) => states[e] ? states[e].state : '—';
+              const s = st(variables.state);
+              const on = (e) => st(e) === 'on';
+              const c = on(variables.charge), d = on(variables.discharge);
+              const bal = parseFloat(st(variables.bal));
+              const inv = parseFloat(st(variables.inv));
+              const alarms = st(variables.alarms);
+              const good = (!alarms || alarms === 'none');
+              const stIcon = s === 'Charge' ? 'mdi:battery-charging' : s === 'Discharge' ? 'mdi:battery-arrow-down' : s === 'Standby' ? 'mdi:battery-clock' : s === 'Float' ? 'mdi:battery-heart' : s === 'Fully charged' ? 'mdi:battery-check' : 'mdi:battery';
+              const chip = (icon, text, col) => `<span style="display:inline-flex;align-items:center;margin-right:14px"><ha-icon icon="${icon}" style="width:15px;height:15px;color:${col}"></ha-icon><span style="margin-left:3px">${text}</span></span>`;
+              return '<div style="display:flex;flex-wrap:wrap;gap:2px">' +
+                chip(stIcon, s, '#7fd1ff') +
+                chip('mdi:alpha-c-box', c ? 'FET C on' : 'FET C off', c ? '#8bc34a' : '#ff5252') +
+                chip('mdi:alpha-d-box', d ? 'FET D on' : 'FET D off', d ? '#8bc34a' : '#ff5252') +
+                chip('mdi:scale-balance', isNaN(bal) ? 'bal —' : `bal ${bal}`, bal > 0 ? '#00e5ff' : '#9e9e9e') +
+                chip('mdi:alert-circle-outline', isNaN(inv) ? 'inv —' : `inv ${inv}`, inv > 0 ? '#ff5252' : '#9e9e9e') +
+                chip(good ? 'mdi:shield-check' : 'mdi:alert', good ? 'alarms: none' : alarms, good ? '#8bc34a' : '#ff5252') +
+                '</div>';
+            ]]]
+      - type: grid
+        square: false
+        columns: 3
+        cards:
+          - type: gauge
+            entity: sensor.pack4_live_temp_1
+            name: Temp 1
+            needle: true
+            min: 0
+            max: 60
+            severity:
+              yellow: 15
+              green: 40
+              red: 50
+          - type: gauge
+            entity: sensor.pack4_live_temp_2
+            name: Temp 2
+            needle: true
+            min: 0
+            max: 60
+            severity:
+              yellow: 15
+              green: 40
+              red: 50
+          - type: gauge
+            entity: sensor.pack4_live_temp_3
+            name: Temp 3
+            needle: true
+            min: 0
+            max: 60
+            severity:
+              yellow: 15
+              green: 40
+              red: 50
+          - type: gauge
+            entity: sensor.pack4_live_temp_4
+            name: Temp 4
+            needle: true
+            min: 0
+            max: 60
+            severity:
+              yellow: 15
+              green: 40
+              red: 50
+          - type: gauge
+            entity: sensor.pack4_live_environment_temperature
+            name: Ambient
+            needle: true
+            min: 0
+            max: 60
+            severity:
+              yellow: 15
+              green: 40
+              red: 50
+          - type: gauge
+            entity: sensor.pack4_live_power_temperature
+            name: Power
+            needle: true
+            min: 0
+            max: 60
+            severity:
+              yellow: 15
+              green: 40
+              red: 50
       - type: grid
         square: false
         columns: 3
@@ -3233,12 +4654,14 @@ cards:
             name: |
               [[[
                 const s = states['sensor.pack4_live_cell_1'];
+                const b = states['binary_sensor.pack4_live_cell_1_balancing'];
                 const sl = states['sensor.pack4_live_min_cell']; const sh = states['sensor.pack4_live_max_cell'];
                 if (!s) return 'Cell 1';
                 const v = parseFloat(s.state);
                 const lv = sl ? parseFloat(sl.state) : NaN;
                 const hv = sh ? parseFloat(sh.state) : NaN;
                 let n = 'Cell 1';
+                if (b && b.state === 'on') n += ' ⚡';
                 if (!isNaN(lv) && v === lv) n += ' (L)';
                 if (!isNaN(hv) && v === hv) n += ' (H)';
                 return n;
@@ -3261,7 +4684,26 @@ cards:
                       const v = parseFloat(s.state);
                       const lv = sl ? parseFloat(sl.state) : NaN;
                       const hv = sh ? parseFloat(sh.state) : NaN;
-                      return (!isNaN(lv) && v === lv) ? 'orange' : (!isNaN(hv) && v === hv) ? 'darkgreen' : 'green';
+                      return (!isNaN(lv) && v === lv) ? '#f9a825' : (!isNaN(hv) && v === hv) ? '#1b5e20' : '#2e7d32';
+                    ]]]
+                - color: |
+                    [[[
+                      const s = states['sensor.pack4_live_cell_1'];
+                      const sl = states['sensor.pack4_live_min_cell'];
+                      if (!s) return 'white';
+                      const v = parseFloat(s.state);
+                      const lv = sl ? parseFloat(sl.state) : NaN;
+                      return (!isNaN(lv) && v === lv) ? '#1a1a1a' : 'white';
+                    ]]]
+                - border: |
+                    [[[
+                      const b = states['binary_sensor.pack4_live_cell_1_balancing'];
+                      return (b && b.state === 'on') ? '3px solid #00e5ff' : '1px solid rgba(255,255,255,0.12)';
+                    ]]]
+                - box-shadow: |
+                    [[[
+                      const b = states['binary_sensor.pack4_live_cell_1_balancing'];
+                      return (b && b.state === 'on') ? '0px 0px 8px 2px #00e5ff' : 'none';
                     ]]]
               name:
                 - font-size: 0.6em
@@ -3272,12 +4714,14 @@ cards:
             name: |
               [[[
                 const s = states['sensor.pack4_live_cell_2'];
+                const b = states['binary_sensor.pack4_live_cell_2_balancing'];
                 const sl = states['sensor.pack4_live_min_cell']; const sh = states['sensor.pack4_live_max_cell'];
                 if (!s) return 'Cell 2';
                 const v = parseFloat(s.state);
                 const lv = sl ? parseFloat(sl.state) : NaN;
                 const hv = sh ? parseFloat(sh.state) : NaN;
                 let n = 'Cell 2';
+                if (b && b.state === 'on') n += ' ⚡';
                 if (!isNaN(lv) && v === lv) n += ' (L)';
                 if (!isNaN(hv) && v === hv) n += ' (H)';
                 return n;
@@ -3300,7 +4744,26 @@ cards:
                       const v = parseFloat(s.state);
                       const lv = sl ? parseFloat(sl.state) : NaN;
                       const hv = sh ? parseFloat(sh.state) : NaN;
-                      return (!isNaN(lv) && v === lv) ? 'orange' : (!isNaN(hv) && v === hv) ? 'darkgreen' : 'green';
+                      return (!isNaN(lv) && v === lv) ? '#f9a825' : (!isNaN(hv) && v === hv) ? '#1b5e20' : '#2e7d32';
+                    ]]]
+                - color: |
+                    [[[
+                      const s = states['sensor.pack4_live_cell_2'];
+                      const sl = states['sensor.pack4_live_min_cell'];
+                      if (!s) return 'white';
+                      const v = parseFloat(s.state);
+                      const lv = sl ? parseFloat(sl.state) : NaN;
+                      return (!isNaN(lv) && v === lv) ? '#1a1a1a' : 'white';
+                    ]]]
+                - border: |
+                    [[[
+                      const b = states['binary_sensor.pack4_live_cell_2_balancing'];
+                      return (b && b.state === 'on') ? '3px solid #00e5ff' : '1px solid rgba(255,255,255,0.12)';
+                    ]]]
+                - box-shadow: |
+                    [[[
+                      const b = states['binary_sensor.pack4_live_cell_2_balancing'];
+                      return (b && b.state === 'on') ? '0px 0px 8px 2px #00e5ff' : 'none';
                     ]]]
               name:
                 - font-size: 0.6em
@@ -3311,12 +4774,14 @@ cards:
             name: |
               [[[
                 const s = states['sensor.pack4_live_cell_3'];
+                const b = states['binary_sensor.pack4_live_cell_3_balancing'];
                 const sl = states['sensor.pack4_live_min_cell']; const sh = states['sensor.pack4_live_max_cell'];
                 if (!s) return 'Cell 3';
                 const v = parseFloat(s.state);
                 const lv = sl ? parseFloat(sl.state) : NaN;
                 const hv = sh ? parseFloat(sh.state) : NaN;
                 let n = 'Cell 3';
+                if (b && b.state === 'on') n += ' ⚡';
                 if (!isNaN(lv) && v === lv) n += ' (L)';
                 if (!isNaN(hv) && v === hv) n += ' (H)';
                 return n;
@@ -3339,7 +4804,26 @@ cards:
                       const v = parseFloat(s.state);
                       const lv = sl ? parseFloat(sl.state) : NaN;
                       const hv = sh ? parseFloat(sh.state) : NaN;
-                      return (!isNaN(lv) && v === lv) ? 'orange' : (!isNaN(hv) && v === hv) ? 'darkgreen' : 'green';
+                      return (!isNaN(lv) && v === lv) ? '#f9a825' : (!isNaN(hv) && v === hv) ? '#1b5e20' : '#2e7d32';
+                    ]]]
+                - color: |
+                    [[[
+                      const s = states['sensor.pack4_live_cell_3'];
+                      const sl = states['sensor.pack4_live_min_cell'];
+                      if (!s) return 'white';
+                      const v = parseFloat(s.state);
+                      const lv = sl ? parseFloat(sl.state) : NaN;
+                      return (!isNaN(lv) && v === lv) ? '#1a1a1a' : 'white';
+                    ]]]
+                - border: |
+                    [[[
+                      const b = states['binary_sensor.pack4_live_cell_3_balancing'];
+                      return (b && b.state === 'on') ? '3px solid #00e5ff' : '1px solid rgba(255,255,255,0.12)';
+                    ]]]
+                - box-shadow: |
+                    [[[
+                      const b = states['binary_sensor.pack4_live_cell_3_balancing'];
+                      return (b && b.state === 'on') ? '0px 0px 8px 2px #00e5ff' : 'none';
                     ]]]
               name:
                 - font-size: 0.6em
@@ -3350,12 +4834,14 @@ cards:
             name: |
               [[[
                 const s = states['sensor.pack4_live_cell_4'];
+                const b = states['binary_sensor.pack4_live_cell_4_balancing'];
                 const sl = states['sensor.pack4_live_min_cell']; const sh = states['sensor.pack4_live_max_cell'];
                 if (!s) return 'Cell 4';
                 const v = parseFloat(s.state);
                 const lv = sl ? parseFloat(sl.state) : NaN;
                 const hv = sh ? parseFloat(sh.state) : NaN;
                 let n = 'Cell 4';
+                if (b && b.state === 'on') n += ' ⚡';
                 if (!isNaN(lv) && v === lv) n += ' (L)';
                 if (!isNaN(hv) && v === hv) n += ' (H)';
                 return n;
@@ -3378,7 +4864,26 @@ cards:
                       const v = parseFloat(s.state);
                       const lv = sl ? parseFloat(sl.state) : NaN;
                       const hv = sh ? parseFloat(sh.state) : NaN;
-                      return (!isNaN(lv) && v === lv) ? 'orange' : (!isNaN(hv) && v === hv) ? 'darkgreen' : 'green';
+                      return (!isNaN(lv) && v === lv) ? '#f9a825' : (!isNaN(hv) && v === hv) ? '#1b5e20' : '#2e7d32';
+                    ]]]
+                - color: |
+                    [[[
+                      const s = states['sensor.pack4_live_cell_4'];
+                      const sl = states['sensor.pack4_live_min_cell'];
+                      if (!s) return 'white';
+                      const v = parseFloat(s.state);
+                      const lv = sl ? parseFloat(sl.state) : NaN;
+                      return (!isNaN(lv) && v === lv) ? '#1a1a1a' : 'white';
+                    ]]]
+                - border: |
+                    [[[
+                      const b = states['binary_sensor.pack4_live_cell_4_balancing'];
+                      return (b && b.state === 'on') ? '3px solid #00e5ff' : '1px solid rgba(255,255,255,0.12)';
+                    ]]]
+                - box-shadow: |
+                    [[[
+                      const b = states['binary_sensor.pack4_live_cell_4_balancing'];
+                      return (b && b.state === 'on') ? '0px 0px 8px 2px #00e5ff' : 'none';
                     ]]]
               name:
                 - font-size: 0.6em
@@ -3389,12 +4894,14 @@ cards:
             name: |
               [[[
                 const s = states['sensor.pack4_live_cell_5'];
+                const b = states['binary_sensor.pack4_live_cell_5_balancing'];
                 const sl = states['sensor.pack4_live_min_cell']; const sh = states['sensor.pack4_live_max_cell'];
                 if (!s) return 'Cell 5';
                 const v = parseFloat(s.state);
                 const lv = sl ? parseFloat(sl.state) : NaN;
                 const hv = sh ? parseFloat(sh.state) : NaN;
                 let n = 'Cell 5';
+                if (b && b.state === 'on') n += ' ⚡';
                 if (!isNaN(lv) && v === lv) n += ' (L)';
                 if (!isNaN(hv) && v === hv) n += ' (H)';
                 return n;
@@ -3417,7 +4924,26 @@ cards:
                       const v = parseFloat(s.state);
                       const lv = sl ? parseFloat(sl.state) : NaN;
                       const hv = sh ? parseFloat(sh.state) : NaN;
-                      return (!isNaN(lv) && v === lv) ? 'orange' : (!isNaN(hv) && v === hv) ? 'darkgreen' : 'green';
+                      return (!isNaN(lv) && v === lv) ? '#f9a825' : (!isNaN(hv) && v === hv) ? '#1b5e20' : '#2e7d32';
+                    ]]]
+                - color: |
+                    [[[
+                      const s = states['sensor.pack4_live_cell_5'];
+                      const sl = states['sensor.pack4_live_min_cell'];
+                      if (!s) return 'white';
+                      const v = parseFloat(s.state);
+                      const lv = sl ? parseFloat(sl.state) : NaN;
+                      return (!isNaN(lv) && v === lv) ? '#1a1a1a' : 'white';
+                    ]]]
+                - border: |
+                    [[[
+                      const b = states['binary_sensor.pack4_live_cell_5_balancing'];
+                      return (b && b.state === 'on') ? '3px solid #00e5ff' : '1px solid rgba(255,255,255,0.12)';
+                    ]]]
+                - box-shadow: |
+                    [[[
+                      const b = states['binary_sensor.pack4_live_cell_5_balancing'];
+                      return (b && b.state === 'on') ? '0px 0px 8px 2px #00e5ff' : 'none';
                     ]]]
               name:
                 - font-size: 0.6em
@@ -3428,12 +4954,14 @@ cards:
             name: |
               [[[
                 const s = states['sensor.pack4_live_cell_6'];
+                const b = states['binary_sensor.pack4_live_cell_6_balancing'];
                 const sl = states['sensor.pack4_live_min_cell']; const sh = states['sensor.pack4_live_max_cell'];
                 if (!s) return 'Cell 6';
                 const v = parseFloat(s.state);
                 const lv = sl ? parseFloat(sl.state) : NaN;
                 const hv = sh ? parseFloat(sh.state) : NaN;
                 let n = 'Cell 6';
+                if (b && b.state === 'on') n += ' ⚡';
                 if (!isNaN(lv) && v === lv) n += ' (L)';
                 if (!isNaN(hv) && v === hv) n += ' (H)';
                 return n;
@@ -3456,7 +4984,26 @@ cards:
                       const v = parseFloat(s.state);
                       const lv = sl ? parseFloat(sl.state) : NaN;
                       const hv = sh ? parseFloat(sh.state) : NaN;
-                      return (!isNaN(lv) && v === lv) ? 'orange' : (!isNaN(hv) && v === hv) ? 'darkgreen' : 'green';
+                      return (!isNaN(lv) && v === lv) ? '#f9a825' : (!isNaN(hv) && v === hv) ? '#1b5e20' : '#2e7d32';
+                    ]]]
+                - color: |
+                    [[[
+                      const s = states['sensor.pack4_live_cell_6'];
+                      const sl = states['sensor.pack4_live_min_cell'];
+                      if (!s) return 'white';
+                      const v = parseFloat(s.state);
+                      const lv = sl ? parseFloat(sl.state) : NaN;
+                      return (!isNaN(lv) && v === lv) ? '#1a1a1a' : 'white';
+                    ]]]
+                - border: |
+                    [[[
+                      const b = states['binary_sensor.pack4_live_cell_6_balancing'];
+                      return (b && b.state === 'on') ? '3px solid #00e5ff' : '1px solid rgba(255,255,255,0.12)';
+                    ]]]
+                - box-shadow: |
+                    [[[
+                      const b = states['binary_sensor.pack4_live_cell_6_balancing'];
+                      return (b && b.state === 'on') ? '0px 0px 8px 2px #00e5ff' : 'none';
                     ]]]
               name:
                 - font-size: 0.6em
@@ -3467,12 +5014,14 @@ cards:
             name: |
               [[[
                 const s = states['sensor.pack4_live_cell_7'];
+                const b = states['binary_sensor.pack4_live_cell_7_balancing'];
                 const sl = states['sensor.pack4_live_min_cell']; const sh = states['sensor.pack4_live_max_cell'];
                 if (!s) return 'Cell 7';
                 const v = parseFloat(s.state);
                 const lv = sl ? parseFloat(sl.state) : NaN;
                 const hv = sh ? parseFloat(sh.state) : NaN;
                 let n = 'Cell 7';
+                if (b && b.state === 'on') n += ' ⚡';
                 if (!isNaN(lv) && v === lv) n += ' (L)';
                 if (!isNaN(hv) && v === hv) n += ' (H)';
                 return n;
@@ -3495,7 +5044,26 @@ cards:
                       const v = parseFloat(s.state);
                       const lv = sl ? parseFloat(sl.state) : NaN;
                       const hv = sh ? parseFloat(sh.state) : NaN;
-                      return (!isNaN(lv) && v === lv) ? 'orange' : (!isNaN(hv) && v === hv) ? 'darkgreen' : 'green';
+                      return (!isNaN(lv) && v === lv) ? '#f9a825' : (!isNaN(hv) && v === hv) ? '#1b5e20' : '#2e7d32';
+                    ]]]
+                - color: |
+                    [[[
+                      const s = states['sensor.pack4_live_cell_7'];
+                      const sl = states['sensor.pack4_live_min_cell'];
+                      if (!s) return 'white';
+                      const v = parseFloat(s.state);
+                      const lv = sl ? parseFloat(sl.state) : NaN;
+                      return (!isNaN(lv) && v === lv) ? '#1a1a1a' : 'white';
+                    ]]]
+                - border: |
+                    [[[
+                      const b = states['binary_sensor.pack4_live_cell_7_balancing'];
+                      return (b && b.state === 'on') ? '3px solid #00e5ff' : '1px solid rgba(255,255,255,0.12)';
+                    ]]]
+                - box-shadow: |
+                    [[[
+                      const b = states['binary_sensor.pack4_live_cell_7_balancing'];
+                      return (b && b.state === 'on') ? '0px 0px 8px 2px #00e5ff' : 'none';
                     ]]]
               name:
                 - font-size: 0.6em
@@ -3506,12 +5074,14 @@ cards:
             name: |
               [[[
                 const s = states['sensor.pack4_live_cell_8'];
+                const b = states['binary_sensor.pack4_live_cell_8_balancing'];
                 const sl = states['sensor.pack4_live_min_cell']; const sh = states['sensor.pack4_live_max_cell'];
                 if (!s) return 'Cell 8';
                 const v = parseFloat(s.state);
                 const lv = sl ? parseFloat(sl.state) : NaN;
                 const hv = sh ? parseFloat(sh.state) : NaN;
                 let n = 'Cell 8';
+                if (b && b.state === 'on') n += ' ⚡';
                 if (!isNaN(lv) && v === lv) n += ' (L)';
                 if (!isNaN(hv) && v === hv) n += ' (H)';
                 return n;
@@ -3534,7 +5104,26 @@ cards:
                       const v = parseFloat(s.state);
                       const lv = sl ? parseFloat(sl.state) : NaN;
                       const hv = sh ? parseFloat(sh.state) : NaN;
-                      return (!isNaN(lv) && v === lv) ? 'orange' : (!isNaN(hv) && v === hv) ? 'darkgreen' : 'green';
+                      return (!isNaN(lv) && v === lv) ? '#f9a825' : (!isNaN(hv) && v === hv) ? '#1b5e20' : '#2e7d32';
+                    ]]]
+                - color: |
+                    [[[
+                      const s = states['sensor.pack4_live_cell_8'];
+                      const sl = states['sensor.pack4_live_min_cell'];
+                      if (!s) return 'white';
+                      const v = parseFloat(s.state);
+                      const lv = sl ? parseFloat(sl.state) : NaN;
+                      return (!isNaN(lv) && v === lv) ? '#1a1a1a' : 'white';
+                    ]]]
+                - border: |
+                    [[[
+                      const b = states['binary_sensor.pack4_live_cell_8_balancing'];
+                      return (b && b.state === 'on') ? '3px solid #00e5ff' : '1px solid rgba(255,255,255,0.12)';
+                    ]]]
+                - box-shadow: |
+                    [[[
+                      const b = states['binary_sensor.pack4_live_cell_8_balancing'];
+                      return (b && b.state === 'on') ? '0px 0px 8px 2px #00e5ff' : 'none';
                     ]]]
               name:
                 - font-size: 0.6em
@@ -3545,12 +5134,14 @@ cards:
             name: |
               [[[
                 const s = states['sensor.pack4_live_cell_9'];
+                const b = states['binary_sensor.pack4_live_cell_9_balancing'];
                 const sl = states['sensor.pack4_live_min_cell']; const sh = states['sensor.pack4_live_max_cell'];
                 if (!s) return 'Cell 9';
                 const v = parseFloat(s.state);
                 const lv = sl ? parseFloat(sl.state) : NaN;
                 const hv = sh ? parseFloat(sh.state) : NaN;
                 let n = 'Cell 9';
+                if (b && b.state === 'on') n += ' ⚡';
                 if (!isNaN(lv) && v === lv) n += ' (L)';
                 if (!isNaN(hv) && v === hv) n += ' (H)';
                 return n;
@@ -3573,7 +5164,26 @@ cards:
                       const v = parseFloat(s.state);
                       const lv = sl ? parseFloat(sl.state) : NaN;
                       const hv = sh ? parseFloat(sh.state) : NaN;
-                      return (!isNaN(lv) && v === lv) ? 'orange' : (!isNaN(hv) && v === hv) ? 'darkgreen' : 'green';
+                      return (!isNaN(lv) && v === lv) ? '#f9a825' : (!isNaN(hv) && v === hv) ? '#1b5e20' : '#2e7d32';
+                    ]]]
+                - color: |
+                    [[[
+                      const s = states['sensor.pack4_live_cell_9'];
+                      const sl = states['sensor.pack4_live_min_cell'];
+                      if (!s) return 'white';
+                      const v = parseFloat(s.state);
+                      const lv = sl ? parseFloat(sl.state) : NaN;
+                      return (!isNaN(lv) && v === lv) ? '#1a1a1a' : 'white';
+                    ]]]
+                - border: |
+                    [[[
+                      const b = states['binary_sensor.pack4_live_cell_9_balancing'];
+                      return (b && b.state === 'on') ? '3px solid #00e5ff' : '1px solid rgba(255,255,255,0.12)';
+                    ]]]
+                - box-shadow: |
+                    [[[
+                      const b = states['binary_sensor.pack4_live_cell_9_balancing'];
+                      return (b && b.state === 'on') ? '0px 0px 8px 2px #00e5ff' : 'none';
                     ]]]
               name:
                 - font-size: 0.6em
@@ -3584,12 +5194,14 @@ cards:
             name: |
               [[[
                 const s = states['sensor.pack4_live_cell_10'];
+                const b = states['binary_sensor.pack4_live_cell_10_balancing'];
                 const sl = states['sensor.pack4_live_min_cell']; const sh = states['sensor.pack4_live_max_cell'];
                 if (!s) return 'Cell 10';
                 const v = parseFloat(s.state);
                 const lv = sl ? parseFloat(sl.state) : NaN;
                 const hv = sh ? parseFloat(sh.state) : NaN;
                 let n = 'Cell 10';
+                if (b && b.state === 'on') n += ' ⚡';
                 if (!isNaN(lv) && v === lv) n += ' (L)';
                 if (!isNaN(hv) && v === hv) n += ' (H)';
                 return n;
@@ -3612,7 +5224,26 @@ cards:
                       const v = parseFloat(s.state);
                       const lv = sl ? parseFloat(sl.state) : NaN;
                       const hv = sh ? parseFloat(sh.state) : NaN;
-                      return (!isNaN(lv) && v === lv) ? 'orange' : (!isNaN(hv) && v === hv) ? 'darkgreen' : 'green';
+                      return (!isNaN(lv) && v === lv) ? '#f9a825' : (!isNaN(hv) && v === hv) ? '#1b5e20' : '#2e7d32';
+                    ]]]
+                - color: |
+                    [[[
+                      const s = states['sensor.pack4_live_cell_10'];
+                      const sl = states['sensor.pack4_live_min_cell'];
+                      if (!s) return 'white';
+                      const v = parseFloat(s.state);
+                      const lv = sl ? parseFloat(sl.state) : NaN;
+                      return (!isNaN(lv) && v === lv) ? '#1a1a1a' : 'white';
+                    ]]]
+                - border: |
+                    [[[
+                      const b = states['binary_sensor.pack4_live_cell_10_balancing'];
+                      return (b && b.state === 'on') ? '3px solid #00e5ff' : '1px solid rgba(255,255,255,0.12)';
+                    ]]]
+                - box-shadow: |
+                    [[[
+                      const b = states['binary_sensor.pack4_live_cell_10_balancing'];
+                      return (b && b.state === 'on') ? '0px 0px 8px 2px #00e5ff' : 'none';
                     ]]]
               name:
                 - font-size: 0.6em
@@ -3623,12 +5254,14 @@ cards:
             name: |
               [[[
                 const s = states['sensor.pack4_live_cell_11'];
+                const b = states['binary_sensor.pack4_live_cell_11_balancing'];
                 const sl = states['sensor.pack4_live_min_cell']; const sh = states['sensor.pack4_live_max_cell'];
                 if (!s) return 'Cell 11';
                 const v = parseFloat(s.state);
                 const lv = sl ? parseFloat(sl.state) : NaN;
                 const hv = sh ? parseFloat(sh.state) : NaN;
                 let n = 'Cell 11';
+                if (b && b.state === 'on') n += ' ⚡';
                 if (!isNaN(lv) && v === lv) n += ' (L)';
                 if (!isNaN(hv) && v === hv) n += ' (H)';
                 return n;
@@ -3651,7 +5284,26 @@ cards:
                       const v = parseFloat(s.state);
                       const lv = sl ? parseFloat(sl.state) : NaN;
                       const hv = sh ? parseFloat(sh.state) : NaN;
-                      return (!isNaN(lv) && v === lv) ? 'orange' : (!isNaN(hv) && v === hv) ? 'darkgreen' : 'green';
+                      return (!isNaN(lv) && v === lv) ? '#f9a825' : (!isNaN(hv) && v === hv) ? '#1b5e20' : '#2e7d32';
+                    ]]]
+                - color: |
+                    [[[
+                      const s = states['sensor.pack4_live_cell_11'];
+                      const sl = states['sensor.pack4_live_min_cell'];
+                      if (!s) return 'white';
+                      const v = parseFloat(s.state);
+                      const lv = sl ? parseFloat(sl.state) : NaN;
+                      return (!isNaN(lv) && v === lv) ? '#1a1a1a' : 'white';
+                    ]]]
+                - border: |
+                    [[[
+                      const b = states['binary_sensor.pack4_live_cell_11_balancing'];
+                      return (b && b.state === 'on') ? '3px solid #00e5ff' : '1px solid rgba(255,255,255,0.12)';
+                    ]]]
+                - box-shadow: |
+                    [[[
+                      const b = states['binary_sensor.pack4_live_cell_11_balancing'];
+                      return (b && b.state === 'on') ? '0px 0px 8px 2px #00e5ff' : 'none';
                     ]]]
               name:
                 - font-size: 0.6em
@@ -3662,12 +5314,14 @@ cards:
             name: |
               [[[
                 const s = states['sensor.pack4_live_cell_12'];
+                const b = states['binary_sensor.pack4_live_cell_12_balancing'];
                 const sl = states['sensor.pack4_live_min_cell']; const sh = states['sensor.pack4_live_max_cell'];
                 if (!s) return 'Cell 12';
                 const v = parseFloat(s.state);
                 const lv = sl ? parseFloat(sl.state) : NaN;
                 const hv = sh ? parseFloat(sh.state) : NaN;
                 let n = 'Cell 12';
+                if (b && b.state === 'on') n += ' ⚡';
                 if (!isNaN(lv) && v === lv) n += ' (L)';
                 if (!isNaN(hv) && v === hv) n += ' (H)';
                 return n;
@@ -3690,7 +5344,26 @@ cards:
                       const v = parseFloat(s.state);
                       const lv = sl ? parseFloat(sl.state) : NaN;
                       const hv = sh ? parseFloat(sh.state) : NaN;
-                      return (!isNaN(lv) && v === lv) ? 'orange' : (!isNaN(hv) && v === hv) ? 'darkgreen' : 'green';
+                      return (!isNaN(lv) && v === lv) ? '#f9a825' : (!isNaN(hv) && v === hv) ? '#1b5e20' : '#2e7d32';
+                    ]]]
+                - color: |
+                    [[[
+                      const s = states['sensor.pack4_live_cell_12'];
+                      const sl = states['sensor.pack4_live_min_cell'];
+                      if (!s) return 'white';
+                      const v = parseFloat(s.state);
+                      const lv = sl ? parseFloat(sl.state) : NaN;
+                      return (!isNaN(lv) && v === lv) ? '#1a1a1a' : 'white';
+                    ]]]
+                - border: |
+                    [[[
+                      const b = states['binary_sensor.pack4_live_cell_12_balancing'];
+                      return (b && b.state === 'on') ? '3px solid #00e5ff' : '1px solid rgba(255,255,255,0.12)';
+                    ]]]
+                - box-shadow: |
+                    [[[
+                      const b = states['binary_sensor.pack4_live_cell_12_balancing'];
+                      return (b && b.state === 'on') ? '0px 0px 8px 2px #00e5ff' : 'none';
                     ]]]
               name:
                 - font-size: 0.6em
@@ -3701,12 +5374,14 @@ cards:
             name: |
               [[[
                 const s = states['sensor.pack4_live_cell_13'];
+                const b = states['binary_sensor.pack4_live_cell_13_balancing'];
                 const sl = states['sensor.pack4_live_min_cell']; const sh = states['sensor.pack4_live_max_cell'];
                 if (!s) return 'Cell 13';
                 const v = parseFloat(s.state);
                 const lv = sl ? parseFloat(sl.state) : NaN;
                 const hv = sh ? parseFloat(sh.state) : NaN;
                 let n = 'Cell 13';
+                if (b && b.state === 'on') n += ' ⚡';
                 if (!isNaN(lv) && v === lv) n += ' (L)';
                 if (!isNaN(hv) && v === hv) n += ' (H)';
                 return n;
@@ -3729,7 +5404,26 @@ cards:
                       const v = parseFloat(s.state);
                       const lv = sl ? parseFloat(sl.state) : NaN;
                       const hv = sh ? parseFloat(sh.state) : NaN;
-                      return (!isNaN(lv) && v === lv) ? 'orange' : (!isNaN(hv) && v === hv) ? 'darkgreen' : 'green';
+                      return (!isNaN(lv) && v === lv) ? '#f9a825' : (!isNaN(hv) && v === hv) ? '#1b5e20' : '#2e7d32';
+                    ]]]
+                - color: |
+                    [[[
+                      const s = states['sensor.pack4_live_cell_13'];
+                      const sl = states['sensor.pack4_live_min_cell'];
+                      if (!s) return 'white';
+                      const v = parseFloat(s.state);
+                      const lv = sl ? parseFloat(sl.state) : NaN;
+                      return (!isNaN(lv) && v === lv) ? '#1a1a1a' : 'white';
+                    ]]]
+                - border: |
+                    [[[
+                      const b = states['binary_sensor.pack4_live_cell_13_balancing'];
+                      return (b && b.state === 'on') ? '3px solid #00e5ff' : '1px solid rgba(255,255,255,0.12)';
+                    ]]]
+                - box-shadow: |
+                    [[[
+                      const b = states['binary_sensor.pack4_live_cell_13_balancing'];
+                      return (b && b.state === 'on') ? '0px 0px 8px 2px #00e5ff' : 'none';
                     ]]]
               name:
                 - font-size: 0.6em
@@ -3740,12 +5434,14 @@ cards:
             name: |
               [[[
                 const s = states['sensor.pack4_live_cell_14'];
+                const b = states['binary_sensor.pack4_live_cell_14_balancing'];
                 const sl = states['sensor.pack4_live_min_cell']; const sh = states['sensor.pack4_live_max_cell'];
                 if (!s) return 'Cell 14';
                 const v = parseFloat(s.state);
                 const lv = sl ? parseFloat(sl.state) : NaN;
                 const hv = sh ? parseFloat(sh.state) : NaN;
                 let n = 'Cell 14';
+                if (b && b.state === 'on') n += ' ⚡';
                 if (!isNaN(lv) && v === lv) n += ' (L)';
                 if (!isNaN(hv) && v === hv) n += ' (H)';
                 return n;
@@ -3768,7 +5464,26 @@ cards:
                       const v = parseFloat(s.state);
                       const lv = sl ? parseFloat(sl.state) : NaN;
                       const hv = sh ? parseFloat(sh.state) : NaN;
-                      return (!isNaN(lv) && v === lv) ? 'orange' : (!isNaN(hv) && v === hv) ? 'darkgreen' : 'green';
+                      return (!isNaN(lv) && v === lv) ? '#f9a825' : (!isNaN(hv) && v === hv) ? '#1b5e20' : '#2e7d32';
+                    ]]]
+                - color: |
+                    [[[
+                      const s = states['sensor.pack4_live_cell_14'];
+                      const sl = states['sensor.pack4_live_min_cell'];
+                      if (!s) return 'white';
+                      const v = parseFloat(s.state);
+                      const lv = sl ? parseFloat(sl.state) : NaN;
+                      return (!isNaN(lv) && v === lv) ? '#1a1a1a' : 'white';
+                    ]]]
+                - border: |
+                    [[[
+                      const b = states['binary_sensor.pack4_live_cell_14_balancing'];
+                      return (b && b.state === 'on') ? '3px solid #00e5ff' : '1px solid rgba(255,255,255,0.12)';
+                    ]]]
+                - box-shadow: |
+                    [[[
+                      const b = states['binary_sensor.pack4_live_cell_14_balancing'];
+                      return (b && b.state === 'on') ? '0px 0px 8px 2px #00e5ff' : 'none';
                     ]]]
               name:
                 - font-size: 0.6em
@@ -3779,12 +5494,14 @@ cards:
             name: |
               [[[
                 const s = states['sensor.pack4_live_cell_15'];
+                const b = states['binary_sensor.pack4_live_cell_15_balancing'];
                 const sl = states['sensor.pack4_live_min_cell']; const sh = states['sensor.pack4_live_max_cell'];
                 if (!s) return 'Cell 15';
                 const v = parseFloat(s.state);
                 const lv = sl ? parseFloat(sl.state) : NaN;
                 const hv = sh ? parseFloat(sh.state) : NaN;
                 let n = 'Cell 15';
+                if (b && b.state === 'on') n += ' ⚡';
                 if (!isNaN(lv) && v === lv) n += ' (L)';
                 if (!isNaN(hv) && v === hv) n += ' (H)';
                 return n;
@@ -3807,7 +5524,26 @@ cards:
                       const v = parseFloat(s.state);
                       const lv = sl ? parseFloat(sl.state) : NaN;
                       const hv = sh ? parseFloat(sh.state) : NaN;
-                      return (!isNaN(lv) && v === lv) ? 'orange' : (!isNaN(hv) && v === hv) ? 'darkgreen' : 'green';
+                      return (!isNaN(lv) && v === lv) ? '#f9a825' : (!isNaN(hv) && v === hv) ? '#1b5e20' : '#2e7d32';
+                    ]]]
+                - color: |
+                    [[[
+                      const s = states['sensor.pack4_live_cell_15'];
+                      const sl = states['sensor.pack4_live_min_cell'];
+                      if (!s) return 'white';
+                      const v = parseFloat(s.state);
+                      const lv = sl ? parseFloat(sl.state) : NaN;
+                      return (!isNaN(lv) && v === lv) ? '#1a1a1a' : 'white';
+                    ]]]
+                - border: |
+                    [[[
+                      const b = states['binary_sensor.pack4_live_cell_15_balancing'];
+                      return (b && b.state === 'on') ? '3px solid #00e5ff' : '1px solid rgba(255,255,255,0.12)';
+                    ]]]
+                - box-shadow: |
+                    [[[
+                      const b = states['binary_sensor.pack4_live_cell_15_balancing'];
+                      return (b && b.state === 'on') ? '0px 0px 8px 2px #00e5ff' : 'none';
                     ]]]
               name:
                 - font-size: 0.6em
@@ -3818,12 +5554,14 @@ cards:
             name: |
               [[[
                 const s = states['sensor.pack4_live_cell_16'];
+                const b = states['binary_sensor.pack4_live_cell_16_balancing'];
                 const sl = states['sensor.pack4_live_min_cell']; const sh = states['sensor.pack4_live_max_cell'];
                 if (!s) return 'Cell 16';
                 const v = parseFloat(s.state);
                 const lv = sl ? parseFloat(sl.state) : NaN;
                 const hv = sh ? parseFloat(sh.state) : NaN;
                 let n = 'Cell 16';
+                if (b && b.state === 'on') n += ' ⚡';
                 if (!isNaN(lv) && v === lv) n += ' (L)';
                 if (!isNaN(hv) && v === hv) n += ' (H)';
                 return n;
@@ -3846,7 +5584,26 @@ cards:
                       const v = parseFloat(s.state);
                       const lv = sl ? parseFloat(sl.state) : NaN;
                       const hv = sh ? parseFloat(sh.state) : NaN;
-                      return (!isNaN(lv) && v === lv) ? 'orange' : (!isNaN(hv) && v === hv) ? 'darkgreen' : 'green';
+                      return (!isNaN(lv) && v === lv) ? '#f9a825' : (!isNaN(hv) && v === hv) ? '#1b5e20' : '#2e7d32';
+                    ]]]
+                - color: |
+                    [[[
+                      const s = states['sensor.pack4_live_cell_16'];
+                      const sl = states['sensor.pack4_live_min_cell'];
+                      if (!s) return 'white';
+                      const v = parseFloat(s.state);
+                      const lv = sl ? parseFloat(sl.state) : NaN;
+                      return (!isNaN(lv) && v === lv) ? '#1a1a1a' : 'white';
+                    ]]]
+                - border: |
+                    [[[
+                      const b = states['binary_sensor.pack4_live_cell_16_balancing'];
+                      return (b && b.state === 'on') ? '3px solid #00e5ff' : '1px solid rgba(255,255,255,0.12)';
+                    ]]]
+                - box-shadow: |
+                    [[[
+                      const b = states['binary_sensor.pack4_live_cell_16_balancing'];
+                      return (b && b.state === 'on') ? '0px 0px 8px 2px #00e5ff' : 'none';
                     ]]]
               name:
                 - font-size: 0.6em
