@@ -527,7 +527,16 @@ void BmsBridge::load_saved_mac_() {
   uint32_t key = fnv1a_hash_extend(2166136261u, "bms_bridge_mac_" + std::to_string(mac_slot_));
   auto pref = global_preferences->make_preference<uint64_t>(key, true);
   uint64_t mac = 0;
-  if (!pref.load(&mac) || mac == 0) return;
+  if (!pref.load(&mac) || mac == 0) {
+    // No stored MAC: fall back to the YAML value. A placeholder (all zero)
+    // means there is nothing to connect to yet — stay disabled instead of
+    // retrying a bogus address until the user sets one.
+    if (ble_client_->get_address() == 0) {
+      ble_client_->set_enabled(false);
+      ESP_LOGW(TAG, "no MAC configured: set the 'Pack MAC' text entity");
+    }
+    return;
+  }
   ble_client_->set_address(mac);
   mac_str_ = format_mac(mac);
   ESP_LOGI(TAG, "using stored MAC %s", mac_str_.c_str());

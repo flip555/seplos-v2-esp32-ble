@@ -11,8 +11,8 @@ From zero to a working pack in about ten minutes, with **one flash**.
 ## 2. Minimal configuration
 
 The `ble_client` needs *a* MAC to compile, but you no longer need to know the
-real one up front — the component can store it at runtime. Use a placeholder
-for the first flash:
+real one up front — the component stores it in NVS at runtime and prefers that
+value over the YAML one. Use a placeholder for the first flash:
 
 ```yaml
 substitutions:
@@ -108,6 +108,13 @@ step 3 (`AA:BB:CC:DD:EE:FF`). On submit the component:
 
 The value survives reboots and OTA updates. Press **Scan** again any time to
 re-check what is nearby.
+
+**When it is re-read:** at every boot the stored MAC wins over the YAML value.
+OTA keeps NVS, so a firmware update does not ask again. A full serial flash that
+erases NVS (or an "erase flash" option) clears it — then either set **Pack MAC**
+again or hardcode the real MAC in `ble_client`, which becomes the fallback. With
+an all-zero placeholder and no stored MAC the client stays disabled, so there
+are no futile connection attempts.
 
 ## 5. Multiple packs
 
