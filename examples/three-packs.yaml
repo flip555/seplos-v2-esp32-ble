@@ -97,1601 +97,1601 @@ sensor:
     bms_bridge_id: hub1
     device_id: pack1_live
     type: total_voltage
-    name: "Pack 1 Pack voltage"
+    name: "Pack voltage"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_live
     type: current
-    name: "Pack 1 Current"
+    name: "Current"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_live
     type: power
-    name: "Pack 1 Power"
+    name: "Power"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_live
     type: soc
-    name: "Pack 1 SOC"
+    name: "SOC"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_live
     type: soh
-    name: "Pack 1 SOH"
+    name: "SOH"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_live
     type: cycles
-    name: "Pack 1 Cycles"
+    name: "Cycles"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_live
     type: capacity
-    name: "Pack 1 Capacity"
+    name: "Capacity"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_live
     type: remaining_capacity
-    name: "Pack 1 Remaining capacity"
+    name: "Remaining capacity"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_live
     type: rated_capacity
-    name: "Pack 1 Rated capacity"
+    name: "Rated capacity"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_live
     type: port_voltage
-    name: "Pack 1 Port voltage"
+    name: "Port voltage"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_live
     type: cell_voltage_min
-    name: "Pack 1 Min cell"
+    name: "Min cell"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_live
     type: cell_voltage_max
-    name: "Pack 1 Max cell"
+    name: "Max cell"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_live
     type: cell_voltage_delta
-    name: "Pack 1 Cell delta"
+    name: "Cell delta"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_live
     type: temperature_min
-    name: "Pack 1 Min temp"
+    name: "Min temp"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_live
     type: temperature_max
-    name: "Pack 1 Max temp"
+    name: "Max temp"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_live
     type: mos_temperature
-    name: "Pack 1 MOS temperature"
+    name: "MOS temperature"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_live
     type: full_charge
-    name: "Pack 1 Full charge"
+    name: "Full charge"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_live
     type: full_charge_watts
-    name: "Pack 1 Full charge (Wh)"
+    name: "Full charge (Wh)"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_live
     type: remaining_watts
-    name: "Pack 1 Remaining (Wh)"
+    name: "Remaining (Wh)"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_live
     type: capacity_watts
-    name: "Pack 1 Capacity (Wh)"
+    name: "Capacity (Wh)"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_live
     type: battery_watts
-    name: "Pack 1 Battery power"
+    name: "Battery power"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_live
     type: cell_max_number
-    name: "Pack 1 Max cell #"
+    name: "Max cell #"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_live
     type: cell_min_number
-    name: "Pack 1 Min cell #"
+    name: "Min cell #"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_live
     type: temp_max_number
-    name: "Pack 1 Max temp #"
+    name: "Max temp #"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_live
     type: temp_min_number
-    name: "Pack 1 Min temp #"
+    name: "Min temp #"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_live
     type: temp_delta
-    name: "Pack 1 Temp spread"
+    name: "Temp spread"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_live
     type: cell_voltage
     index: 1
-    name: "Pack 1 Cell 1"
+    name: "Cell 1"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_live
     type: cell_voltage
     index: 2
-    name: "Pack 1 Cell 2"
+    name: "Cell 2"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_live
     type: cell_voltage
     index: 3
-    name: "Pack 1 Cell 3"
+    name: "Cell 3"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_live
     type: cell_voltage
     index: 4
-    name: "Pack 1 Cell 4"
+    name: "Cell 4"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_live
     type: cell_voltage
     index: 5
-    name: "Pack 1 Cell 5"
+    name: "Cell 5"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_live
     type: cell_voltage
     index: 6
-    name: "Pack 1 Cell 6"
+    name: "Cell 6"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_live
     type: cell_voltage
     index: 7
-    name: "Pack 1 Cell 7"
+    name: "Cell 7"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_live
     type: cell_voltage
     index: 8
-    name: "Pack 1 Cell 8"
+    name: "Cell 8"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_live
     type: cell_voltage
     index: 9
-    name: "Pack 1 Cell 9"
+    name: "Cell 9"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_live
     type: cell_voltage
     index: 10
-    name: "Pack 1 Cell 10"
+    name: "Cell 10"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_live
     type: cell_voltage
     index: 11
-    name: "Pack 1 Cell 11"
+    name: "Cell 11"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_live
     type: cell_voltage
     index: 12
-    name: "Pack 1 Cell 12"
+    name: "Cell 12"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_live
     type: cell_voltage
     index: 13
-    name: "Pack 1 Cell 13"
+    name: "Cell 13"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_live
     type: cell_voltage
     index: 14
-    name: "Pack 1 Cell 14"
+    name: "Cell 14"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_live
     type: cell_voltage
     index: 15
-    name: "Pack 1 Cell 15"
+    name: "Cell 15"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_live
     type: cell_voltage
     index: 16
-    name: "Pack 1 Cell 16"
+    name: "Cell 16"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_live
     type: temperature
     index: 1
-    name: "Pack 1 Temp 1"
+    name: "Temp 1"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_live
     type: temperature
     index: 2
-    name: "Pack 1 Temp 2"
+    name: "Temp 2"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_live
     type: temperature
     index: 3
-    name: "Pack 1 Temp 3"
+    name: "Temp 3"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_live
     type: temperature
     index: 4
-    name: "Pack 1 Temp 4"
+    name: "Temp 4"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_live
     type: temperature
     index: 5
-    name: "Pack 1 Temp 5"
+    name: "Temp 5"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_live
     type: temperature
     index: 6
-    name: "Pack 1 Temp 6"
+    name: "Temp 6"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_settings
     type: setting_cell_ov_alarm
-    name: "Pack 1 Cell OV alarm"
+    name: "Cell OV alarm"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_settings
     type: setting_cell_ov_rec
-    name: "Pack 1 Cell OV recovery"
+    name: "Cell OV recovery"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_settings
     type: setting_cell_uv_alarm
-    name: "Pack 1 Cell UV alarm"
+    name: "Cell UV alarm"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_settings
     type: setting_cell_uv_rec
-    name: "Pack 1 Cell UV recovery"
+    name: "Cell UV recovery"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_settings
     type: setting_cell_ovp
-    name: "Pack 1 Cell OVP"
+    name: "Cell OVP"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_settings
     type: setting_cell_ovp_rec
-    name: "Pack 1 Cell OVP recovery"
+    name: "Cell OVP recovery"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_settings
     type: setting_cell_uvp
-    name: "Pack 1 Cell UVP"
+    name: "Cell UVP"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_settings
     type: setting_cell_uvp_rec
-    name: "Pack 1 Cell UVP recovery"
+    name: "Cell UVP recovery"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_settings
     type: setting_balance_start
-    name: "Pack 1 Balance start"
+    name: "Balance start"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_settings
     type: setting_charge_forbid
-    name: "Pack 1 Charge forbidden below"
+    name: "Charge forbidden below"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_settings
     type: setting_pack_ov_alarm
-    name: "Pack 1 Pack OV alarm"
+    name: "Pack OV alarm"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_settings
     type: setting_pack_ov_rec
-    name: "Pack 1 Pack OV recovery"
+    name: "Pack OV recovery"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_settings
     type: setting_pack_uv_alarm
-    name: "Pack 1 Pack UV alarm"
+    name: "Pack UV alarm"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_settings
     type: setting_pack_uv_rec
-    name: "Pack 1 Pack UV recovery"
+    name: "Pack UV recovery"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_settings
     type: setting_pack_ovp
-    name: "Pack 1 Pack OVP"
+    name: "Pack OVP"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_settings
     type: setting_pack_ovp_rec
-    name: "Pack 1 Pack OVP recovery"
+    name: "Pack OVP recovery"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_settings
     type: setting_pack_uvp
-    name: "Pack 1 Pack UVP"
+    name: "Pack UVP"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_settings
     type: setting_pack_uvp_rec
-    name: "Pack 1 Pack UVP recovery"
+    name: "Pack UVP recovery"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_settings
     type: setting_charge_ovp
-    name: "Pack 1 Charging OVP"
+    name: "Charging OVP"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_settings
     type: setting_charge_ovp_rec
-    name: "Pack 1 Charging OVP recovery"
+    name: "Charging OVP recovery"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_settings
     type: setting_charge_temp_high_warn
-    name: "Pack 1 Charge temp high warn"
+    name: "Charge temp high warn"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_settings
     type: setting_charge_temp_high_rec
-    name: "Pack 1 Charge temp high rec"
+    name: "Charge temp high rec"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_settings
     type: setting_charge_temp_low_warn
-    name: "Pack 1 Charge temp low warn"
+    name: "Charge temp low warn"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_settings
     type: setting_charge_temp_low_rec
-    name: "Pack 1 Charge temp low rec"
+    name: "Charge temp low rec"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_settings
     type: setting_charge_temp_high_prot
-    name: "Pack 1 Charge temp high prot"
+    name: "Charge temp high prot"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_settings
     type: setting_charge_temp_high_prot_rec
-    name: "Pack 1 Charge temp high prot rec"
+    name: "Charge temp high prot rec"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_settings
     type: setting_charge_temp_low_prot
-    name: "Pack 1 Charge temp low prot"
+    name: "Charge temp low prot"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_settings
     type: setting_charge_temp_low_prot_rec
-    name: "Pack 1 Charge temp low prot rec"
+    name: "Charge temp low prot rec"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_settings
     type: setting_discharge_temp_high_warn
-    name: "Pack 1 Discharge temp high warn"
+    name: "Discharge temp high warn"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_settings
     type: setting_discharge_temp_high_rec
-    name: "Pack 1 Discharge temp high rec"
+    name: "Discharge temp high rec"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_settings
     type: setting_discharge_temp_low_warn
-    name: "Pack 1 Discharge temp low warn"
+    name: "Discharge temp low warn"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_settings
     type: setting_discharge_temp_low_rec
-    name: "Pack 1 Discharge temp low rec"
+    name: "Discharge temp low rec"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_settings
     type: setting_discharge_temp_high_prot
-    name: "Pack 1 Discharge temp high prot"
+    name: "Discharge temp high prot"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_settings
     type: setting_discharge_temp_high_prot_rec
-    name: "Pack 1 Discharge temp high prot rec"
+    name: "Discharge temp high prot rec"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_settings
     type: setting_discharge_temp_low_prot
-    name: "Pack 1 Discharge temp low prot"
+    name: "Discharge temp low prot"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_settings
     type: setting_discharge_temp_low_prot_rec
-    name: "Pack 1 Discharge temp low prot rec"
+    name: "Discharge temp low prot rec"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_settings
     type: setting_cell_heat
-    name: "Pack 1 Cell heating"
+    name: "Cell heating"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_settings
     type: setting_cell_heat_rec
-    name: "Pack 1 Cell heating recovery"
+    name: "Cell heating recovery"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_live
     type: total_voltage
-    name: "Pack 2 Pack voltage"
+    name: "Pack voltage"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_live
     type: current
-    name: "Pack 2 Current"
+    name: "Current"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_live
     type: power
-    name: "Pack 2 Power"
+    name: "Power"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_live
     type: soc
-    name: "Pack 2 SOC"
+    name: "SOC"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_live
     type: soh
-    name: "Pack 2 SOH"
+    name: "SOH"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_live
     type: cycles
-    name: "Pack 2 Cycles"
+    name: "Cycles"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_live
     type: capacity
-    name: "Pack 2 Capacity"
+    name: "Capacity"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_live
     type: remaining_capacity
-    name: "Pack 2 Remaining capacity"
+    name: "Remaining capacity"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_live
     type: rated_capacity
-    name: "Pack 2 Rated capacity"
+    name: "Rated capacity"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_live
     type: port_voltage
-    name: "Pack 2 Port voltage"
+    name: "Port voltage"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_live
     type: cell_voltage_min
-    name: "Pack 2 Min cell"
+    name: "Min cell"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_live
     type: cell_voltage_max
-    name: "Pack 2 Max cell"
+    name: "Max cell"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_live
     type: cell_voltage_delta
-    name: "Pack 2 Cell delta"
+    name: "Cell delta"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_live
     type: temperature_min
-    name: "Pack 2 Min temp"
+    name: "Min temp"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_live
     type: temperature_max
-    name: "Pack 2 Max temp"
+    name: "Max temp"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_live
     type: mos_temperature
-    name: "Pack 2 MOS temperature"
+    name: "MOS temperature"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_live
     type: full_charge
-    name: "Pack 2 Full charge"
+    name: "Full charge"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_live
     type: full_charge_watts
-    name: "Pack 2 Full charge (Wh)"
+    name: "Full charge (Wh)"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_live
     type: remaining_watts
-    name: "Pack 2 Remaining (Wh)"
+    name: "Remaining (Wh)"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_live
     type: capacity_watts
-    name: "Pack 2 Capacity (Wh)"
+    name: "Capacity (Wh)"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_live
     type: battery_watts
-    name: "Pack 2 Battery power"
+    name: "Battery power"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_live
     type: cell_max_number
-    name: "Pack 2 Max cell #"
+    name: "Max cell #"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_live
     type: cell_min_number
-    name: "Pack 2 Min cell #"
+    name: "Min cell #"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_live
     type: temp_max_number
-    name: "Pack 2 Max temp #"
+    name: "Max temp #"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_live
     type: temp_min_number
-    name: "Pack 2 Min temp #"
+    name: "Min temp #"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_live
     type: temp_delta
-    name: "Pack 2 Temp spread"
+    name: "Temp spread"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_live
     type: cell_voltage
     index: 1
-    name: "Pack 2 Cell 1"
+    name: "Cell 1"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_live
     type: cell_voltage
     index: 2
-    name: "Pack 2 Cell 2"
+    name: "Cell 2"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_live
     type: cell_voltage
     index: 3
-    name: "Pack 2 Cell 3"
+    name: "Cell 3"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_live
     type: cell_voltage
     index: 4
-    name: "Pack 2 Cell 4"
+    name: "Cell 4"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_live
     type: cell_voltage
     index: 5
-    name: "Pack 2 Cell 5"
+    name: "Cell 5"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_live
     type: cell_voltage
     index: 6
-    name: "Pack 2 Cell 6"
+    name: "Cell 6"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_live
     type: cell_voltage
     index: 7
-    name: "Pack 2 Cell 7"
+    name: "Cell 7"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_live
     type: cell_voltage
     index: 8
-    name: "Pack 2 Cell 8"
+    name: "Cell 8"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_live
     type: cell_voltage
     index: 9
-    name: "Pack 2 Cell 9"
+    name: "Cell 9"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_live
     type: cell_voltage
     index: 10
-    name: "Pack 2 Cell 10"
+    name: "Cell 10"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_live
     type: cell_voltage
     index: 11
-    name: "Pack 2 Cell 11"
+    name: "Cell 11"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_live
     type: cell_voltage
     index: 12
-    name: "Pack 2 Cell 12"
+    name: "Cell 12"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_live
     type: cell_voltage
     index: 13
-    name: "Pack 2 Cell 13"
+    name: "Cell 13"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_live
     type: cell_voltage
     index: 14
-    name: "Pack 2 Cell 14"
+    name: "Cell 14"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_live
     type: cell_voltage
     index: 15
-    name: "Pack 2 Cell 15"
+    name: "Cell 15"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_live
     type: cell_voltage
     index: 16
-    name: "Pack 2 Cell 16"
+    name: "Cell 16"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_live
     type: temperature
     index: 1
-    name: "Pack 2 Temp 1"
+    name: "Temp 1"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_live
     type: temperature
     index: 2
-    name: "Pack 2 Temp 2"
+    name: "Temp 2"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_live
     type: temperature
     index: 3
-    name: "Pack 2 Temp 3"
+    name: "Temp 3"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_live
     type: temperature
     index: 4
-    name: "Pack 2 Temp 4"
+    name: "Temp 4"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_live
     type: temperature
     index: 5
-    name: "Pack 2 Temp 5"
+    name: "Temp 5"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_live
     type: temperature
     index: 6
-    name: "Pack 2 Temp 6"
+    name: "Temp 6"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_settings
     type: setting_cell_ov_alarm
-    name: "Pack 2 Cell OV alarm"
+    name: "Cell OV alarm"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_settings
     type: setting_cell_ov_rec
-    name: "Pack 2 Cell OV recovery"
+    name: "Cell OV recovery"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_settings
     type: setting_cell_uv_alarm
-    name: "Pack 2 Cell UV alarm"
+    name: "Cell UV alarm"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_settings
     type: setting_cell_uv_rec
-    name: "Pack 2 Cell UV recovery"
+    name: "Cell UV recovery"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_settings
     type: setting_cell_ovp
-    name: "Pack 2 Cell OVP"
+    name: "Cell OVP"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_settings
     type: setting_cell_ovp_rec
-    name: "Pack 2 Cell OVP recovery"
+    name: "Cell OVP recovery"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_settings
     type: setting_cell_uvp
-    name: "Pack 2 Cell UVP"
+    name: "Cell UVP"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_settings
     type: setting_cell_uvp_rec
-    name: "Pack 2 Cell UVP recovery"
+    name: "Cell UVP recovery"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_settings
     type: setting_balance_start
-    name: "Pack 2 Balance start"
+    name: "Balance start"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_settings
     type: setting_charge_forbid
-    name: "Pack 2 Charge forbidden below"
+    name: "Charge forbidden below"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_settings
     type: setting_pack_ov_alarm
-    name: "Pack 2 Pack OV alarm"
+    name: "Pack OV alarm"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_settings
     type: setting_pack_ov_rec
-    name: "Pack 2 Pack OV recovery"
+    name: "Pack OV recovery"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_settings
     type: setting_pack_uv_alarm
-    name: "Pack 2 Pack UV alarm"
+    name: "Pack UV alarm"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_settings
     type: setting_pack_uv_rec
-    name: "Pack 2 Pack UV recovery"
+    name: "Pack UV recovery"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_settings
     type: setting_pack_ovp
-    name: "Pack 2 Pack OVP"
+    name: "Pack OVP"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_settings
     type: setting_pack_ovp_rec
-    name: "Pack 2 Pack OVP recovery"
+    name: "Pack OVP recovery"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_settings
     type: setting_pack_uvp
-    name: "Pack 2 Pack UVP"
+    name: "Pack UVP"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_settings
     type: setting_pack_uvp_rec
-    name: "Pack 2 Pack UVP recovery"
+    name: "Pack UVP recovery"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_settings
     type: setting_charge_ovp
-    name: "Pack 2 Charging OVP"
+    name: "Charging OVP"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_settings
     type: setting_charge_ovp_rec
-    name: "Pack 2 Charging OVP recovery"
+    name: "Charging OVP recovery"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_settings
     type: setting_charge_temp_high_warn
-    name: "Pack 2 Charge temp high warn"
+    name: "Charge temp high warn"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_settings
     type: setting_charge_temp_high_rec
-    name: "Pack 2 Charge temp high rec"
+    name: "Charge temp high rec"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_settings
     type: setting_charge_temp_low_warn
-    name: "Pack 2 Charge temp low warn"
+    name: "Charge temp low warn"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_settings
     type: setting_charge_temp_low_rec
-    name: "Pack 2 Charge temp low rec"
+    name: "Charge temp low rec"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_settings
     type: setting_charge_temp_high_prot
-    name: "Pack 2 Charge temp high prot"
+    name: "Charge temp high prot"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_settings
     type: setting_charge_temp_high_prot_rec
-    name: "Pack 2 Charge temp high prot rec"
+    name: "Charge temp high prot rec"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_settings
     type: setting_charge_temp_low_prot
-    name: "Pack 2 Charge temp low prot"
+    name: "Charge temp low prot"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_settings
     type: setting_charge_temp_low_prot_rec
-    name: "Pack 2 Charge temp low prot rec"
+    name: "Charge temp low prot rec"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_settings
     type: setting_discharge_temp_high_warn
-    name: "Pack 2 Discharge temp high warn"
+    name: "Discharge temp high warn"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_settings
     type: setting_discharge_temp_high_rec
-    name: "Pack 2 Discharge temp high rec"
+    name: "Discharge temp high rec"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_settings
     type: setting_discharge_temp_low_warn
-    name: "Pack 2 Discharge temp low warn"
+    name: "Discharge temp low warn"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_settings
     type: setting_discharge_temp_low_rec
-    name: "Pack 2 Discharge temp low rec"
+    name: "Discharge temp low rec"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_settings
     type: setting_discharge_temp_high_prot
-    name: "Pack 2 Discharge temp high prot"
+    name: "Discharge temp high prot"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_settings
     type: setting_discharge_temp_high_prot_rec
-    name: "Pack 2 Discharge temp high prot rec"
+    name: "Discharge temp high prot rec"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_settings
     type: setting_discharge_temp_low_prot
-    name: "Pack 2 Discharge temp low prot"
+    name: "Discharge temp low prot"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_settings
     type: setting_discharge_temp_low_prot_rec
-    name: "Pack 2 Discharge temp low prot rec"
+    name: "Discharge temp low prot rec"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_settings
     type: setting_cell_heat
-    name: "Pack 2 Cell heating"
+    name: "Cell heating"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_settings
     type: setting_cell_heat_rec
-    name: "Pack 2 Cell heating recovery"
+    name: "Cell heating recovery"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_live
     type: total_voltage
-    name: "Pack 3 Pack voltage"
+    name: "Pack voltage"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_live
     type: current
-    name: "Pack 3 Current"
+    name: "Current"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_live
     type: power
-    name: "Pack 3 Power"
+    name: "Power"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_live
     type: soc
-    name: "Pack 3 SOC"
+    name: "SOC"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_live
     type: soh
-    name: "Pack 3 SOH"
+    name: "SOH"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_live
     type: cycles
-    name: "Pack 3 Cycles"
+    name: "Cycles"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_live
     type: capacity
-    name: "Pack 3 Capacity"
+    name: "Capacity"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_live
     type: remaining_capacity
-    name: "Pack 3 Remaining capacity"
+    name: "Remaining capacity"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_live
     type: rated_capacity
-    name: "Pack 3 Rated capacity"
+    name: "Rated capacity"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_live
     type: port_voltage
-    name: "Pack 3 Port voltage"
+    name: "Port voltage"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_live
     type: cell_voltage_min
-    name: "Pack 3 Min cell"
+    name: "Min cell"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_live
     type: cell_voltage_max
-    name: "Pack 3 Max cell"
+    name: "Max cell"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_live
     type: cell_voltage_delta
-    name: "Pack 3 Cell delta"
+    name: "Cell delta"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_live
     type: temperature_min
-    name: "Pack 3 Min temp"
+    name: "Min temp"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_live
     type: temperature_max
-    name: "Pack 3 Max temp"
+    name: "Max temp"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_live
     type: mos_temperature
-    name: "Pack 3 MOS temperature"
+    name: "MOS temperature"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_live
     type: full_charge
-    name: "Pack 3 Full charge"
+    name: "Full charge"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_live
     type: full_charge_watts
-    name: "Pack 3 Full charge (Wh)"
+    name: "Full charge (Wh)"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_live
     type: remaining_watts
-    name: "Pack 3 Remaining (Wh)"
+    name: "Remaining (Wh)"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_live
     type: capacity_watts
-    name: "Pack 3 Capacity (Wh)"
+    name: "Capacity (Wh)"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_live
     type: battery_watts
-    name: "Pack 3 Battery power"
+    name: "Battery power"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_live
     type: cell_max_number
-    name: "Pack 3 Max cell #"
+    name: "Max cell #"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_live
     type: cell_min_number
-    name: "Pack 3 Min cell #"
+    name: "Min cell #"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_live
     type: temp_max_number
-    name: "Pack 3 Max temp #"
+    name: "Max temp #"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_live
     type: temp_min_number
-    name: "Pack 3 Min temp #"
+    name: "Min temp #"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_live
     type: temp_delta
-    name: "Pack 3 Temp spread"
+    name: "Temp spread"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_live
     type: cell_voltage
     index: 1
-    name: "Pack 3 Cell 1"
+    name: "Cell 1"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_live
     type: cell_voltage
     index: 2
-    name: "Pack 3 Cell 2"
+    name: "Cell 2"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_live
     type: cell_voltage
     index: 3
-    name: "Pack 3 Cell 3"
+    name: "Cell 3"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_live
     type: cell_voltage
     index: 4
-    name: "Pack 3 Cell 4"
+    name: "Cell 4"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_live
     type: cell_voltage
     index: 5
-    name: "Pack 3 Cell 5"
+    name: "Cell 5"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_live
     type: cell_voltage
     index: 6
-    name: "Pack 3 Cell 6"
+    name: "Cell 6"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_live
     type: cell_voltage
     index: 7
-    name: "Pack 3 Cell 7"
+    name: "Cell 7"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_live
     type: cell_voltage
     index: 8
-    name: "Pack 3 Cell 8"
+    name: "Cell 8"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_live
     type: cell_voltage
     index: 9
-    name: "Pack 3 Cell 9"
+    name: "Cell 9"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_live
     type: cell_voltage
     index: 10
-    name: "Pack 3 Cell 10"
+    name: "Cell 10"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_live
     type: cell_voltage
     index: 11
-    name: "Pack 3 Cell 11"
+    name: "Cell 11"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_live
     type: cell_voltage
     index: 12
-    name: "Pack 3 Cell 12"
+    name: "Cell 12"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_live
     type: cell_voltage
     index: 13
-    name: "Pack 3 Cell 13"
+    name: "Cell 13"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_live
     type: cell_voltage
     index: 14
-    name: "Pack 3 Cell 14"
+    name: "Cell 14"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_live
     type: cell_voltage
     index: 15
-    name: "Pack 3 Cell 15"
+    name: "Cell 15"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_live
     type: cell_voltage
     index: 16
-    name: "Pack 3 Cell 16"
+    name: "Cell 16"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_live
     type: temperature
     index: 1
-    name: "Pack 3 Temp 1"
+    name: "Temp 1"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_live
     type: temperature
     index: 2
-    name: "Pack 3 Temp 2"
+    name: "Temp 2"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_live
     type: temperature
     index: 3
-    name: "Pack 3 Temp 3"
+    name: "Temp 3"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_live
     type: temperature
     index: 4
-    name: "Pack 3 Temp 4"
+    name: "Temp 4"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_live
     type: temperature
     index: 5
-    name: "Pack 3 Temp 5"
+    name: "Temp 5"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_live
     type: temperature
     index: 6
-    name: "Pack 3 Temp 6"
+    name: "Temp 6"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_settings
     type: setting_cell_ov_alarm
-    name: "Pack 3 Cell OV alarm"
+    name: "Cell OV alarm"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_settings
     type: setting_cell_ov_rec
-    name: "Pack 3 Cell OV recovery"
+    name: "Cell OV recovery"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_settings
     type: setting_cell_uv_alarm
-    name: "Pack 3 Cell UV alarm"
+    name: "Cell UV alarm"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_settings
     type: setting_cell_uv_rec
-    name: "Pack 3 Cell UV recovery"
+    name: "Cell UV recovery"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_settings
     type: setting_cell_ovp
-    name: "Pack 3 Cell OVP"
+    name: "Cell OVP"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_settings
     type: setting_cell_ovp_rec
-    name: "Pack 3 Cell OVP recovery"
+    name: "Cell OVP recovery"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_settings
     type: setting_cell_uvp
-    name: "Pack 3 Cell UVP"
+    name: "Cell UVP"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_settings
     type: setting_cell_uvp_rec
-    name: "Pack 3 Cell UVP recovery"
+    name: "Cell UVP recovery"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_settings
     type: setting_balance_start
-    name: "Pack 3 Balance start"
+    name: "Balance start"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_settings
     type: setting_charge_forbid
-    name: "Pack 3 Charge forbidden below"
+    name: "Charge forbidden below"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_settings
     type: setting_pack_ov_alarm
-    name: "Pack 3 Pack OV alarm"
+    name: "Pack OV alarm"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_settings
     type: setting_pack_ov_rec
-    name: "Pack 3 Pack OV recovery"
+    name: "Pack OV recovery"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_settings
     type: setting_pack_uv_alarm
-    name: "Pack 3 Pack UV alarm"
+    name: "Pack UV alarm"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_settings
     type: setting_pack_uv_rec
-    name: "Pack 3 Pack UV recovery"
+    name: "Pack UV recovery"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_settings
     type: setting_pack_ovp
-    name: "Pack 3 Pack OVP"
+    name: "Pack OVP"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_settings
     type: setting_pack_ovp_rec
-    name: "Pack 3 Pack OVP recovery"
+    name: "Pack OVP recovery"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_settings
     type: setting_pack_uvp
-    name: "Pack 3 Pack UVP"
+    name: "Pack UVP"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_settings
     type: setting_pack_uvp_rec
-    name: "Pack 3 Pack UVP recovery"
+    name: "Pack UVP recovery"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_settings
     type: setting_charge_ovp
-    name: "Pack 3 Charging OVP"
+    name: "Charging OVP"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_settings
     type: setting_charge_ovp_rec
-    name: "Pack 3 Charging OVP recovery"
+    name: "Charging OVP recovery"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_settings
     type: setting_charge_temp_high_warn
-    name: "Pack 3 Charge temp high warn"
+    name: "Charge temp high warn"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_settings
     type: setting_charge_temp_high_rec
-    name: "Pack 3 Charge temp high rec"
+    name: "Charge temp high rec"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_settings
     type: setting_charge_temp_low_warn
-    name: "Pack 3 Charge temp low warn"
+    name: "Charge temp low warn"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_settings
     type: setting_charge_temp_low_rec
-    name: "Pack 3 Charge temp low rec"
+    name: "Charge temp low rec"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_settings
     type: setting_charge_temp_high_prot
-    name: "Pack 3 Charge temp high prot"
+    name: "Charge temp high prot"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_settings
     type: setting_charge_temp_high_prot_rec
-    name: "Pack 3 Charge temp high prot rec"
+    name: "Charge temp high prot rec"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_settings
     type: setting_charge_temp_low_prot
-    name: "Pack 3 Charge temp low prot"
+    name: "Charge temp low prot"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_settings
     type: setting_charge_temp_low_prot_rec
-    name: "Pack 3 Charge temp low prot rec"
+    name: "Charge temp low prot rec"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_settings
     type: setting_discharge_temp_high_warn
-    name: "Pack 3 Discharge temp high warn"
+    name: "Discharge temp high warn"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_settings
     type: setting_discharge_temp_high_rec
-    name: "Pack 3 Discharge temp high rec"
+    name: "Discharge temp high rec"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_settings
     type: setting_discharge_temp_low_warn
-    name: "Pack 3 Discharge temp low warn"
+    name: "Discharge temp low warn"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_settings
     type: setting_discharge_temp_low_rec
-    name: "Pack 3 Discharge temp low rec"
+    name: "Discharge temp low rec"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_settings
     type: setting_discharge_temp_high_prot
-    name: "Pack 3 Discharge temp high prot"
+    name: "Discharge temp high prot"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_settings
     type: setting_discharge_temp_high_prot_rec
-    name: "Pack 3 Discharge temp high prot rec"
+    name: "Discharge temp high prot rec"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_settings
     type: setting_discharge_temp_low_prot
-    name: "Pack 3 Discharge temp low prot"
+    name: "Discharge temp low prot"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_settings
     type: setting_discharge_temp_low_prot_rec
-    name: "Pack 3 Discharge temp low prot rec"
+    name: "Discharge temp low prot rec"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_settings
     type: setting_cell_heat
-    name: "Pack 3 Cell heating"
+    name: "Cell heating"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_settings
     type: setting_cell_heat_rec
-    name: "Pack 3 Cell heating recovery"
+    name: "Cell heating recovery"
 
 text_sensor:
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_diag
     type: profile
-    name: "Pack 1 Profile"
+    name: "Profile"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_diag
     type: model
-    name: "Pack 1 Model"
+    name: "Model"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_diag
     type: hardware_version
-    name: "Pack 1 Hardware version"
+    name: "Hardware version"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_diag
     type: software_version
-    name: "Pack 1 Software version"
+    name: "Software version"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_diag
     type: status
-    name: "Pack 1 Status"
+    name: "Status"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_settings
     type: settings_raw
-    name: "Pack 1 Settings raw"
+    name: "Settings raw"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_settings
     type: alarms_raw
-    name: "Pack 1 Alarms raw"
+    name: "Alarms raw"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_diag
     type: status_tail
-    name: "Pack 1 Status tail"
+    name: "Status tail"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_diag
     type: crc_capture
-    name: "Pack 1 Crc capture"
+    name: "Crc capture"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_diag
     type: scan_results
-    name: "Pack 1 Scan results"
+    name: "Scan results"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_diag
     type: output
-    name: "Pack 1 Output"
+    name: "Output"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_diag
     type: profile
-    name: "Pack 2 Profile"
+    name: "Profile"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_diag
     type: model
-    name: "Pack 2 Model"
+    name: "Model"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_diag
     type: hardware_version
-    name: "Pack 2 Hardware version"
+    name: "Hardware version"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_diag
     type: software_version
-    name: "Pack 2 Software version"
+    name: "Software version"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_diag
     type: status
-    name: "Pack 2 Status"
+    name: "Status"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_settings
     type: settings_raw
-    name: "Pack 2 Settings raw"
+    name: "Settings raw"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_settings
     type: alarms_raw
-    name: "Pack 2 Alarms raw"
+    name: "Alarms raw"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_diag
     type: status_tail
-    name: "Pack 2 Status tail"
+    name: "Status tail"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_diag
     type: crc_capture
-    name: "Pack 2 Crc capture"
+    name: "Crc capture"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_diag
     type: scan_results
-    name: "Pack 2 Scan results"
+    name: "Scan results"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_diag
     type: output
-    name: "Pack 2 Output"
+    name: "Output"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_diag
     type: profile
-    name: "Pack 3 Profile"
+    name: "Profile"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_diag
     type: model
-    name: "Pack 3 Model"
+    name: "Model"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_diag
     type: hardware_version
-    name: "Pack 3 Hardware version"
+    name: "Hardware version"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_diag
     type: software_version
-    name: "Pack 3 Software version"
+    name: "Software version"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_diag
     type: status
-    name: "Pack 3 Status"
+    name: "Status"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_settings
     type: settings_raw
-    name: "Pack 3 Settings raw"
+    name: "Settings raw"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_settings
     type: alarms_raw
-    name: "Pack 3 Alarms raw"
+    name: "Alarms raw"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_diag
     type: status_tail
-    name: "Pack 3 Status tail"
+    name: "Status tail"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_diag
     type: crc_capture
-    name: "Pack 3 Crc capture"
+    name: "Crc capture"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_diag
     type: scan_results
-    name: "Pack 3 Scan results"
+    name: "Scan results"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_diag
     type: output
-    name: "Pack 3 Output"
+    name: "Output"
 
 button:
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_diag
     type: scan
-    name: "Pack 1 Scan"
+    name: "Scan"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_diag
     type: settings
-    name: "Pack 1 Read settings"
+    name: "Read settings"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_diag
     type: alarms
-    name: "Pack 1 Read alarms"
+    name: "Read alarms"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_diag
     type: run
-    name: "Pack 1 Run command"
+    name: "Run command"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_diag
     type: scan
-    name: "Pack 2 Scan"
+    name: "Scan"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_diag
     type: settings
-    name: "Pack 2 Read settings"
+    name: "Read settings"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_diag
     type: alarms
-    name: "Pack 2 Read alarms"
+    name: "Read alarms"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_diag
     type: run
-    name: "Pack 2 Run command"
+    name: "Run command"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_diag
     type: scan
-    name: "Pack 3 Scan"
+    name: "Scan"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_diag
     type: settings
-    name: "Pack 3 Read settings"
+    name: "Read settings"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_diag
     type: alarms
-    name: "Pack 3 Read alarms"
+    name: "Read alarms"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_diag
     type: run
-    name: "Pack 3 Run command"
+    name: "Run command"
 
 text:
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_diag
     mode: text
-    name: "Pack 1 BLE command"
+    name: "BLE command"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_diag
     mode: text
-    name: "Pack 2 BLE command"
+    name: "BLE command"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_diag
     mode: text
-    name: "Pack 3 BLE command"
+    name: "BLE command"

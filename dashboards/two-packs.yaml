@@ -1,0 +1,1931 @@
+# Requires custom:button-card. Paste into a dashboard as one card.
+# Entity ids assume the example naming: device pack1_live, entity 'SOC'
+# -> sensor.pack1_live_soc.
+type: grid
+square: false
+columns: 2
+cards:
+  - type: vertical-stack
+    cards:
+      - type: custom:button-card
+        variables:
+          soc: sensor.pack1_live_soc
+          voltage: sensor.pack1_live_pack_voltage
+          current: sensor.pack1_live_current
+          power: sensor.pack1_live_battery_power_port
+          cycles: sensor.pack1_live_cycles
+          cell_min: sensor.pack1_live_min_cell
+          cell_max: sensor.pack1_live_max_cell
+          ah_used: sensor.pack1_live_full_charge_remaining
+          t1: sensor.pack1_live_temp_1
+          t2: sensor.pack1_live_temp_2
+          t3: sensor.pack1_live_temp_3
+          t4: sensor.pack1_live_temp_4
+          t5: sensor.pack1_live_temp_5
+          t6: sensor.pack1_live_temp_6
+        show_name: false
+        tap_action:
+          action: more-info
+          entity: sensor.pack1_live_soc
+        styles:
+          card:
+            - background-color: rgba(61,61,61,0.8)
+            - color: ivory
+            - font-size: 13px
+            - text-shadow: 0px 0px 5px black
+            - text-transform: capitalize
+            - border-radius: 10px
+            - border: |
+                [[[
+                  const s = states[variables.soc];
+                  const c = s ? parseFloat(s.state) : NaN;
+                  const col = isNaN(c) ? 'grey' : c > 75 ? 'lime' : c > 50 ? 'yellow' : c > 25 ? 'orange' : c > 15 ? 'red' : 'darkred';
+                  return `1px solid ${col}`;
+                ]]]
+            - box-shadow: |
+                [[[
+                  const s = states[variables.soc];
+                  const c = s ? parseFloat(s.state) : NaN;
+                  const col = isNaN(c) ? 'grey' : c > 75 ? 'lime' : c > 50 ? 'yellow' : c > 25 ? 'orange' : c > 15 ? 'red' : 'darkred';
+                  return `0px 0px 10px 3px ${col}`;
+                ]]]
+          grid:
+            - grid-template-areas: '"i bat cells"'
+            - grid-template-columns: 0fr 1fr 1fr
+            - align-items: start
+          icon:
+            - color: |
+                [[[
+                  const s = states[variables.soc];
+                  const c = s ? parseFloat(s.state) : NaN;
+                  return isNaN(c) ? 'grey' : c > 75 ? 'lime' : c > 50 ? 'yellow' : c > 25 ? 'orange' : c > 15 ? 'red' : 'darkred';
+                ]]]
+            - width: 70%
+            - margin-top: 0%
+          custom_fields:
+            bat:
+              - justify-content: start
+              - padding-left: 10px
+            cells:
+              - justify-content: start
+              - padding-left: 10px
+        custom_fields:
+          bat: |
+            [[[
+              const num = (e, d) => {
+                const s = states[e];
+                if (!s || s.state === 'unknown' || s.state === 'unavailable') return '—';
+                const n = parseFloat(s.state);
+                return isNaN(n) ? '—' : n.toFixed(d);
+              };
+              return `
+                <div><ha-icon icon="mdi:battery-high" style="width:14px;height:14px;color:yellow"></ha-icon><span style="margin-left:4px">SOC: ${num(variables.soc, 1)}%</span></div>
+                <div><ha-icon icon="mdi:flash" style="width:14px;height:14px;color:green"></ha-icon><span style="margin-left:4px">Voltage: ${num(variables.voltage, 2)}V</span></div>
+                <div><ha-icon icon="mdi:current-dc" style="width:14px;height:14px;color:#3db7e4"></ha-icon><span style="margin-left:4px">Usage: ${num(variables.current, 2)}A/${num(variables.power, 0)}W</span></div>
+                <div><ha-icon icon="mdi:power-plug" style="width:14px;height:14px;color:white"></ha-icon><span style="margin-left:4px">Cycles: ${num(variables.cycles, 0)}</span></div>
+              `;
+            ]]]
+          cells: |
+            [[[
+              const v = (e) => states[e] ? parseFloat(states[e].state) : NaN;
+              const num = (e, d) => {
+                const s = states[e];
+                if (!s || s.state === 'unknown' || s.state === 'unavailable') return '—';
+                const n = parseFloat(s.state);
+                return isNaN(n) ? '—' : n.toFixed(d);
+              };
+              const ts = [variables.t1, variables.t2, variables.t3, variables.t4, variables.t5, variables.t6]
+                .map(v).filter(x => !isNaN(x));
+              const minT = ts.length ? Math.min(...ts).toFixed(1) : '—';
+              const maxT = ts.length ? Math.max(...ts).toFixed(1) : '—';
+              const cm = v(variables.cell_min), cx = v(variables.cell_max);
+              const mv = (x) => isNaN(x) ? '—' : (x * 1000).toFixed(0);
+              return `
+                <div><ha-icon icon="mdi:arrow-down-bold" style="width:14px;height:14px;color:#3db7e4"></ha-icon><span style="margin-left:4px">Lowest: ${mv(cm)}mV</span></div>
+                <div><ha-icon icon="mdi:arrow-up-bold" style="width:14px;height:14px;color:#f53d3d"></ha-icon><span style="margin-left:4px">Highest: ${mv(cx)}mV</span></div>
+                <div><ha-icon icon="mdi:thermometer-lines" style="width:14px;height:14px;color:#f5b041"></ha-icon><span style="margin-left:4px">Temp: ${minT}°C/${maxT}°C</span></div>
+                <div><ha-icon icon="mdi:battery-charging-100" style="width:14px;height:14px;color:#8c8c8c"></ha-icon><span style="margin-left:4px">Ah Used: ${num(variables.ah_used, 2)}Ah</span></div>
+              `;
+            ]]]
+      - type: custom:button-card
+        entity: sensor.pack1_live_soc
+        variables:
+          title: "Pack 1"
+        show_name: false
+        show_state: false
+        show_icon: false
+        custom_fields:
+          bat: |
+            [[[
+              if (!entity || !entity.last_updated) return 'no data';
+              const t = new Date(entity.last_updated).getTime();
+              const s = Math.max(0, Math.floor((Date.now() - t) / 1000));
+              let rel;
+              if (s < 60) rel = `${s}s ago`;
+              else { const m = Math.floor(s / 60);
+                if (m < 60) rel = `${m}m ${s % 60}s ago`;
+                else { const h = Math.floor(m / 60);
+                  if (h < 24) rel = `${h}h ${m % 60}m ago`;
+                  else { const d = Math.floor(h / 24); rel = `${d}d ${h % 24}h ago`; } } }
+              return `<span style="font-size:14px;font-weight:600">${variables.title}</span> <span style="font-size:12px;color:var(--secondary-text-color)">[ Updated ${rel} ]</span>`;
+            ]]]
+        styles:
+          card:
+            - background: none
+            - border: none
+            - box-shadow: none
+            - padding: 0
+          grid:
+            - grid-template-areas: '"bat"'
+            - grid-template-columns: 1fr
+          custom_fields:
+            bat:
+              - justify-self: center
+              - text-align: left
+      - type: grid
+        square: false
+        columns: 3
+        cards:
+          - type: custom:button-card
+            entity: sensor.pack1_live_soc
+            name: "State of Charge"
+            show_name: true
+            show_state: true
+            show_icon: false
+            show_units: true
+            tap_action:
+              action: more-info
+            styles:
+              card:
+                - "--card-background-color": null
+              name:
+                - font-size: 0.6em
+              state:
+                - font-size: 0.8em
+          - type: custom:button-card
+            entity: sensor.pack1_live_soh
+            name: "State of Health"
+            show_name: true
+            show_state: true
+            show_icon: false
+            show_units: true
+            tap_action:
+              action: more-info
+            styles:
+              card:
+                - "--card-background-color": null
+              name:
+                - font-size: 0.6em
+              state:
+                - font-size: 0.8em
+          - type: custom:button-card
+            entity: sensor.pack1_live_cycles
+            name: "Cycles"
+            show_name: true
+            show_state: true
+            show_icon: false
+            show_units: true
+            tap_action:
+              action: more-info
+            styles:
+              card:
+                - "--card-background-color": null
+              name:
+                - font-size: 0.6em
+              state:
+                - font-size: 0.8em
+          - type: custom:button-card
+            entity: sensor.pack1_live_pack_voltage
+            name: "Pack Voltage"
+            show_name: true
+            show_state: true
+            show_icon: false
+            show_units: true
+            tap_action:
+              action: more-info
+            styles:
+              card:
+                - "--card-background-color": null
+              name:
+                - font-size: 0.6em
+              state:
+                - font-size: 0.8em
+          - type: custom:button-card
+            entity: sensor.pack1_live_port_voltage
+            name: "Port Voltage"
+            show_name: true
+            show_state: true
+            show_icon: false
+            show_units: true
+            tap_action:
+              action: more-info
+            styles:
+              card:
+                - "--card-background-color": null
+              name:
+                - font-size: 0.6em
+              state:
+                - font-size: 0.8em
+          - type: custom:button-card
+            entity: sensor.pack1_live_cell_delta
+            name: "Cell Deviation"
+            show_name: true
+            show_state: true
+            show_icon: false
+            show_units: true
+            tap_action:
+              action: more-info
+            styles:
+              card:
+                - "--card-background-color": null
+              name:
+                - font-size: 0.6em
+              state:
+                - font-size: 0.8em
+          - type: custom:button-card
+            entity: sensor.pack1_live_battery_power_port
+            name: "Battery Watts"
+            show_name: true
+            show_state: true
+            show_icon: false
+            show_units: true
+            tap_action:
+              action: more-info
+            styles:
+              card:
+                - "--card-background-color": null
+              name:
+                - font-size: 0.6em
+              state:
+                - font-size: 0.8em
+          - type: custom:button-card
+            entity: sensor.pack1_live_remaining_energy
+            name: "Watts Remaining"
+            show_name: true
+            show_state: true
+            show_icon: false
+            show_units: true
+            tap_action:
+              action: more-info
+            styles:
+              card:
+                - "--card-background-color": null
+              name:
+                - font-size: 0.6em
+              state:
+                - font-size: 0.8em
+          - type: custom:button-card
+            entity: sensor.pack1_live_full_charge_remaining_wh
+            name: "Watts Used"
+            show_name: true
+            show_state: true
+            show_icon: false
+            show_units: true
+            tap_action:
+              action: more-info
+            styles:
+              card:
+                - "--card-background-color": null
+              name:
+                - font-size: 0.6em
+              state:
+                - font-size: 0.8em
+          - type: custom:button-card
+            entity: sensor.pack1_live_current
+            name: "Battery Amps"
+            show_name: true
+            show_state: true
+            show_icon: false
+            show_units: true
+            tap_action:
+              action: more-info
+            styles:
+              card:
+                - "--card-background-color": null
+              name:
+                - font-size: 0.6em
+              state:
+                - font-size: 0.8em
+          - type: custom:button-card
+            entity: sensor.pack1_live_remaining_capacity
+            name: "Ah Remaining"
+            show_name: true
+            show_state: true
+            show_icon: false
+            show_units: true
+            tap_action:
+              action: more-info
+            styles:
+              card:
+                - "--card-background-color": null
+              name:
+                - font-size: 0.6em
+              state:
+                - font-size: 0.8em
+          - type: custom:button-card
+            entity: sensor.pack1_live_full_charge_remaining
+            name: "Ah Used"
+            show_name: true
+            show_state: true
+            show_icon: false
+            show_units: true
+            tap_action:
+              action: more-info
+            styles:
+              card:
+                - "--card-background-color": null
+              name:
+                - font-size: 0.6em
+              state:
+                - font-size: 0.8em
+      - type: grid
+        square: false
+        columns: 4
+        cards:
+          - type: custom:button-card
+            entity: sensor.pack1_live_cell_1
+            name: |
+              [[[
+                const s = states['sensor.pack1_live_cell_1'];
+                const sl = states['sensor.pack1_live_min_cell']; const sh = states['sensor.pack1_live_max_cell'];
+                if (!s) return 'Cell 1';
+                const v = parseFloat(s.state);
+                const lv = sl ? parseFloat(sl.state) : NaN;
+                const hv = sh ? parseFloat(sh.state) : NaN;
+                let n = 'Cell 1';
+                if (!isNaN(lv) && v === lv) n += ' (L)';
+                if (!isNaN(hv) && v === hv) n += ' (H)';
+                return n;
+              ]]]
+            state_display: >
+              [[[ const v = parseFloat(entity && entity.state); return isNaN(v)
+              ? '—' : (v * 1000).toFixed(0) + ' mV'; ]]]
+            show_name: true
+            show_state: true
+            show_icon: false
+            tap_action:
+              action: more-info
+            styles:
+              card:
+                - "--card-background-color": |
+                    [[[
+                      const s = states['sensor.pack1_live_cell_1'];
+                      const sl = states['sensor.pack1_live_min_cell']; const sh = states['sensor.pack1_live_max_cell'];
+                      if (!s) return 'grey';
+                      const v = parseFloat(s.state);
+                      const lv = sl ? parseFloat(sl.state) : NaN;
+                      const hv = sh ? parseFloat(sh.state) : NaN;
+                      return (!isNaN(lv) && v === lv) ? 'orange' : (!isNaN(hv) && v === hv) ? 'darkgreen' : 'green';
+                    ]]]
+              name:
+                - font-size: 0.6em
+              state:
+                - font-size: 0.7em
+          - type: custom:button-card
+            entity: sensor.pack1_live_cell_2
+            name: |
+              [[[
+                const s = states['sensor.pack1_live_cell_2'];
+                const sl = states['sensor.pack1_live_min_cell']; const sh = states['sensor.pack1_live_max_cell'];
+                if (!s) return 'Cell 2';
+                const v = parseFloat(s.state);
+                const lv = sl ? parseFloat(sl.state) : NaN;
+                const hv = sh ? parseFloat(sh.state) : NaN;
+                let n = 'Cell 2';
+                if (!isNaN(lv) && v === lv) n += ' (L)';
+                if (!isNaN(hv) && v === hv) n += ' (H)';
+                return n;
+              ]]]
+            state_display: >
+              [[[ const v = parseFloat(entity && entity.state); return isNaN(v)
+              ? '—' : (v * 1000).toFixed(0) + ' mV'; ]]]
+            show_name: true
+            show_state: true
+            show_icon: false
+            tap_action:
+              action: more-info
+            styles:
+              card:
+                - "--card-background-color": |
+                    [[[
+                      const s = states['sensor.pack1_live_cell_2'];
+                      const sl = states['sensor.pack1_live_min_cell']; const sh = states['sensor.pack1_live_max_cell'];
+                      if (!s) return 'grey';
+                      const v = parseFloat(s.state);
+                      const lv = sl ? parseFloat(sl.state) : NaN;
+                      const hv = sh ? parseFloat(sh.state) : NaN;
+                      return (!isNaN(lv) && v === lv) ? 'orange' : (!isNaN(hv) && v === hv) ? 'darkgreen' : 'green';
+                    ]]]
+              name:
+                - font-size: 0.6em
+              state:
+                - font-size: 0.7em
+          - type: custom:button-card
+            entity: sensor.pack1_live_cell_3
+            name: |
+              [[[
+                const s = states['sensor.pack1_live_cell_3'];
+                const sl = states['sensor.pack1_live_min_cell']; const sh = states['sensor.pack1_live_max_cell'];
+                if (!s) return 'Cell 3';
+                const v = parseFloat(s.state);
+                const lv = sl ? parseFloat(sl.state) : NaN;
+                const hv = sh ? parseFloat(sh.state) : NaN;
+                let n = 'Cell 3';
+                if (!isNaN(lv) && v === lv) n += ' (L)';
+                if (!isNaN(hv) && v === hv) n += ' (H)';
+                return n;
+              ]]]
+            state_display: >
+              [[[ const v = parseFloat(entity && entity.state); return isNaN(v)
+              ? '—' : (v * 1000).toFixed(0) + ' mV'; ]]]
+            show_name: true
+            show_state: true
+            show_icon: false
+            tap_action:
+              action: more-info
+            styles:
+              card:
+                - "--card-background-color": |
+                    [[[
+                      const s = states['sensor.pack1_live_cell_3'];
+                      const sl = states['sensor.pack1_live_min_cell']; const sh = states['sensor.pack1_live_max_cell'];
+                      if (!s) return 'grey';
+                      const v = parseFloat(s.state);
+                      const lv = sl ? parseFloat(sl.state) : NaN;
+                      const hv = sh ? parseFloat(sh.state) : NaN;
+                      return (!isNaN(lv) && v === lv) ? 'orange' : (!isNaN(hv) && v === hv) ? 'darkgreen' : 'green';
+                    ]]]
+              name:
+                - font-size: 0.6em
+              state:
+                - font-size: 0.7em
+          - type: custom:button-card
+            entity: sensor.pack1_live_cell_4
+            name: |
+              [[[
+                const s = states['sensor.pack1_live_cell_4'];
+                const sl = states['sensor.pack1_live_min_cell']; const sh = states['sensor.pack1_live_max_cell'];
+                if (!s) return 'Cell 4';
+                const v = parseFloat(s.state);
+                const lv = sl ? parseFloat(sl.state) : NaN;
+                const hv = sh ? parseFloat(sh.state) : NaN;
+                let n = 'Cell 4';
+                if (!isNaN(lv) && v === lv) n += ' (L)';
+                if (!isNaN(hv) && v === hv) n += ' (H)';
+                return n;
+              ]]]
+            state_display: >
+              [[[ const v = parseFloat(entity && entity.state); return isNaN(v)
+              ? '—' : (v * 1000).toFixed(0) + ' mV'; ]]]
+            show_name: true
+            show_state: true
+            show_icon: false
+            tap_action:
+              action: more-info
+            styles:
+              card:
+                - "--card-background-color": |
+                    [[[
+                      const s = states['sensor.pack1_live_cell_4'];
+                      const sl = states['sensor.pack1_live_min_cell']; const sh = states['sensor.pack1_live_max_cell'];
+                      if (!s) return 'grey';
+                      const v = parseFloat(s.state);
+                      const lv = sl ? parseFloat(sl.state) : NaN;
+                      const hv = sh ? parseFloat(sh.state) : NaN;
+                      return (!isNaN(lv) && v === lv) ? 'orange' : (!isNaN(hv) && v === hv) ? 'darkgreen' : 'green';
+                    ]]]
+              name:
+                - font-size: 0.6em
+              state:
+                - font-size: 0.7em
+          - type: custom:button-card
+            entity: sensor.pack1_live_cell_5
+            name: |
+              [[[
+                const s = states['sensor.pack1_live_cell_5'];
+                const sl = states['sensor.pack1_live_min_cell']; const sh = states['sensor.pack1_live_max_cell'];
+                if (!s) return 'Cell 5';
+                const v = parseFloat(s.state);
+                const lv = sl ? parseFloat(sl.state) : NaN;
+                const hv = sh ? parseFloat(sh.state) : NaN;
+                let n = 'Cell 5';
+                if (!isNaN(lv) && v === lv) n += ' (L)';
+                if (!isNaN(hv) && v === hv) n += ' (H)';
+                return n;
+              ]]]
+            state_display: >
+              [[[ const v = parseFloat(entity && entity.state); return isNaN(v)
+              ? '—' : (v * 1000).toFixed(0) + ' mV'; ]]]
+            show_name: true
+            show_state: true
+            show_icon: false
+            tap_action:
+              action: more-info
+            styles:
+              card:
+                - "--card-background-color": |
+                    [[[
+                      const s = states['sensor.pack1_live_cell_5'];
+                      const sl = states['sensor.pack1_live_min_cell']; const sh = states['sensor.pack1_live_max_cell'];
+                      if (!s) return 'grey';
+                      const v = parseFloat(s.state);
+                      const lv = sl ? parseFloat(sl.state) : NaN;
+                      const hv = sh ? parseFloat(sh.state) : NaN;
+                      return (!isNaN(lv) && v === lv) ? 'orange' : (!isNaN(hv) && v === hv) ? 'darkgreen' : 'green';
+                    ]]]
+              name:
+                - font-size: 0.6em
+              state:
+                - font-size: 0.7em
+          - type: custom:button-card
+            entity: sensor.pack1_live_cell_6
+            name: |
+              [[[
+                const s = states['sensor.pack1_live_cell_6'];
+                const sl = states['sensor.pack1_live_min_cell']; const sh = states['sensor.pack1_live_max_cell'];
+                if (!s) return 'Cell 6';
+                const v = parseFloat(s.state);
+                const lv = sl ? parseFloat(sl.state) : NaN;
+                const hv = sh ? parseFloat(sh.state) : NaN;
+                let n = 'Cell 6';
+                if (!isNaN(lv) && v === lv) n += ' (L)';
+                if (!isNaN(hv) && v === hv) n += ' (H)';
+                return n;
+              ]]]
+            state_display: >
+              [[[ const v = parseFloat(entity && entity.state); return isNaN(v)
+              ? '—' : (v * 1000).toFixed(0) + ' mV'; ]]]
+            show_name: true
+            show_state: true
+            show_icon: false
+            tap_action:
+              action: more-info
+            styles:
+              card:
+                - "--card-background-color": |
+                    [[[
+                      const s = states['sensor.pack1_live_cell_6'];
+                      const sl = states['sensor.pack1_live_min_cell']; const sh = states['sensor.pack1_live_max_cell'];
+                      if (!s) return 'grey';
+                      const v = parseFloat(s.state);
+                      const lv = sl ? parseFloat(sl.state) : NaN;
+                      const hv = sh ? parseFloat(sh.state) : NaN;
+                      return (!isNaN(lv) && v === lv) ? 'orange' : (!isNaN(hv) && v === hv) ? 'darkgreen' : 'green';
+                    ]]]
+              name:
+                - font-size: 0.6em
+              state:
+                - font-size: 0.7em
+          - type: custom:button-card
+            entity: sensor.pack1_live_cell_7
+            name: |
+              [[[
+                const s = states['sensor.pack1_live_cell_7'];
+                const sl = states['sensor.pack1_live_min_cell']; const sh = states['sensor.pack1_live_max_cell'];
+                if (!s) return 'Cell 7';
+                const v = parseFloat(s.state);
+                const lv = sl ? parseFloat(sl.state) : NaN;
+                const hv = sh ? parseFloat(sh.state) : NaN;
+                let n = 'Cell 7';
+                if (!isNaN(lv) && v === lv) n += ' (L)';
+                if (!isNaN(hv) && v === hv) n += ' (H)';
+                return n;
+              ]]]
+            state_display: >
+              [[[ const v = parseFloat(entity && entity.state); return isNaN(v)
+              ? '—' : (v * 1000).toFixed(0) + ' mV'; ]]]
+            show_name: true
+            show_state: true
+            show_icon: false
+            tap_action:
+              action: more-info
+            styles:
+              card:
+                - "--card-background-color": |
+                    [[[
+                      const s = states['sensor.pack1_live_cell_7'];
+                      const sl = states['sensor.pack1_live_min_cell']; const sh = states['sensor.pack1_live_max_cell'];
+                      if (!s) return 'grey';
+                      const v = parseFloat(s.state);
+                      const lv = sl ? parseFloat(sl.state) : NaN;
+                      const hv = sh ? parseFloat(sh.state) : NaN;
+                      return (!isNaN(lv) && v === lv) ? 'orange' : (!isNaN(hv) && v === hv) ? 'darkgreen' : 'green';
+                    ]]]
+              name:
+                - font-size: 0.6em
+              state:
+                - font-size: 0.7em
+          - type: custom:button-card
+            entity: sensor.pack1_live_cell_8
+            name: |
+              [[[
+                const s = states['sensor.pack1_live_cell_8'];
+                const sl = states['sensor.pack1_live_min_cell']; const sh = states['sensor.pack1_live_max_cell'];
+                if (!s) return 'Cell 8';
+                const v = parseFloat(s.state);
+                const lv = sl ? parseFloat(sl.state) : NaN;
+                const hv = sh ? parseFloat(sh.state) : NaN;
+                let n = 'Cell 8';
+                if (!isNaN(lv) && v === lv) n += ' (L)';
+                if (!isNaN(hv) && v === hv) n += ' (H)';
+                return n;
+              ]]]
+            state_display: >
+              [[[ const v = parseFloat(entity && entity.state); return isNaN(v)
+              ? '—' : (v * 1000).toFixed(0) + ' mV'; ]]]
+            show_name: true
+            show_state: true
+            show_icon: false
+            tap_action:
+              action: more-info
+            styles:
+              card:
+                - "--card-background-color": |
+                    [[[
+                      const s = states['sensor.pack1_live_cell_8'];
+                      const sl = states['sensor.pack1_live_min_cell']; const sh = states['sensor.pack1_live_max_cell'];
+                      if (!s) return 'grey';
+                      const v = parseFloat(s.state);
+                      const lv = sl ? parseFloat(sl.state) : NaN;
+                      const hv = sh ? parseFloat(sh.state) : NaN;
+                      return (!isNaN(lv) && v === lv) ? 'orange' : (!isNaN(hv) && v === hv) ? 'darkgreen' : 'green';
+                    ]]]
+              name:
+                - font-size: 0.6em
+              state:
+                - font-size: 0.7em
+          - type: custom:button-card
+            entity: sensor.pack1_live_cell_9
+            name: |
+              [[[
+                const s = states['sensor.pack1_live_cell_9'];
+                const sl = states['sensor.pack1_live_min_cell']; const sh = states['sensor.pack1_live_max_cell'];
+                if (!s) return 'Cell 9';
+                const v = parseFloat(s.state);
+                const lv = sl ? parseFloat(sl.state) : NaN;
+                const hv = sh ? parseFloat(sh.state) : NaN;
+                let n = 'Cell 9';
+                if (!isNaN(lv) && v === lv) n += ' (L)';
+                if (!isNaN(hv) && v === hv) n += ' (H)';
+                return n;
+              ]]]
+            state_display: >
+              [[[ const v = parseFloat(entity && entity.state); return isNaN(v)
+              ? '—' : (v * 1000).toFixed(0) + ' mV'; ]]]
+            show_name: true
+            show_state: true
+            show_icon: false
+            tap_action:
+              action: more-info
+            styles:
+              card:
+                - "--card-background-color": |
+                    [[[
+                      const s = states['sensor.pack1_live_cell_9'];
+                      const sl = states['sensor.pack1_live_min_cell']; const sh = states['sensor.pack1_live_max_cell'];
+                      if (!s) return 'grey';
+                      const v = parseFloat(s.state);
+                      const lv = sl ? parseFloat(sl.state) : NaN;
+                      const hv = sh ? parseFloat(sh.state) : NaN;
+                      return (!isNaN(lv) && v === lv) ? 'orange' : (!isNaN(hv) && v === hv) ? 'darkgreen' : 'green';
+                    ]]]
+              name:
+                - font-size: 0.6em
+              state:
+                - font-size: 0.7em
+          - type: custom:button-card
+            entity: sensor.pack1_live_cell_10
+            name: |
+              [[[
+                const s = states['sensor.pack1_live_cell_10'];
+                const sl = states['sensor.pack1_live_min_cell']; const sh = states['sensor.pack1_live_max_cell'];
+                if (!s) return 'Cell 10';
+                const v = parseFloat(s.state);
+                const lv = sl ? parseFloat(sl.state) : NaN;
+                const hv = sh ? parseFloat(sh.state) : NaN;
+                let n = 'Cell 10';
+                if (!isNaN(lv) && v === lv) n += ' (L)';
+                if (!isNaN(hv) && v === hv) n += ' (H)';
+                return n;
+              ]]]
+            state_display: >
+              [[[ const v = parseFloat(entity && entity.state); return isNaN(v)
+              ? '—' : (v * 1000).toFixed(0) + ' mV'; ]]]
+            show_name: true
+            show_state: true
+            show_icon: false
+            tap_action:
+              action: more-info
+            styles:
+              card:
+                - "--card-background-color": |
+                    [[[
+                      const s = states['sensor.pack1_live_cell_10'];
+                      const sl = states['sensor.pack1_live_min_cell']; const sh = states['sensor.pack1_live_max_cell'];
+                      if (!s) return 'grey';
+                      const v = parseFloat(s.state);
+                      const lv = sl ? parseFloat(sl.state) : NaN;
+                      const hv = sh ? parseFloat(sh.state) : NaN;
+                      return (!isNaN(lv) && v === lv) ? 'orange' : (!isNaN(hv) && v === hv) ? 'darkgreen' : 'green';
+                    ]]]
+              name:
+                - font-size: 0.6em
+              state:
+                - font-size: 0.7em
+          - type: custom:button-card
+            entity: sensor.pack1_live_cell_11
+            name: |
+              [[[
+                const s = states['sensor.pack1_live_cell_11'];
+                const sl = states['sensor.pack1_live_min_cell']; const sh = states['sensor.pack1_live_max_cell'];
+                if (!s) return 'Cell 11';
+                const v = parseFloat(s.state);
+                const lv = sl ? parseFloat(sl.state) : NaN;
+                const hv = sh ? parseFloat(sh.state) : NaN;
+                let n = 'Cell 11';
+                if (!isNaN(lv) && v === lv) n += ' (L)';
+                if (!isNaN(hv) && v === hv) n += ' (H)';
+                return n;
+              ]]]
+            state_display: >
+              [[[ const v = parseFloat(entity && entity.state); return isNaN(v)
+              ? '—' : (v * 1000).toFixed(0) + ' mV'; ]]]
+            show_name: true
+            show_state: true
+            show_icon: false
+            tap_action:
+              action: more-info
+            styles:
+              card:
+                - "--card-background-color": |
+                    [[[
+                      const s = states['sensor.pack1_live_cell_11'];
+                      const sl = states['sensor.pack1_live_min_cell']; const sh = states['sensor.pack1_live_max_cell'];
+                      if (!s) return 'grey';
+                      const v = parseFloat(s.state);
+                      const lv = sl ? parseFloat(sl.state) : NaN;
+                      const hv = sh ? parseFloat(sh.state) : NaN;
+                      return (!isNaN(lv) && v === lv) ? 'orange' : (!isNaN(hv) && v === hv) ? 'darkgreen' : 'green';
+                    ]]]
+              name:
+                - font-size: 0.6em
+              state:
+                - font-size: 0.7em
+          - type: custom:button-card
+            entity: sensor.pack1_live_cell_12
+            name: |
+              [[[
+                const s = states['sensor.pack1_live_cell_12'];
+                const sl = states['sensor.pack1_live_min_cell']; const sh = states['sensor.pack1_live_max_cell'];
+                if (!s) return 'Cell 12';
+                const v = parseFloat(s.state);
+                const lv = sl ? parseFloat(sl.state) : NaN;
+                const hv = sh ? parseFloat(sh.state) : NaN;
+                let n = 'Cell 12';
+                if (!isNaN(lv) && v === lv) n += ' (L)';
+                if (!isNaN(hv) && v === hv) n += ' (H)';
+                return n;
+              ]]]
+            state_display: >
+              [[[ const v = parseFloat(entity && entity.state); return isNaN(v)
+              ? '—' : (v * 1000).toFixed(0) + ' mV'; ]]]
+            show_name: true
+            show_state: true
+            show_icon: false
+            tap_action:
+              action: more-info
+            styles:
+              card:
+                - "--card-background-color": |
+                    [[[
+                      const s = states['sensor.pack1_live_cell_12'];
+                      const sl = states['sensor.pack1_live_min_cell']; const sh = states['sensor.pack1_live_max_cell'];
+                      if (!s) return 'grey';
+                      const v = parseFloat(s.state);
+                      const lv = sl ? parseFloat(sl.state) : NaN;
+                      const hv = sh ? parseFloat(sh.state) : NaN;
+                      return (!isNaN(lv) && v === lv) ? 'orange' : (!isNaN(hv) && v === hv) ? 'darkgreen' : 'green';
+                    ]]]
+              name:
+                - font-size: 0.6em
+              state:
+                - font-size: 0.7em
+          - type: custom:button-card
+            entity: sensor.pack1_live_cell_13
+            name: |
+              [[[
+                const s = states['sensor.pack1_live_cell_13'];
+                const sl = states['sensor.pack1_live_min_cell']; const sh = states['sensor.pack1_live_max_cell'];
+                if (!s) return 'Cell 13';
+                const v = parseFloat(s.state);
+                const lv = sl ? parseFloat(sl.state) : NaN;
+                const hv = sh ? parseFloat(sh.state) : NaN;
+                let n = 'Cell 13';
+                if (!isNaN(lv) && v === lv) n += ' (L)';
+                if (!isNaN(hv) && v === hv) n += ' (H)';
+                return n;
+              ]]]
+            state_display: >
+              [[[ const v = parseFloat(entity && entity.state); return isNaN(v)
+              ? '—' : (v * 1000).toFixed(0) + ' mV'; ]]]
+            show_name: true
+            show_state: true
+            show_icon: false
+            tap_action:
+              action: more-info
+            styles:
+              card:
+                - "--card-background-color": |
+                    [[[
+                      const s = states['sensor.pack1_live_cell_13'];
+                      const sl = states['sensor.pack1_live_min_cell']; const sh = states['sensor.pack1_live_max_cell'];
+                      if (!s) return 'grey';
+                      const v = parseFloat(s.state);
+                      const lv = sl ? parseFloat(sl.state) : NaN;
+                      const hv = sh ? parseFloat(sh.state) : NaN;
+                      return (!isNaN(lv) && v === lv) ? 'orange' : (!isNaN(hv) && v === hv) ? 'darkgreen' : 'green';
+                    ]]]
+              name:
+                - font-size: 0.6em
+              state:
+                - font-size: 0.7em
+          - type: custom:button-card
+            entity: sensor.pack1_live_cell_14
+            name: |
+              [[[
+                const s = states['sensor.pack1_live_cell_14'];
+                const sl = states['sensor.pack1_live_min_cell']; const sh = states['sensor.pack1_live_max_cell'];
+                if (!s) return 'Cell 14';
+                const v = parseFloat(s.state);
+                const lv = sl ? parseFloat(sl.state) : NaN;
+                const hv = sh ? parseFloat(sh.state) : NaN;
+                let n = 'Cell 14';
+                if (!isNaN(lv) && v === lv) n += ' (L)';
+                if (!isNaN(hv) && v === hv) n += ' (H)';
+                return n;
+              ]]]
+            state_display: >
+              [[[ const v = parseFloat(entity && entity.state); return isNaN(v)
+              ? '—' : (v * 1000).toFixed(0) + ' mV'; ]]]
+            show_name: true
+            show_state: true
+            show_icon: false
+            tap_action:
+              action: more-info
+            styles:
+              card:
+                - "--card-background-color": |
+                    [[[
+                      const s = states['sensor.pack1_live_cell_14'];
+                      const sl = states['sensor.pack1_live_min_cell']; const sh = states['sensor.pack1_live_max_cell'];
+                      if (!s) return 'grey';
+                      const v = parseFloat(s.state);
+                      const lv = sl ? parseFloat(sl.state) : NaN;
+                      const hv = sh ? parseFloat(sh.state) : NaN;
+                      return (!isNaN(lv) && v === lv) ? 'orange' : (!isNaN(hv) && v === hv) ? 'darkgreen' : 'green';
+                    ]]]
+              name:
+                - font-size: 0.6em
+              state:
+                - font-size: 0.7em
+          - type: custom:button-card
+            entity: sensor.pack1_live_cell_15
+            name: |
+              [[[
+                const s = states['sensor.pack1_live_cell_15'];
+                const sl = states['sensor.pack1_live_min_cell']; const sh = states['sensor.pack1_live_max_cell'];
+                if (!s) return 'Cell 15';
+                const v = parseFloat(s.state);
+                const lv = sl ? parseFloat(sl.state) : NaN;
+                const hv = sh ? parseFloat(sh.state) : NaN;
+                let n = 'Cell 15';
+                if (!isNaN(lv) && v === lv) n += ' (L)';
+                if (!isNaN(hv) && v === hv) n += ' (H)';
+                return n;
+              ]]]
+            state_display: >
+              [[[ const v = parseFloat(entity && entity.state); return isNaN(v)
+              ? '—' : (v * 1000).toFixed(0) + ' mV'; ]]]
+            show_name: true
+            show_state: true
+            show_icon: false
+            tap_action:
+              action: more-info
+            styles:
+              card:
+                - "--card-background-color": |
+                    [[[
+                      const s = states['sensor.pack1_live_cell_15'];
+                      const sl = states['sensor.pack1_live_min_cell']; const sh = states['sensor.pack1_live_max_cell'];
+                      if (!s) return 'grey';
+                      const v = parseFloat(s.state);
+                      const lv = sl ? parseFloat(sl.state) : NaN;
+                      const hv = sh ? parseFloat(sh.state) : NaN;
+                      return (!isNaN(lv) && v === lv) ? 'orange' : (!isNaN(hv) && v === hv) ? 'darkgreen' : 'green';
+                    ]]]
+              name:
+                - font-size: 0.6em
+              state:
+                - font-size: 0.7em
+          - type: custom:button-card
+            entity: sensor.pack1_live_cell_16
+            name: |
+              [[[
+                const s = states['sensor.pack1_live_cell_16'];
+                const sl = states['sensor.pack1_live_min_cell']; const sh = states['sensor.pack1_live_max_cell'];
+                if (!s) return 'Cell 16';
+                const v = parseFloat(s.state);
+                const lv = sl ? parseFloat(sl.state) : NaN;
+                const hv = sh ? parseFloat(sh.state) : NaN;
+                let n = 'Cell 16';
+                if (!isNaN(lv) && v === lv) n += ' (L)';
+                if (!isNaN(hv) && v === hv) n += ' (H)';
+                return n;
+              ]]]
+            state_display: >
+              [[[ const v = parseFloat(entity && entity.state); return isNaN(v)
+              ? '—' : (v * 1000).toFixed(0) + ' mV'; ]]]
+            show_name: true
+            show_state: true
+            show_icon: false
+            tap_action:
+              action: more-info
+            styles:
+              card:
+                - "--card-background-color": |
+                    [[[
+                      const s = states['sensor.pack1_live_cell_16'];
+                      const sl = states['sensor.pack1_live_min_cell']; const sh = states['sensor.pack1_live_max_cell'];
+                      if (!s) return 'grey';
+                      const v = parseFloat(s.state);
+                      const lv = sl ? parseFloat(sl.state) : NaN;
+                      const hv = sh ? parseFloat(sh.state) : NaN;
+                      return (!isNaN(lv) && v === lv) ? 'orange' : (!isNaN(hv) && v === hv) ? 'darkgreen' : 'green';
+                    ]]]
+              name:
+                - font-size: 0.6em
+              state:
+                - font-size: 0.7em
+
+  - type: vertical-stack
+    cards:
+      - type: custom:button-card
+        variables:
+          soc: sensor.pack2_live_soc
+          voltage: sensor.pack2_live_pack_voltage
+          current: sensor.pack2_live_current
+          power: sensor.pack2_live_battery_power_port
+          cycles: sensor.pack2_live_cycles
+          cell_min: sensor.pack2_live_min_cell
+          cell_max: sensor.pack2_live_max_cell
+          ah_used: sensor.pack2_live_full_charge_remaining
+          t1: sensor.pack2_live_temp_1
+          t2: sensor.pack2_live_temp_2
+          t3: sensor.pack2_live_temp_3
+          t4: sensor.pack2_live_temp_4
+          t5: sensor.pack2_live_temp_5
+          t6: sensor.pack2_live_temp_6
+        show_name: false
+        tap_action:
+          action: more-info
+          entity: sensor.pack2_live_soc
+        styles:
+          card:
+            - background-color: rgba(61,61,61,0.8)
+            - color: ivory
+            - font-size: 13px
+            - text-shadow: 0px 0px 5px black
+            - text-transform: capitalize
+            - border-radius: 10px
+            - border: |
+                [[[
+                  const s = states[variables.soc];
+                  const c = s ? parseFloat(s.state) : NaN;
+                  const col = isNaN(c) ? 'grey' : c > 75 ? 'lime' : c > 50 ? 'yellow' : c > 25 ? 'orange' : c > 15 ? 'red' : 'darkred';
+                  return `1px solid ${col}`;
+                ]]]
+            - box-shadow: |
+                [[[
+                  const s = states[variables.soc];
+                  const c = s ? parseFloat(s.state) : NaN;
+                  const col = isNaN(c) ? 'grey' : c > 75 ? 'lime' : c > 50 ? 'yellow' : c > 25 ? 'orange' : c > 15 ? 'red' : 'darkred';
+                  return `0px 0px 10px 3px ${col}`;
+                ]]]
+          grid:
+            - grid-template-areas: '"i bat cells"'
+            - grid-template-columns: 0fr 1fr 1fr
+            - align-items: start
+          icon:
+            - color: |
+                [[[
+                  const s = states[variables.soc];
+                  const c = s ? parseFloat(s.state) : NaN;
+                  return isNaN(c) ? 'grey' : c > 75 ? 'lime' : c > 50 ? 'yellow' : c > 25 ? 'orange' : c > 15 ? 'red' : 'darkred';
+                ]]]
+            - width: 70%
+            - margin-top: 0%
+          custom_fields:
+            bat:
+              - justify-content: start
+              - padding-left: 10px
+            cells:
+              - justify-content: start
+              - padding-left: 10px
+        custom_fields:
+          bat: |
+            [[[
+              const num = (e, d) => {
+                const s = states[e];
+                if (!s || s.state === 'unknown' || s.state === 'unavailable') return '—';
+                const n = parseFloat(s.state);
+                return isNaN(n) ? '—' : n.toFixed(d);
+              };
+              return `
+                <div><ha-icon icon="mdi:battery-high" style="width:14px;height:14px;color:yellow"></ha-icon><span style="margin-left:4px">SOC: ${num(variables.soc, 1)}%</span></div>
+                <div><ha-icon icon="mdi:flash" style="width:14px;height:14px;color:green"></ha-icon><span style="margin-left:4px">Voltage: ${num(variables.voltage, 2)}V</span></div>
+                <div><ha-icon icon="mdi:current-dc" style="width:14px;height:14px;color:#3db7e4"></ha-icon><span style="margin-left:4px">Usage: ${num(variables.current, 2)}A/${num(variables.power, 0)}W</span></div>
+                <div><ha-icon icon="mdi:power-plug" style="width:14px;height:14px;color:white"></ha-icon><span style="margin-left:4px">Cycles: ${num(variables.cycles, 0)}</span></div>
+              `;
+            ]]]
+          cells: |
+            [[[
+              const v = (e) => states[e] ? parseFloat(states[e].state) : NaN;
+              const num = (e, d) => {
+                const s = states[e];
+                if (!s || s.state === 'unknown' || s.state === 'unavailable') return '—';
+                const n = parseFloat(s.state);
+                return isNaN(n) ? '—' : n.toFixed(d);
+              };
+              const ts = [variables.t1, variables.t2, variables.t3, variables.t4, variables.t5, variables.t6]
+                .map(v).filter(x => !isNaN(x));
+              const minT = ts.length ? Math.min(...ts).toFixed(1) : '—';
+              const maxT = ts.length ? Math.max(...ts).toFixed(1) : '—';
+              const cm = v(variables.cell_min), cx = v(variables.cell_max);
+              const mv = (x) => isNaN(x) ? '—' : (x * 1000).toFixed(0);
+              return `
+                <div><ha-icon icon="mdi:arrow-down-bold" style="width:14px;height:14px;color:#3db7e4"></ha-icon><span style="margin-left:4px">Lowest: ${mv(cm)}mV</span></div>
+                <div><ha-icon icon="mdi:arrow-up-bold" style="width:14px;height:14px;color:#f53d3d"></ha-icon><span style="margin-left:4px">Highest: ${mv(cx)}mV</span></div>
+                <div><ha-icon icon="mdi:thermometer-lines" style="width:14px;height:14px;color:#f5b041"></ha-icon><span style="margin-left:4px">Temp: ${minT}°C/${maxT}°C</span></div>
+                <div><ha-icon icon="mdi:battery-charging-100" style="width:14px;height:14px;color:#8c8c8c"></ha-icon><span style="margin-left:4px">Ah Used: ${num(variables.ah_used, 2)}Ah</span></div>
+              `;
+            ]]]
+      - type: custom:button-card
+        entity: sensor.pack2_live_soc
+        variables:
+          title: "Pack 2"
+        show_name: false
+        show_state: false
+        show_icon: false
+        custom_fields:
+          bat: |
+            [[[
+              if (!entity || !entity.last_updated) return 'no data';
+              const t = new Date(entity.last_updated).getTime();
+              const s = Math.max(0, Math.floor((Date.now() - t) / 1000));
+              let rel;
+              if (s < 60) rel = `${s}s ago`;
+              else { const m = Math.floor(s / 60);
+                if (m < 60) rel = `${m}m ${s % 60}s ago`;
+                else { const h = Math.floor(m / 60);
+                  if (h < 24) rel = `${h}h ${m % 60}m ago`;
+                  else { const d = Math.floor(h / 24); rel = `${d}d ${h % 24}h ago`; } } }
+              return `<span style="font-size:14px;font-weight:600">${variables.title}</span> <span style="font-size:12px;color:var(--secondary-text-color)">[ Updated ${rel} ]</span>`;
+            ]]]
+        styles:
+          card:
+            - background: none
+            - border: none
+            - box-shadow: none
+            - padding: 0
+          grid:
+            - grid-template-areas: '"bat"'
+            - grid-template-columns: 1fr
+          custom_fields:
+            bat:
+              - justify-self: center
+              - text-align: left
+      - type: grid
+        square: false
+        columns: 3
+        cards:
+          - type: custom:button-card
+            entity: sensor.pack2_live_soc
+            name: "State of Charge"
+            show_name: true
+            show_state: true
+            show_icon: false
+            show_units: true
+            tap_action:
+              action: more-info
+            styles:
+              card:
+                - "--card-background-color": null
+              name:
+                - font-size: 0.6em
+              state:
+                - font-size: 0.8em
+          - type: custom:button-card
+            entity: sensor.pack2_live_soh
+            name: "State of Health"
+            show_name: true
+            show_state: true
+            show_icon: false
+            show_units: true
+            tap_action:
+              action: more-info
+            styles:
+              card:
+                - "--card-background-color": null
+              name:
+                - font-size: 0.6em
+              state:
+                - font-size: 0.8em
+          - type: custom:button-card
+            entity: sensor.pack2_live_cycles
+            name: "Cycles"
+            show_name: true
+            show_state: true
+            show_icon: false
+            show_units: true
+            tap_action:
+              action: more-info
+            styles:
+              card:
+                - "--card-background-color": null
+              name:
+                - font-size: 0.6em
+              state:
+                - font-size: 0.8em
+          - type: custom:button-card
+            entity: sensor.pack2_live_pack_voltage
+            name: "Pack Voltage"
+            show_name: true
+            show_state: true
+            show_icon: false
+            show_units: true
+            tap_action:
+              action: more-info
+            styles:
+              card:
+                - "--card-background-color": null
+              name:
+                - font-size: 0.6em
+              state:
+                - font-size: 0.8em
+          - type: custom:button-card
+            entity: sensor.pack2_live_port_voltage
+            name: "Port Voltage"
+            show_name: true
+            show_state: true
+            show_icon: false
+            show_units: true
+            tap_action:
+              action: more-info
+            styles:
+              card:
+                - "--card-background-color": null
+              name:
+                - font-size: 0.6em
+              state:
+                - font-size: 0.8em
+          - type: custom:button-card
+            entity: sensor.pack2_live_cell_delta
+            name: "Cell Deviation"
+            show_name: true
+            show_state: true
+            show_icon: false
+            show_units: true
+            tap_action:
+              action: more-info
+            styles:
+              card:
+                - "--card-background-color": null
+              name:
+                - font-size: 0.6em
+              state:
+                - font-size: 0.8em
+          - type: custom:button-card
+            entity: sensor.pack2_live_battery_power_port
+            name: "Battery Watts"
+            show_name: true
+            show_state: true
+            show_icon: false
+            show_units: true
+            tap_action:
+              action: more-info
+            styles:
+              card:
+                - "--card-background-color": null
+              name:
+                - font-size: 0.6em
+              state:
+                - font-size: 0.8em
+          - type: custom:button-card
+            entity: sensor.pack2_live_remaining_energy
+            name: "Watts Remaining"
+            show_name: true
+            show_state: true
+            show_icon: false
+            show_units: true
+            tap_action:
+              action: more-info
+            styles:
+              card:
+                - "--card-background-color": null
+              name:
+                - font-size: 0.6em
+              state:
+                - font-size: 0.8em
+          - type: custom:button-card
+            entity: sensor.pack2_live_full_charge_remaining_wh
+            name: "Watts Used"
+            show_name: true
+            show_state: true
+            show_icon: false
+            show_units: true
+            tap_action:
+              action: more-info
+            styles:
+              card:
+                - "--card-background-color": null
+              name:
+                - font-size: 0.6em
+              state:
+                - font-size: 0.8em
+          - type: custom:button-card
+            entity: sensor.pack2_live_current
+            name: "Battery Amps"
+            show_name: true
+            show_state: true
+            show_icon: false
+            show_units: true
+            tap_action:
+              action: more-info
+            styles:
+              card:
+                - "--card-background-color": null
+              name:
+                - font-size: 0.6em
+              state:
+                - font-size: 0.8em
+          - type: custom:button-card
+            entity: sensor.pack2_live_remaining_capacity
+            name: "Ah Remaining"
+            show_name: true
+            show_state: true
+            show_icon: false
+            show_units: true
+            tap_action:
+              action: more-info
+            styles:
+              card:
+                - "--card-background-color": null
+              name:
+                - font-size: 0.6em
+              state:
+                - font-size: 0.8em
+          - type: custom:button-card
+            entity: sensor.pack2_live_full_charge_remaining
+            name: "Ah Used"
+            show_name: true
+            show_state: true
+            show_icon: false
+            show_units: true
+            tap_action:
+              action: more-info
+            styles:
+              card:
+                - "--card-background-color": null
+              name:
+                - font-size: 0.6em
+              state:
+                - font-size: 0.8em
+      - type: grid
+        square: false
+        columns: 4
+        cards:
+          - type: custom:button-card
+            entity: sensor.pack2_live_cell_1
+            name: |
+              [[[
+                const s = states['sensor.pack2_live_cell_1'];
+                const sl = states['sensor.pack2_live_min_cell']; const sh = states['sensor.pack2_live_max_cell'];
+                if (!s) return 'Cell 1';
+                const v = parseFloat(s.state);
+                const lv = sl ? parseFloat(sl.state) : NaN;
+                const hv = sh ? parseFloat(sh.state) : NaN;
+                let n = 'Cell 1';
+                if (!isNaN(lv) && v === lv) n += ' (L)';
+                if (!isNaN(hv) && v === hv) n += ' (H)';
+                return n;
+              ]]]
+            state_display: >
+              [[[ const v = parseFloat(entity && entity.state); return isNaN(v)
+              ? '—' : (v * 1000).toFixed(0) + ' mV'; ]]]
+            show_name: true
+            show_state: true
+            show_icon: false
+            tap_action:
+              action: more-info
+            styles:
+              card:
+                - "--card-background-color": |
+                    [[[
+                      const s = states['sensor.pack2_live_cell_1'];
+                      const sl = states['sensor.pack2_live_min_cell']; const sh = states['sensor.pack2_live_max_cell'];
+                      if (!s) return 'grey';
+                      const v = parseFloat(s.state);
+                      const lv = sl ? parseFloat(sl.state) : NaN;
+                      const hv = sh ? parseFloat(sh.state) : NaN;
+                      return (!isNaN(lv) && v === lv) ? 'orange' : (!isNaN(hv) && v === hv) ? 'darkgreen' : 'green';
+                    ]]]
+              name:
+                - font-size: 0.6em
+              state:
+                - font-size: 0.7em
+          - type: custom:button-card
+            entity: sensor.pack2_live_cell_2
+            name: |
+              [[[
+                const s = states['sensor.pack2_live_cell_2'];
+                const sl = states['sensor.pack2_live_min_cell']; const sh = states['sensor.pack2_live_max_cell'];
+                if (!s) return 'Cell 2';
+                const v = parseFloat(s.state);
+                const lv = sl ? parseFloat(sl.state) : NaN;
+                const hv = sh ? parseFloat(sh.state) : NaN;
+                let n = 'Cell 2';
+                if (!isNaN(lv) && v === lv) n += ' (L)';
+                if (!isNaN(hv) && v === hv) n += ' (H)';
+                return n;
+              ]]]
+            state_display: >
+              [[[ const v = parseFloat(entity && entity.state); return isNaN(v)
+              ? '—' : (v * 1000).toFixed(0) + ' mV'; ]]]
+            show_name: true
+            show_state: true
+            show_icon: false
+            tap_action:
+              action: more-info
+            styles:
+              card:
+                - "--card-background-color": |
+                    [[[
+                      const s = states['sensor.pack2_live_cell_2'];
+                      const sl = states['sensor.pack2_live_min_cell']; const sh = states['sensor.pack2_live_max_cell'];
+                      if (!s) return 'grey';
+                      const v = parseFloat(s.state);
+                      const lv = sl ? parseFloat(sl.state) : NaN;
+                      const hv = sh ? parseFloat(sh.state) : NaN;
+                      return (!isNaN(lv) && v === lv) ? 'orange' : (!isNaN(hv) && v === hv) ? 'darkgreen' : 'green';
+                    ]]]
+              name:
+                - font-size: 0.6em
+              state:
+                - font-size: 0.7em
+          - type: custom:button-card
+            entity: sensor.pack2_live_cell_3
+            name: |
+              [[[
+                const s = states['sensor.pack2_live_cell_3'];
+                const sl = states['sensor.pack2_live_min_cell']; const sh = states['sensor.pack2_live_max_cell'];
+                if (!s) return 'Cell 3';
+                const v = parseFloat(s.state);
+                const lv = sl ? parseFloat(sl.state) : NaN;
+                const hv = sh ? parseFloat(sh.state) : NaN;
+                let n = 'Cell 3';
+                if (!isNaN(lv) && v === lv) n += ' (L)';
+                if (!isNaN(hv) && v === hv) n += ' (H)';
+                return n;
+              ]]]
+            state_display: >
+              [[[ const v = parseFloat(entity && entity.state); return isNaN(v)
+              ? '—' : (v * 1000).toFixed(0) + ' mV'; ]]]
+            show_name: true
+            show_state: true
+            show_icon: false
+            tap_action:
+              action: more-info
+            styles:
+              card:
+                - "--card-background-color": |
+                    [[[
+                      const s = states['sensor.pack2_live_cell_3'];
+                      const sl = states['sensor.pack2_live_min_cell']; const sh = states['sensor.pack2_live_max_cell'];
+                      if (!s) return 'grey';
+                      const v = parseFloat(s.state);
+                      const lv = sl ? parseFloat(sl.state) : NaN;
+                      const hv = sh ? parseFloat(sh.state) : NaN;
+                      return (!isNaN(lv) && v === lv) ? 'orange' : (!isNaN(hv) && v === hv) ? 'darkgreen' : 'green';
+                    ]]]
+              name:
+                - font-size: 0.6em
+              state:
+                - font-size: 0.7em
+          - type: custom:button-card
+            entity: sensor.pack2_live_cell_4
+            name: |
+              [[[
+                const s = states['sensor.pack2_live_cell_4'];
+                const sl = states['sensor.pack2_live_min_cell']; const sh = states['sensor.pack2_live_max_cell'];
+                if (!s) return 'Cell 4';
+                const v = parseFloat(s.state);
+                const lv = sl ? parseFloat(sl.state) : NaN;
+                const hv = sh ? parseFloat(sh.state) : NaN;
+                let n = 'Cell 4';
+                if (!isNaN(lv) && v === lv) n += ' (L)';
+                if (!isNaN(hv) && v === hv) n += ' (H)';
+                return n;
+              ]]]
+            state_display: >
+              [[[ const v = parseFloat(entity && entity.state); return isNaN(v)
+              ? '—' : (v * 1000).toFixed(0) + ' mV'; ]]]
+            show_name: true
+            show_state: true
+            show_icon: false
+            tap_action:
+              action: more-info
+            styles:
+              card:
+                - "--card-background-color": |
+                    [[[
+                      const s = states['sensor.pack2_live_cell_4'];
+                      const sl = states['sensor.pack2_live_min_cell']; const sh = states['sensor.pack2_live_max_cell'];
+                      if (!s) return 'grey';
+                      const v = parseFloat(s.state);
+                      const lv = sl ? parseFloat(sl.state) : NaN;
+                      const hv = sh ? parseFloat(sh.state) : NaN;
+                      return (!isNaN(lv) && v === lv) ? 'orange' : (!isNaN(hv) && v === hv) ? 'darkgreen' : 'green';
+                    ]]]
+              name:
+                - font-size: 0.6em
+              state:
+                - font-size: 0.7em
+          - type: custom:button-card
+            entity: sensor.pack2_live_cell_5
+            name: |
+              [[[
+                const s = states['sensor.pack2_live_cell_5'];
+                const sl = states['sensor.pack2_live_min_cell']; const sh = states['sensor.pack2_live_max_cell'];
+                if (!s) return 'Cell 5';
+                const v = parseFloat(s.state);
+                const lv = sl ? parseFloat(sl.state) : NaN;
+                const hv = sh ? parseFloat(sh.state) : NaN;
+                let n = 'Cell 5';
+                if (!isNaN(lv) && v === lv) n += ' (L)';
+                if (!isNaN(hv) && v === hv) n += ' (H)';
+                return n;
+              ]]]
+            state_display: >
+              [[[ const v = parseFloat(entity && entity.state); return isNaN(v)
+              ? '—' : (v * 1000).toFixed(0) + ' mV'; ]]]
+            show_name: true
+            show_state: true
+            show_icon: false
+            tap_action:
+              action: more-info
+            styles:
+              card:
+                - "--card-background-color": |
+                    [[[
+                      const s = states['sensor.pack2_live_cell_5'];
+                      const sl = states['sensor.pack2_live_min_cell']; const sh = states['sensor.pack2_live_max_cell'];
+                      if (!s) return 'grey';
+                      const v = parseFloat(s.state);
+                      const lv = sl ? parseFloat(sl.state) : NaN;
+                      const hv = sh ? parseFloat(sh.state) : NaN;
+                      return (!isNaN(lv) && v === lv) ? 'orange' : (!isNaN(hv) && v === hv) ? 'darkgreen' : 'green';
+                    ]]]
+              name:
+                - font-size: 0.6em
+              state:
+                - font-size: 0.7em
+          - type: custom:button-card
+            entity: sensor.pack2_live_cell_6
+            name: |
+              [[[
+                const s = states['sensor.pack2_live_cell_6'];
+                const sl = states['sensor.pack2_live_min_cell']; const sh = states['sensor.pack2_live_max_cell'];
+                if (!s) return 'Cell 6';
+                const v = parseFloat(s.state);
+                const lv = sl ? parseFloat(sl.state) : NaN;
+                const hv = sh ? parseFloat(sh.state) : NaN;
+                let n = 'Cell 6';
+                if (!isNaN(lv) && v === lv) n += ' (L)';
+                if (!isNaN(hv) && v === hv) n += ' (H)';
+                return n;
+              ]]]
+            state_display: >
+              [[[ const v = parseFloat(entity && entity.state); return isNaN(v)
+              ? '—' : (v * 1000).toFixed(0) + ' mV'; ]]]
+            show_name: true
+            show_state: true
+            show_icon: false
+            tap_action:
+              action: more-info
+            styles:
+              card:
+                - "--card-background-color": |
+                    [[[
+                      const s = states['sensor.pack2_live_cell_6'];
+                      const sl = states['sensor.pack2_live_min_cell']; const sh = states['sensor.pack2_live_max_cell'];
+                      if (!s) return 'grey';
+                      const v = parseFloat(s.state);
+                      const lv = sl ? parseFloat(sl.state) : NaN;
+                      const hv = sh ? parseFloat(sh.state) : NaN;
+                      return (!isNaN(lv) && v === lv) ? 'orange' : (!isNaN(hv) && v === hv) ? 'darkgreen' : 'green';
+                    ]]]
+              name:
+                - font-size: 0.6em
+              state:
+                - font-size: 0.7em
+          - type: custom:button-card
+            entity: sensor.pack2_live_cell_7
+            name: |
+              [[[
+                const s = states['sensor.pack2_live_cell_7'];
+                const sl = states['sensor.pack2_live_min_cell']; const sh = states['sensor.pack2_live_max_cell'];
+                if (!s) return 'Cell 7';
+                const v = parseFloat(s.state);
+                const lv = sl ? parseFloat(sl.state) : NaN;
+                const hv = sh ? parseFloat(sh.state) : NaN;
+                let n = 'Cell 7';
+                if (!isNaN(lv) && v === lv) n += ' (L)';
+                if (!isNaN(hv) && v === hv) n += ' (H)';
+                return n;
+              ]]]
+            state_display: >
+              [[[ const v = parseFloat(entity && entity.state); return isNaN(v)
+              ? '—' : (v * 1000).toFixed(0) + ' mV'; ]]]
+            show_name: true
+            show_state: true
+            show_icon: false
+            tap_action:
+              action: more-info
+            styles:
+              card:
+                - "--card-background-color": |
+                    [[[
+                      const s = states['sensor.pack2_live_cell_7'];
+                      const sl = states['sensor.pack2_live_min_cell']; const sh = states['sensor.pack2_live_max_cell'];
+                      if (!s) return 'grey';
+                      const v = parseFloat(s.state);
+                      const lv = sl ? parseFloat(sl.state) : NaN;
+                      const hv = sh ? parseFloat(sh.state) : NaN;
+                      return (!isNaN(lv) && v === lv) ? 'orange' : (!isNaN(hv) && v === hv) ? 'darkgreen' : 'green';
+                    ]]]
+              name:
+                - font-size: 0.6em
+              state:
+                - font-size: 0.7em
+          - type: custom:button-card
+            entity: sensor.pack2_live_cell_8
+            name: |
+              [[[
+                const s = states['sensor.pack2_live_cell_8'];
+                const sl = states['sensor.pack2_live_min_cell']; const sh = states['sensor.pack2_live_max_cell'];
+                if (!s) return 'Cell 8';
+                const v = parseFloat(s.state);
+                const lv = sl ? parseFloat(sl.state) : NaN;
+                const hv = sh ? parseFloat(sh.state) : NaN;
+                let n = 'Cell 8';
+                if (!isNaN(lv) && v === lv) n += ' (L)';
+                if (!isNaN(hv) && v === hv) n += ' (H)';
+                return n;
+              ]]]
+            state_display: >
+              [[[ const v = parseFloat(entity && entity.state); return isNaN(v)
+              ? '—' : (v * 1000).toFixed(0) + ' mV'; ]]]
+            show_name: true
+            show_state: true
+            show_icon: false
+            tap_action:
+              action: more-info
+            styles:
+              card:
+                - "--card-background-color": |
+                    [[[
+                      const s = states['sensor.pack2_live_cell_8'];
+                      const sl = states['sensor.pack2_live_min_cell']; const sh = states['sensor.pack2_live_max_cell'];
+                      if (!s) return 'grey';
+                      const v = parseFloat(s.state);
+                      const lv = sl ? parseFloat(sl.state) : NaN;
+                      const hv = sh ? parseFloat(sh.state) : NaN;
+                      return (!isNaN(lv) && v === lv) ? 'orange' : (!isNaN(hv) && v === hv) ? 'darkgreen' : 'green';
+                    ]]]
+              name:
+                - font-size: 0.6em
+              state:
+                - font-size: 0.7em
+          - type: custom:button-card
+            entity: sensor.pack2_live_cell_9
+            name: |
+              [[[
+                const s = states['sensor.pack2_live_cell_9'];
+                const sl = states['sensor.pack2_live_min_cell']; const sh = states['sensor.pack2_live_max_cell'];
+                if (!s) return 'Cell 9';
+                const v = parseFloat(s.state);
+                const lv = sl ? parseFloat(sl.state) : NaN;
+                const hv = sh ? parseFloat(sh.state) : NaN;
+                let n = 'Cell 9';
+                if (!isNaN(lv) && v === lv) n += ' (L)';
+                if (!isNaN(hv) && v === hv) n += ' (H)';
+                return n;
+              ]]]
+            state_display: >
+              [[[ const v = parseFloat(entity && entity.state); return isNaN(v)
+              ? '—' : (v * 1000).toFixed(0) + ' mV'; ]]]
+            show_name: true
+            show_state: true
+            show_icon: false
+            tap_action:
+              action: more-info
+            styles:
+              card:
+                - "--card-background-color": |
+                    [[[
+                      const s = states['sensor.pack2_live_cell_9'];
+                      const sl = states['sensor.pack2_live_min_cell']; const sh = states['sensor.pack2_live_max_cell'];
+                      if (!s) return 'grey';
+                      const v = parseFloat(s.state);
+                      const lv = sl ? parseFloat(sl.state) : NaN;
+                      const hv = sh ? parseFloat(sh.state) : NaN;
+                      return (!isNaN(lv) && v === lv) ? 'orange' : (!isNaN(hv) && v === hv) ? 'darkgreen' : 'green';
+                    ]]]
+              name:
+                - font-size: 0.6em
+              state:
+                - font-size: 0.7em
+          - type: custom:button-card
+            entity: sensor.pack2_live_cell_10
+            name: |
+              [[[
+                const s = states['sensor.pack2_live_cell_10'];
+                const sl = states['sensor.pack2_live_min_cell']; const sh = states['sensor.pack2_live_max_cell'];
+                if (!s) return 'Cell 10';
+                const v = parseFloat(s.state);
+                const lv = sl ? parseFloat(sl.state) : NaN;
+                const hv = sh ? parseFloat(sh.state) : NaN;
+                let n = 'Cell 10';
+                if (!isNaN(lv) && v === lv) n += ' (L)';
+                if (!isNaN(hv) && v === hv) n += ' (H)';
+                return n;
+              ]]]
+            state_display: >
+              [[[ const v = parseFloat(entity && entity.state); return isNaN(v)
+              ? '—' : (v * 1000).toFixed(0) + ' mV'; ]]]
+            show_name: true
+            show_state: true
+            show_icon: false
+            tap_action:
+              action: more-info
+            styles:
+              card:
+                - "--card-background-color": |
+                    [[[
+                      const s = states['sensor.pack2_live_cell_10'];
+                      const sl = states['sensor.pack2_live_min_cell']; const sh = states['sensor.pack2_live_max_cell'];
+                      if (!s) return 'grey';
+                      const v = parseFloat(s.state);
+                      const lv = sl ? parseFloat(sl.state) : NaN;
+                      const hv = sh ? parseFloat(sh.state) : NaN;
+                      return (!isNaN(lv) && v === lv) ? 'orange' : (!isNaN(hv) && v === hv) ? 'darkgreen' : 'green';
+                    ]]]
+              name:
+                - font-size: 0.6em
+              state:
+                - font-size: 0.7em
+          - type: custom:button-card
+            entity: sensor.pack2_live_cell_11
+            name: |
+              [[[
+                const s = states['sensor.pack2_live_cell_11'];
+                const sl = states['sensor.pack2_live_min_cell']; const sh = states['sensor.pack2_live_max_cell'];
+                if (!s) return 'Cell 11';
+                const v = parseFloat(s.state);
+                const lv = sl ? parseFloat(sl.state) : NaN;
+                const hv = sh ? parseFloat(sh.state) : NaN;
+                let n = 'Cell 11';
+                if (!isNaN(lv) && v === lv) n += ' (L)';
+                if (!isNaN(hv) && v === hv) n += ' (H)';
+                return n;
+              ]]]
+            state_display: >
+              [[[ const v = parseFloat(entity && entity.state); return isNaN(v)
+              ? '—' : (v * 1000).toFixed(0) + ' mV'; ]]]
+            show_name: true
+            show_state: true
+            show_icon: false
+            tap_action:
+              action: more-info
+            styles:
+              card:
+                - "--card-background-color": |
+                    [[[
+                      const s = states['sensor.pack2_live_cell_11'];
+                      const sl = states['sensor.pack2_live_min_cell']; const sh = states['sensor.pack2_live_max_cell'];
+                      if (!s) return 'grey';
+                      const v = parseFloat(s.state);
+                      const lv = sl ? parseFloat(sl.state) : NaN;
+                      const hv = sh ? parseFloat(sh.state) : NaN;
+                      return (!isNaN(lv) && v === lv) ? 'orange' : (!isNaN(hv) && v === hv) ? 'darkgreen' : 'green';
+                    ]]]
+              name:
+                - font-size: 0.6em
+              state:
+                - font-size: 0.7em
+          - type: custom:button-card
+            entity: sensor.pack2_live_cell_12
+            name: |
+              [[[
+                const s = states['sensor.pack2_live_cell_12'];
+                const sl = states['sensor.pack2_live_min_cell']; const sh = states['sensor.pack2_live_max_cell'];
+                if (!s) return 'Cell 12';
+                const v = parseFloat(s.state);
+                const lv = sl ? parseFloat(sl.state) : NaN;
+                const hv = sh ? parseFloat(sh.state) : NaN;
+                let n = 'Cell 12';
+                if (!isNaN(lv) && v === lv) n += ' (L)';
+                if (!isNaN(hv) && v === hv) n += ' (H)';
+                return n;
+              ]]]
+            state_display: >
+              [[[ const v = parseFloat(entity && entity.state); return isNaN(v)
+              ? '—' : (v * 1000).toFixed(0) + ' mV'; ]]]
+            show_name: true
+            show_state: true
+            show_icon: false
+            tap_action:
+              action: more-info
+            styles:
+              card:
+                - "--card-background-color": |
+                    [[[
+                      const s = states['sensor.pack2_live_cell_12'];
+                      const sl = states['sensor.pack2_live_min_cell']; const sh = states['sensor.pack2_live_max_cell'];
+                      if (!s) return 'grey';
+                      const v = parseFloat(s.state);
+                      const lv = sl ? parseFloat(sl.state) : NaN;
+                      const hv = sh ? parseFloat(sh.state) : NaN;
+                      return (!isNaN(lv) && v === lv) ? 'orange' : (!isNaN(hv) && v === hv) ? 'darkgreen' : 'green';
+                    ]]]
+              name:
+                - font-size: 0.6em
+              state:
+                - font-size: 0.7em
+          - type: custom:button-card
+            entity: sensor.pack2_live_cell_13
+            name: |
+              [[[
+                const s = states['sensor.pack2_live_cell_13'];
+                const sl = states['sensor.pack2_live_min_cell']; const sh = states['sensor.pack2_live_max_cell'];
+                if (!s) return 'Cell 13';
+                const v = parseFloat(s.state);
+                const lv = sl ? parseFloat(sl.state) : NaN;
+                const hv = sh ? parseFloat(sh.state) : NaN;
+                let n = 'Cell 13';
+                if (!isNaN(lv) && v === lv) n += ' (L)';
+                if (!isNaN(hv) && v === hv) n += ' (H)';
+                return n;
+              ]]]
+            state_display: >
+              [[[ const v = parseFloat(entity && entity.state); return isNaN(v)
+              ? '—' : (v * 1000).toFixed(0) + ' mV'; ]]]
+            show_name: true
+            show_state: true
+            show_icon: false
+            tap_action:
+              action: more-info
+            styles:
+              card:
+                - "--card-background-color": |
+                    [[[
+                      const s = states['sensor.pack2_live_cell_13'];
+                      const sl = states['sensor.pack2_live_min_cell']; const sh = states['sensor.pack2_live_max_cell'];
+                      if (!s) return 'grey';
+                      const v = parseFloat(s.state);
+                      const lv = sl ? parseFloat(sl.state) : NaN;
+                      const hv = sh ? parseFloat(sh.state) : NaN;
+                      return (!isNaN(lv) && v === lv) ? 'orange' : (!isNaN(hv) && v === hv) ? 'darkgreen' : 'green';
+                    ]]]
+              name:
+                - font-size: 0.6em
+              state:
+                - font-size: 0.7em
+          - type: custom:button-card
+            entity: sensor.pack2_live_cell_14
+            name: |
+              [[[
+                const s = states['sensor.pack2_live_cell_14'];
+                const sl = states['sensor.pack2_live_min_cell']; const sh = states['sensor.pack2_live_max_cell'];
+                if (!s) return 'Cell 14';
+                const v = parseFloat(s.state);
+                const lv = sl ? parseFloat(sl.state) : NaN;
+                const hv = sh ? parseFloat(sh.state) : NaN;
+                let n = 'Cell 14';
+                if (!isNaN(lv) && v === lv) n += ' (L)';
+                if (!isNaN(hv) && v === hv) n += ' (H)';
+                return n;
+              ]]]
+            state_display: >
+              [[[ const v = parseFloat(entity && entity.state); return isNaN(v)
+              ? '—' : (v * 1000).toFixed(0) + ' mV'; ]]]
+            show_name: true
+            show_state: true
+            show_icon: false
+            tap_action:
+              action: more-info
+            styles:
+              card:
+                - "--card-background-color": |
+                    [[[
+                      const s = states['sensor.pack2_live_cell_14'];
+                      const sl = states['sensor.pack2_live_min_cell']; const sh = states['sensor.pack2_live_max_cell'];
+                      if (!s) return 'grey';
+                      const v = parseFloat(s.state);
+                      const lv = sl ? parseFloat(sl.state) : NaN;
+                      const hv = sh ? parseFloat(sh.state) : NaN;
+                      return (!isNaN(lv) && v === lv) ? 'orange' : (!isNaN(hv) && v === hv) ? 'darkgreen' : 'green';
+                    ]]]
+              name:
+                - font-size: 0.6em
+              state:
+                - font-size: 0.7em
+          - type: custom:button-card
+            entity: sensor.pack2_live_cell_15
+            name: |
+              [[[
+                const s = states['sensor.pack2_live_cell_15'];
+                const sl = states['sensor.pack2_live_min_cell']; const sh = states['sensor.pack2_live_max_cell'];
+                if (!s) return 'Cell 15';
+                const v = parseFloat(s.state);
+                const lv = sl ? parseFloat(sl.state) : NaN;
+                const hv = sh ? parseFloat(sh.state) : NaN;
+                let n = 'Cell 15';
+                if (!isNaN(lv) && v === lv) n += ' (L)';
+                if (!isNaN(hv) && v === hv) n += ' (H)';
+                return n;
+              ]]]
+            state_display: >
+              [[[ const v = parseFloat(entity && entity.state); return isNaN(v)
+              ? '—' : (v * 1000).toFixed(0) + ' mV'; ]]]
+            show_name: true
+            show_state: true
+            show_icon: false
+            tap_action:
+              action: more-info
+            styles:
+              card:
+                - "--card-background-color": |
+                    [[[
+                      const s = states['sensor.pack2_live_cell_15'];
+                      const sl = states['sensor.pack2_live_min_cell']; const sh = states['sensor.pack2_live_max_cell'];
+                      if (!s) return 'grey';
+                      const v = parseFloat(s.state);
+                      const lv = sl ? parseFloat(sl.state) : NaN;
+                      const hv = sh ? parseFloat(sh.state) : NaN;
+                      return (!isNaN(lv) && v === lv) ? 'orange' : (!isNaN(hv) && v === hv) ? 'darkgreen' : 'green';
+                    ]]]
+              name:
+                - font-size: 0.6em
+              state:
+                - font-size: 0.7em
+          - type: custom:button-card
+            entity: sensor.pack2_live_cell_16
+            name: |
+              [[[
+                const s = states['sensor.pack2_live_cell_16'];
+                const sl = states['sensor.pack2_live_min_cell']; const sh = states['sensor.pack2_live_max_cell'];
+                if (!s) return 'Cell 16';
+                const v = parseFloat(s.state);
+                const lv = sl ? parseFloat(sl.state) : NaN;
+                const hv = sh ? parseFloat(sh.state) : NaN;
+                let n = 'Cell 16';
+                if (!isNaN(lv) && v === lv) n += ' (L)';
+                if (!isNaN(hv) && v === hv) n += ' (H)';
+                return n;
+              ]]]
+            state_display: >
+              [[[ const v = parseFloat(entity && entity.state); return isNaN(v)
+              ? '—' : (v * 1000).toFixed(0) + ' mV'; ]]]
+            show_name: true
+            show_state: true
+            show_icon: false
+            tap_action:
+              action: more-info
+            styles:
+              card:
+                - "--card-background-color": |
+                    [[[
+                      const s = states['sensor.pack2_live_cell_16'];
+                      const sl = states['sensor.pack2_live_min_cell']; const sh = states['sensor.pack2_live_max_cell'];
+                      if (!s) return 'grey';
+                      const v = parseFloat(s.state);
+                      const lv = sl ? parseFloat(sl.state) : NaN;
+                      const hv = sh ? parseFloat(sh.state) : NaN;
+                      return (!isNaN(lv) && v === lv) ? 'orange' : (!isNaN(hv) && v === hv) ? 'darkgreen' : 'green';
+                    ]]]
+              name:
+                - font-size: 0.6em
+              state:
+                - font-size: 0.7em
+

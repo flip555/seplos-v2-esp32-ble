@@ -79,7 +79,7 @@ def gen(n):
         def s(t,label,idx=None,dev="live"):
             a(f"  - platform: bms_bridge\n    bms_bridge_id: hub{i}\n    device_id: pack{i}_{dev}\n    type: {t}")
             if idx is not None: a(f"    index: {idx}")
-            a(f'    name: "Pack {i} {label}"')
+            a(f'    name: "{label}"')
         for t,nm in BASE: s(t,nm)
         for c in range(1,17): s("cell_voltage", f"Cell {c}", c)
         for c in range(1,7): s("temperature", f"Temp {c}", c)
@@ -89,16 +89,16 @@ def gen(n):
     for i in range(1,n+1):
         for t in TEXTS:
             dev="settings" if t in ("settings_raw","alarms_raw") else "diag"
-            a(f'  - platform: bms_bridge\n    bms_bridge_id: hub{i}\n    device_id: pack{i}_{dev}\n    type: {t}\n    name: "Pack {i} {t.replace("_"," ").capitalize()}"')
+            a(f'  - platform: bms_bridge\n    bms_bridge_id: hub{i}\n    device_id: pack{i}_{dev}\n    type: {t}\n    name: "{t.replace("_"," ").capitalize()}"')
     a("")
     a("button:")
     for i in range(1,n+1):
         for t,nm in (("scan","Scan"),("settings","Read settings"),("alarms","Read alarms"),("run","Run command")):
-            a(f'  - platform: bms_bridge\n    bms_bridge_id: hub{i}\n    device_id: pack{i}_diag\n    type: {t}\n    name: "Pack {i} {nm}"')
+            a(f'  - platform: bms_bridge\n    bms_bridge_id: hub{i}\n    device_id: pack{i}_diag\n    type: {t}\n    name: "{nm}"')
     a("")
     a("text:")
     for i in range(1,n+1):
-        a(f'  - platform: bms_bridge\n    bms_bridge_id: hub{i}\n    device_id: pack{i}_diag\n    mode: text\n    name: "Pack {i} BLE command"')
+        a(f'  - platform: bms_bridge\n    bms_bridge_id: hub{i}\n    device_id: pack{i}_diag\n    mode: text\n    name: "BLE command"')
     return "\n".join(L)+"\n"
 
 if __name__ == "__main__":
