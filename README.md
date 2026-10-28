@@ -1,22 +1,26 @@
 # Seplos V2 BLE bridge for ESPHome
 
-A read-only ESPHome component that talks to Seplos / PACE V2 battery BMS units
-over Bluetooth LE from an ESP32 and exposes typed entities to Home Assistant.
+Read-only ESPHome component that talks to Seplos / PACE V2 battery BMS units
+over Bluetooth LE on an ESP32 and exposes typed entities to Home Assistant.
+
+**[Documentation and setup guide → wiki](../../wiki)**
+
+## What it does
 
 - Pack voltage, current, power, SOC, SOH, cycles, capacity, port voltage
-- Every cell voltage, every temperature probe, min/max/delta, derived energy
+- Every cell voltage and temperature probe, plus min/max/delta and derived energy
 - Device identity and the settings block, decoded and read-only
-- Multiple packs on one ESP32: persistent links, staggered polling
-- Sub-devices, so each pack groups as its own device in Home Assistant
+- Multiple packs on one ESP32, grouped as sub-devices
+- Diagnostics: per-hub frame counters and CRC-failure capture
+- Stall recovery: cycles the BLE link if a module stops notifying
 
-Configuration writes are intentionally not implemented.
+Configuration writes are deliberately not implemented.
 
 ## Requirements
 
 - ESP32 with BLE (classic ESP32 or ESP32-S3)
 - ESPHome 2026.5 or newer
 - A Seplos / PACE V2 BMS advertising the BLE service `FF00`
-  (characteristics `FF01` notify, `FF02` write)
 
 ## Install
 
@@ -26,7 +30,10 @@ external_components:
     components: [bms_bridge]
 ```
 
-## Minimal configuration
+See the [Installation](../../wiki/Installation) page for a complete first
+configuration, and [Configuration](../../wiki/Configuration) for every option.
+
+## Minimal example
 
 ```yaml
 esphome:
@@ -46,9 +53,6 @@ esp32:
 
 logger:
   level: INFO
-  logs:
-    esp32_ble_client: WARN
-    bms_bridge.ble: WARN
 
 api:
   encryption:
@@ -59,12 +63,12 @@ ota:
 
 wifi:
   ssid: !secret wifi_ssid
-  password: !secret wifi_password
+  password: *** wifi_password
 
 esp32_ble_tracker:
   scan_parameters:
-    interval: 1100ms
-    window: 1100ms
+    interval: 320ms
+    window: 30ms
   on_ble_advertise:
     - lambda: |-
         id(hub1)->note_advert(x.address_str(), x.get_rssi(), x.get_name(),
@@ -88,70 +92,25 @@ sensor:
     device_id: pack1_live
     type: total_voltage
     name: "Pack voltage"
-  - platform: bms_bridge
-    bms_bridge_id: hub1
-    device_id: pack1_live
-    type: current
-    name: "Current"
-  - platform: bms_bridge
-    bms_bridge_id: hub1
-    device_id: pack1_live
-    type: soc
-    name: "SOC"
-  - platform: bms_bridge
-    bms_bridge_id: hub1
-    device_id: pack1_live
-    type: cell_voltage
-    index: 1
-    name: "Cell 1"
 ```
 
-`examples/van-bms.yaml` is a complete two-pack configuration, including the
-settings and diagnostics entities.
+`examples/van-bms.yaml` is a complete two-pack configuration.
 
-## Entity model
+## Documentation
 
-Entities are declared as `type` plus an optional `index`, so the platform is
-shared across protocols:
+- [Installation](../../wiki/Installation)
+- [Configuration](../../wiki/Configuration)
+- [Entities](../../wiki/Entities)
+- [Protocol](../../wiki/Protocol)
+- [Troubleshooting](../../wiki/Troubleshooting)
 
-| Type | Unit | Notes |
-|---|---|---|
-| `total_voltage` | V | pack voltage |
-| `current` | A | positive = charging |
-| `power` | W | pack voltage × current |
-| `soc`, `soh` | % | |
-| `cycles` | | |
-| `capacity`, `remaining_capacity`, `rated_capacity` | Ah | |
-| `port_voltage` | V | DC output side |
-| `cell_voltage` | V | needs `index: 1..N` |
-| `temperature` | °C | needs `index: 1..N` |
-| `cell_voltage_min` / `_max` / `_delta` | V | |
-| `temperature_min` / `_max` | °C | |
-| `full_charge` | Ah | derived: capacity − remaining |
-| `full_charge_watts`, `remaining_watts`, `capacity_watts` | Wh | derived |
-| `battery_watts` | W | port voltage × current |
-| `cell_max_number`, `cell_min_number` | | 1-based |
-| `temp_max_number`, `temp_min_number` | | 1-based |
-| `temp_delta` | °C | |
-| `setting_*` | V / °C | read-only thresholds from the settings block |
+## Status
 
-Text sensors: `profile`, `settings_raw`, `scan_results`, `output`, `status_tail`.
-Buttons: scan, run console command, read settings, read alarms.
+Read-only by design. Configuration writes and alarm events are tracked in the
+[issue tracker](../../issues). Contributions and detailed reports are welcome.
 
+## Support
 
-## Diagnostics
-
-The component logs a per-hub line every 30 seconds:
-
-```
-hub seplos_v2_ble: chunks=41 bytes=1093 frames=6 buf=0 crc=0 drops=0 valid=1
-```
-
-`frames` should keep climbing and `crc`/`drops` should stay near zero. A rising
-`drops` with few `frames` means the link is losing frame starts, usually a
-range problem or burst pressure on a second concurrent connection.
-
-## Protocol
-
-See [docs/protocol.md](docs/protocol.md) for the frame layout, command IDs and
-field offsets, and [docs/entities.md](docs/entities.md) for the full entity list.
+If this saved you some time: [GitHub Sponsors](https://github.com/sponsors/flip555),
+[Ko-fi](https://ko-fi.com/flip555) or
+[Buy Me a Coffee](https://buymeacoffee.com/flip555).
