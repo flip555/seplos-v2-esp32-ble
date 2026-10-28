@@ -293,7 +293,7 @@ void SeplosV2::decode_status_(const std::vector<uint8_t> &p) {
   info_.temp_warnings.assign(battery_temps, 0);
   info_.events.clear();
   info_.balance_state.assign(cells, 0);
-  info_.broken_state.assign(cells, 0);
+  info_.invalidation_state.assign(cells, 0);
 
   size_t k = t0;
   bool ok = true;
@@ -321,7 +321,7 @@ void SeplosV2::decode_status_(const std::vector<uint8_t> &p) {
         for (size_t i = 0; i < cells; i++) {
           size_t byte = i / 8;
           info_.balance_state[i] = (p[k + byte] >> (i % 8)) & 1u;
-          info_.broken_state[i] = (p[k + bit_bytes + byte] >> (i % 8)) & 1u;
+          info_.invalidation_state[i] = (p[k + bit_bytes + byte] >> (i % 8)) & 1u;
         }
         info_.tail_valid = true;
       }
@@ -361,9 +361,9 @@ size_t PackInfo::balancing_count() const {
   return n;
 }
 
-size_t PackInfo::broken_cell_count() const {
+size_t PackInfo::invalidated_cell_count() const {
   size_t n = 0;
-  for (uint8_t b : broken_state)
+  for (uint8_t b : invalidation_state)
     if (b) n++;
   return n;
 }
@@ -388,6 +388,76 @@ const char *PackInfo::sys_state_name() const {
   }
 }
 
+
+const char *event_bit_name(size_t bit) {
+  static const char *const NAMES[] = {
+    "Voltage sensor invalidation",
+    "Temperature sensor invalidation",
+    "Current sensor invalidation",
+    "Button switch invalidation",
+    "Cell differential pressure invalidation",
+    "Charge switch invalidation",
+    "Discharge switch invalidation",
+    "Current limit switch invalidation",
+    "Monomer high voltage alarm",
+    "Monomer overvoltage protection",
+    "Monomer low pressure alarm",
+    "Monomer undervoltage protection",
+    "Total pressure high pressure alarm",
+    "Total_voltage overvoltage protection",
+    "Total pressure low pressure alarm",
+    "Total_voltage undervoltage protection",
+    "Charging high temperature warning",
+    "Charging over temperature protection",
+    "Charging low temperature warning",
+    "Charging under-temperature protection",
+    "Discharge high temperature warning",
+    "Discharge over temperature protection",
+    "Discharge low temperature warning",
+    "Discharge under-temperature protection",
+    "Ambient high temperature alarm",
+    "Environmental over-temperature protection",
+    "Ambient low temperature alarm",
+    "Environmental under-temperature protection",
+    "Power over temperature protection",
+    "Power high temperature alarm",
+    "Cell low temperature heating",
+    "Secondary tripping protection",
+    "Charging overcurrent warning",
+    "Charge overcurrent protection",
+    "Discharge overcurrent warning",
+    "Discharge overcurrent protection",
+    "Transient current protection",
+    "Output short circuit protection",
+    "Transient overcurrent lockout",
+    "Output short circuit locking",
+    "Charging high voltage protection",
+    "Intermittent charging function",
+    "Remaining capacity alarm",
+    "Remaining capacity protection",
+    "Battery low voltage forbidden charging",
+    "Output reverse connection protection",
+    "Aerosol failure",
+    "reserved",
+    "reserved",
+    "reserved",
+    "reserved",
+    "Automatically activate charging",
+    "Manually activate charging",
+    "reserved",
+    "reserved",
+    "EEP error",
+    "RCT error",
+    "voltage unchecked",
+    "current unchecked",
+    "zero unchecked",
+    "Perpetual calendar is not synchronized",
+    "reserved",
+    "reserved",
+    "reserved",
+  };
+  return bit < (sizeof(NAMES) / sizeof(NAMES[0])) ? NAMES[bit] : "reserved";
+}
 
 }  // namespace bms_bridge
 }  // namespace esphome

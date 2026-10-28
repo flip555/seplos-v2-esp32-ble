@@ -306,6 +306,21 @@ void BmsBridge::publish_(bool force) {
     } else if (k == "system_state") {
       std::string st = i.tail_valid ? i.sys_state_name() : "Unknown";
       if (force || t->state != st) t->publish_state(st);
+    } else if (k == "active_alarms") {
+      std::string st;
+      if (i.tail_valid) {
+        for (size_t bit = 0; bit < i.events.size() * 8; bit++) {
+          if (!i.event(bit)) continue;
+          if (!st.empty()) st += ", ";
+          st += event_bit_name(bit);
+          if (st.size() > 200) {
+            st += "\xE2\x80\xA6";
+            break;
+          }
+        }
+      }
+      if (st.empty()) st = i.tail_valid ? "none" : "unknown";
+      if (force || t->state != st) t->publish_state(st);
     }
   }
 
@@ -320,6 +335,9 @@ void BmsBridge::publish_(bool force) {
       v = i.balancing_count() > 0;
     } else if (k == "alarm") {
       v = i.active_event_count() > 0;
+    } else if (k == "cell_balancing") {
+      size_t idx = b->index();
+      v = i.tail_valid && idx >= 1 && idx <= i.balance_state.size() && i.balance_state[idx - 1];
     }
     if (force || b->state != v) b->publish_state(v);
   }
@@ -416,7 +434,7 @@ float BmsBridge::value_for_(const std::string &type, uint8_t index) const {
   if (type == "mos_temperature") return i.mos_temperature;
   if (type == "sys_state") return i.tail_valid ? (float) i.sys_state : NAN;
   if (type == "balancing_cells") return i.tail_valid ? (float) i.balancing_count() : NAN;
-  if (type == "broken_cells") return i.tail_valid ? (float) i.broken_cell_count() : NAN;
+  if (type == "invalid_cells") return i.tail_valid ? (float) i.invalidated_cell_count() : NAN;
   if (type == "active_events") return i.tail_valid ? (float) i.active_event_count() : NAN;
   if (type == "cell_warning" && index >= 1 && index <= i.cell_warnings.size())
     return (float) i.cell_warnings[index - 1];

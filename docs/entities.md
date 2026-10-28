@@ -39,7 +39,7 @@ optional `device_id` for sub-device grouping.
 | `temp_delta` | °C | 1 | derived |
 | `sys_state` | | 0 | raw state bitmask |
 | `balancing_cells` | | 0 | cells currently balancing |
-| `broken_cells` | | 0 | cells flagged broken/open |
+| `invalid_cells` | | 0 | cells flagged invalid (vendor: cell invalidation) |
 | `active_events` | | 0 | number of set event bits |
 | `cell_warning` | | 0 | required (warning byte per cell) |
 | `setting_*` | V / °C | | read-only settings |
@@ -65,6 +65,7 @@ optional `device_id` for sub-device grouping.
 | `output` | last console/scan message |
 | `status_tail` | raw state-tail bytes |
 | `system_state` | decoded state name (Discharge / Charge / Float / Fully charged / Standby / Shutdown) |
+| `active_alarms` | names of the set event bits, comma separated |
 
 ## Binary sensors
 
@@ -74,6 +75,7 @@ optional `device_id` for sub-device grouping.
 | `discharge_switch` | discharge FET/switch closed (tail bit 1) |
 | `balancing` | at least one cell is balancing |
 | `alarm` | at least one event bit is set |
+| `cell_balancing` | that cell is balancing (requires `index`) |
 
 ## Buttons and text
 

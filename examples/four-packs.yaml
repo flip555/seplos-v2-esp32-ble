@@ -205,8 +205,8 @@ sensor:
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_live
-    type: broken_cells
-    name: "Broken cells"
+    type: invalid_cells
+    name: "Invalid cells"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_live
@@ -670,8 +670,8 @@ sensor:
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_live
-    type: broken_cells
-    name: "Broken cells"
+    type: invalid_cells
+    name: "Invalid cells"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_live
@@ -1135,8 +1135,8 @@ sensor:
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_live
-    type: broken_cells
-    name: "Broken cells"
+    type: invalid_cells
+    name: "Invalid cells"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_live
@@ -1600,8 +1600,8 @@ sensor:
   - platform: bms_bridge
     bms_bridge_id: hub4
     device_id: pack4_live
-    type: broken_cells
-    name: "Broken cells"
+    type: invalid_cells
+    name: "Invalid cells"
   - platform: bms_bridge
     bms_bridge_id: hub4
     device_id: pack4_live
@@ -1995,6 +1995,102 @@ binary_sensor:
     type: alarm
     name: "Alarm"
   - platform: bms_bridge
+    bms_bridge_id: hub1
+    device_id: pack1_live
+    type: cell_balancing
+    index: 1
+    name: "Cell 1 balancing"
+  - platform: bms_bridge
+    bms_bridge_id: hub1
+    device_id: pack1_live
+    type: cell_balancing
+    index: 2
+    name: "Cell 2 balancing"
+  - platform: bms_bridge
+    bms_bridge_id: hub1
+    device_id: pack1_live
+    type: cell_balancing
+    index: 3
+    name: "Cell 3 balancing"
+  - platform: bms_bridge
+    bms_bridge_id: hub1
+    device_id: pack1_live
+    type: cell_balancing
+    index: 4
+    name: "Cell 4 balancing"
+  - platform: bms_bridge
+    bms_bridge_id: hub1
+    device_id: pack1_live
+    type: cell_balancing
+    index: 5
+    name: "Cell 5 balancing"
+  - platform: bms_bridge
+    bms_bridge_id: hub1
+    device_id: pack1_live
+    type: cell_balancing
+    index: 6
+    name: "Cell 6 balancing"
+  - platform: bms_bridge
+    bms_bridge_id: hub1
+    device_id: pack1_live
+    type: cell_balancing
+    index: 7
+    name: "Cell 7 balancing"
+  - platform: bms_bridge
+    bms_bridge_id: hub1
+    device_id: pack1_live
+    type: cell_balancing
+    index: 8
+    name: "Cell 8 balancing"
+  - platform: bms_bridge
+    bms_bridge_id: hub1
+    device_id: pack1_live
+    type: cell_balancing
+    index: 9
+    name: "Cell 9 balancing"
+  - platform: bms_bridge
+    bms_bridge_id: hub1
+    device_id: pack1_live
+    type: cell_balancing
+    index: 10
+    name: "Cell 10 balancing"
+  - platform: bms_bridge
+    bms_bridge_id: hub1
+    device_id: pack1_live
+    type: cell_balancing
+    index: 11
+    name: "Cell 11 balancing"
+  - platform: bms_bridge
+    bms_bridge_id: hub1
+    device_id: pack1_live
+    type: cell_balancing
+    index: 12
+    name: "Cell 12 balancing"
+  - platform: bms_bridge
+    bms_bridge_id: hub1
+    device_id: pack1_live
+    type: cell_balancing
+    index: 13
+    name: "Cell 13 balancing"
+  - platform: bms_bridge
+    bms_bridge_id: hub1
+    device_id: pack1_live
+    type: cell_balancing
+    index: 14
+    name: "Cell 14 balancing"
+  - platform: bms_bridge
+    bms_bridge_id: hub1
+    device_id: pack1_live
+    type: cell_balancing
+    index: 15
+    name: "Cell 15 balancing"
+  - platform: bms_bridge
+    bms_bridge_id: hub1
+    device_id: pack1_live
+    type: cell_balancing
+    index: 16
+    name: "Cell 16 balancing"
+  - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_live
     type: charge_switch
@@ -2015,6 +2111,102 @@ binary_sensor:
     type: alarm
     name: "Alarm"
   - platform: bms_bridge
+    bms_bridge_id: hub2
+    device_id: pack2_live
+    type: cell_balancing
+    index: 1
+    name: "Cell 1 balancing"
+  - platform: bms_bridge
+    bms_bridge_id: hub2
+    device_id: pack2_live
+    type: cell_balancing
+    index: 2
+    name: "Cell 2 balancing"
+  - platform: bms_bridge
+    bms_bridge_id: hub2
+    device_id: pack2_live
+    type: cell_balancing
+    index: 3
+    name: "Cell 3 balancing"
+  - platform: bms_bridge
+    bms_bridge_id: hub2
+    device_id: pack2_live
+    type: cell_balancing
+    index: 4
+    name: "Cell 4 balancing"
+  - platform: bms_bridge
+    bms_bridge_id: hub2
+    device_id: pack2_live
+    type: cell_balancing
+    index: 5
+    name: "Cell 5 balancing"
+  - platform: bms_bridge
+    bms_bridge_id: hub2
+    device_id: pack2_live
+    type: cell_balancing
+    index: 6
+    name: "Cell 6 balancing"
+  - platform: bms_bridge
+    bms_bridge_id: hub2
+    device_id: pack2_live
+    type: cell_balancing
+    index: 7
+    name: "Cell 7 balancing"
+  - platform: bms_bridge
+    bms_bridge_id: hub2
+    device_id: pack2_live
+    type: cell_balancing
+    index: 8
+    name: "Cell 8 balancing"
+  - platform: bms_bridge
+    bms_bridge_id: hub2
+    device_id: pack2_live
+    type: cell_balancing
+    index: 9
+    name: "Cell 9 balancing"
+  - platform: bms_bridge
+    bms_bridge_id: hub2
+    device_id: pack2_live
+    type: cell_balancing
+    index: 10
+    name: "Cell 10 balancing"
+  - platform: bms_bridge
+    bms_bridge_id: hub2
+    device_id: pack2_live
+    type: cell_balancing
+    index: 11
+    name: "Cell 11 balancing"
+  - platform: bms_bridge
+    bms_bridge_id: hub2
+    device_id: pack2_live
+    type: cell_balancing
+    index: 12
+    name: "Cell 12 balancing"
+  - platform: bms_bridge
+    bms_bridge_id: hub2
+    device_id: pack2_live
+    type: cell_balancing
+    index: 13
+    name: "Cell 13 balancing"
+  - platform: bms_bridge
+    bms_bridge_id: hub2
+    device_id: pack2_live
+    type: cell_balancing
+    index: 14
+    name: "Cell 14 balancing"
+  - platform: bms_bridge
+    bms_bridge_id: hub2
+    device_id: pack2_live
+    type: cell_balancing
+    index: 15
+    name: "Cell 15 balancing"
+  - platform: bms_bridge
+    bms_bridge_id: hub2
+    device_id: pack2_live
+    type: cell_balancing
+    index: 16
+    name: "Cell 16 balancing"
+  - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_live
     type: charge_switch
@@ -2035,6 +2227,102 @@ binary_sensor:
     type: alarm
     name: "Alarm"
   - platform: bms_bridge
+    bms_bridge_id: hub3
+    device_id: pack3_live
+    type: cell_balancing
+    index: 1
+    name: "Cell 1 balancing"
+  - platform: bms_bridge
+    bms_bridge_id: hub3
+    device_id: pack3_live
+    type: cell_balancing
+    index: 2
+    name: "Cell 2 balancing"
+  - platform: bms_bridge
+    bms_bridge_id: hub3
+    device_id: pack3_live
+    type: cell_balancing
+    index: 3
+    name: "Cell 3 balancing"
+  - platform: bms_bridge
+    bms_bridge_id: hub3
+    device_id: pack3_live
+    type: cell_balancing
+    index: 4
+    name: "Cell 4 balancing"
+  - platform: bms_bridge
+    bms_bridge_id: hub3
+    device_id: pack3_live
+    type: cell_balancing
+    index: 5
+    name: "Cell 5 balancing"
+  - platform: bms_bridge
+    bms_bridge_id: hub3
+    device_id: pack3_live
+    type: cell_balancing
+    index: 6
+    name: "Cell 6 balancing"
+  - platform: bms_bridge
+    bms_bridge_id: hub3
+    device_id: pack3_live
+    type: cell_balancing
+    index: 7
+    name: "Cell 7 balancing"
+  - platform: bms_bridge
+    bms_bridge_id: hub3
+    device_id: pack3_live
+    type: cell_balancing
+    index: 8
+    name: "Cell 8 balancing"
+  - platform: bms_bridge
+    bms_bridge_id: hub3
+    device_id: pack3_live
+    type: cell_balancing
+    index: 9
+    name: "Cell 9 balancing"
+  - platform: bms_bridge
+    bms_bridge_id: hub3
+    device_id: pack3_live
+    type: cell_balancing
+    index: 10
+    name: "Cell 10 balancing"
+  - platform: bms_bridge
+    bms_bridge_id: hub3
+    device_id: pack3_live
+    type: cell_balancing
+    index: 11
+    name: "Cell 11 balancing"
+  - platform: bms_bridge
+    bms_bridge_id: hub3
+    device_id: pack3_live
+    type: cell_balancing
+    index: 12
+    name: "Cell 12 balancing"
+  - platform: bms_bridge
+    bms_bridge_id: hub3
+    device_id: pack3_live
+    type: cell_balancing
+    index: 13
+    name: "Cell 13 balancing"
+  - platform: bms_bridge
+    bms_bridge_id: hub3
+    device_id: pack3_live
+    type: cell_balancing
+    index: 14
+    name: "Cell 14 balancing"
+  - platform: bms_bridge
+    bms_bridge_id: hub3
+    device_id: pack3_live
+    type: cell_balancing
+    index: 15
+    name: "Cell 15 balancing"
+  - platform: bms_bridge
+    bms_bridge_id: hub3
+    device_id: pack3_live
+    type: cell_balancing
+    index: 16
+    name: "Cell 16 balancing"
+  - platform: bms_bridge
     bms_bridge_id: hub4
     device_id: pack4_live
     type: charge_switch
@@ -2054,6 +2342,102 @@ binary_sensor:
     device_id: pack4_live
     type: alarm
     name: "Alarm"
+  - platform: bms_bridge
+    bms_bridge_id: hub4
+    device_id: pack4_live
+    type: cell_balancing
+    index: 1
+    name: "Cell 1 balancing"
+  - platform: bms_bridge
+    bms_bridge_id: hub4
+    device_id: pack4_live
+    type: cell_balancing
+    index: 2
+    name: "Cell 2 balancing"
+  - platform: bms_bridge
+    bms_bridge_id: hub4
+    device_id: pack4_live
+    type: cell_balancing
+    index: 3
+    name: "Cell 3 balancing"
+  - platform: bms_bridge
+    bms_bridge_id: hub4
+    device_id: pack4_live
+    type: cell_balancing
+    index: 4
+    name: "Cell 4 balancing"
+  - platform: bms_bridge
+    bms_bridge_id: hub4
+    device_id: pack4_live
+    type: cell_balancing
+    index: 5
+    name: "Cell 5 balancing"
+  - platform: bms_bridge
+    bms_bridge_id: hub4
+    device_id: pack4_live
+    type: cell_balancing
+    index: 6
+    name: "Cell 6 balancing"
+  - platform: bms_bridge
+    bms_bridge_id: hub4
+    device_id: pack4_live
+    type: cell_balancing
+    index: 7
+    name: "Cell 7 balancing"
+  - platform: bms_bridge
+    bms_bridge_id: hub4
+    device_id: pack4_live
+    type: cell_balancing
+    index: 8
+    name: "Cell 8 balancing"
+  - platform: bms_bridge
+    bms_bridge_id: hub4
+    device_id: pack4_live
+    type: cell_balancing
+    index: 9
+    name: "Cell 9 balancing"
+  - platform: bms_bridge
+    bms_bridge_id: hub4
+    device_id: pack4_live
+    type: cell_balancing
+    index: 10
+    name: "Cell 10 balancing"
+  - platform: bms_bridge
+    bms_bridge_id: hub4
+    device_id: pack4_live
+    type: cell_balancing
+    index: 11
+    name: "Cell 11 balancing"
+  - platform: bms_bridge
+    bms_bridge_id: hub4
+    device_id: pack4_live
+    type: cell_balancing
+    index: 12
+    name: "Cell 12 balancing"
+  - platform: bms_bridge
+    bms_bridge_id: hub4
+    device_id: pack4_live
+    type: cell_balancing
+    index: 13
+    name: "Cell 13 balancing"
+  - platform: bms_bridge
+    bms_bridge_id: hub4
+    device_id: pack4_live
+    type: cell_balancing
+    index: 14
+    name: "Cell 14 balancing"
+  - platform: bms_bridge
+    bms_bridge_id: hub4
+    device_id: pack4_live
+    type: cell_balancing
+    index: 15
+    name: "Cell 15 balancing"
+  - platform: bms_bridge
+    bms_bridge_id: hub4
+    device_id: pack4_live
+    type: cell_balancing
+    index: 16
+    name: "Cell 16 balancing"
 
 text_sensor:
   - platform: bms_bridge
@@ -2117,6 +2501,11 @@ text_sensor:
     type: system_state
     name: "System state"
   - platform: bms_bridge
+    bms_bridge_id: hub1
+    device_id: pack1_diag
+    type: active_alarms
+    name: "Active alarms"
+  - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_diag
     type: profile
@@ -2176,6 +2565,11 @@ text_sensor:
     device_id: pack2_diag
     type: system_state
     name: "System state"
+  - platform: bms_bridge
+    bms_bridge_id: hub2
+    device_id: pack2_diag
+    type: active_alarms
+    name: "Active alarms"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_diag
@@ -2237,6 +2631,11 @@ text_sensor:
     type: system_state
     name: "System state"
   - platform: bms_bridge
+    bms_bridge_id: hub3
+    device_id: pack3_diag
+    type: active_alarms
+    name: "Active alarms"
+  - platform: bms_bridge
     bms_bridge_id: hub4
     device_id: pack4_diag
     type: profile
@@ -2296,6 +2695,11 @@ text_sensor:
     device_id: pack4_diag
     type: system_state
     name: "System state"
+  - platform: bms_bridge
+    bms_bridge_id: hub4
+    device_id: pack4_diag
+    type: active_alarms
+    name: "Active alarms"
 
 button:
   - platform: bms_bridge

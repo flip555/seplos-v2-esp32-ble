@@ -51,7 +51,7 @@ struct PackInfo {
   std::vector<uint8_t> temp_warnings;    // one warning byte per battery temp
   std::vector<uint8_t> events;           // packed event bits, 8 per byte, LSB first
   std::vector<uint8_t> balance_state;    // per cell, 0/1
-  std::vector<uint8_t> broken_state;     // per cell, 0/1
+  std::vector<uint8_t> invalidation_state;  // per cell, 0/1 (vendor: cell invalidation)
 
   bool event(size_t bit) const {
     size_t byte = bit / 8;
@@ -68,7 +68,7 @@ struct PackInfo {
   float temp_max() const;
   size_t active_event_count() const;
   size_t balancing_count() const;
-  size_t broken_cell_count() const;
+  size_t invalidated_cell_count() const;
   const char *sys_state_name() const;
 };
 
@@ -114,6 +114,9 @@ class Protocol {
   virtual std::string capture() const { return ""; }
   virtual uint32_t pushes() const { return 0; }
 };
+
+// Vendor alarm/event name for one bit of the status-tail event list.
+const char *event_bit_name(size_t bit);
 
 // Factory. Returns nullptr for an unknown profile.
 Protocol *create_protocol(const std::string &profile, uint8_t address);

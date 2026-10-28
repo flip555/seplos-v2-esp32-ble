@@ -15,7 +15,7 @@ BASE = [
     ("cell_voltage_min","Min cell"),("cell_voltage_max","Max cell"),("cell_voltage_delta","Cell delta"),
     ("temperature_min","Min temp"),("temperature_max","Max temp"),
     ("ambient_temperature","Ambient temp"),("power_temperature","Power temp"),
-    ("balancing_cells","Balancing cells"),("broken_cells","Broken cells"),
+    ("balancing_cells","Balancing cells"),("invalid_cells","Invalid cells"),
     ("active_events","Active events"),("sys_state","System state code"),
     ("full_charge","Full charge"),("full_charge_watts","Full charge (Wh)"),
     ("remaining_watts","Remaining (Wh)"),("capacity_watts","Capacity (Wh)"),("battery_watts","Battery power"),
@@ -44,7 +44,7 @@ SETTINGS = [
     ("setting_cell_heat","Cell heating"),("setting_cell_heat_rec","Cell heating recovery"),
 ]
 TEXTS = ["profile","model","hardware_version","software_version","status","settings_raw",
-         "alarms_raw","status_tail","crc_capture","scan_results","output","system_state"]
+         "alarms_raw","status_tail","crc_capture","scan_results","output","system_state","active_alarms"]
 BINARIES = [("charge_switch","Charge switch"),("discharge_switch","Discharge switch"),
             ("balancing","Balancing"),("alarm","Alarm")]
 
@@ -98,6 +98,8 @@ def gen(n):
     for i in range(1,n+1):
         for t,nm in BINARIES:
             a(f'  - platform: bms_bridge\n    bms_bridge_id: hub{i}\n    device_id: pack{i}_live\n    type: {t}\n    name: "{nm}"')
+        for c in range(1,17):
+            a(f'  - platform: bms_bridge\n    bms_bridge_id: hub{i}\n    device_id: pack{i}_live\n    type: cell_balancing\n    index: {c}\n    name: "Cell {c} balancing"')
     a("")
     a("text_sensor:")
     for i in range(1,n+1):

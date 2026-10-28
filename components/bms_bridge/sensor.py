@@ -37,7 +37,7 @@ TYPES = {
     "mos_temperature": ("°C", 1),
     "sys_state": ("", 0),
     "balancing_cells": ("", 0),
-    "broken_cells": ("", 0),
+    "invalid_cells": ("", 0),
     "active_events": ("", 0),
     "cell_warning": ("", 0),
     "port_voltage": ("V", 2),

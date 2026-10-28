@@ -50,10 +50,13 @@ class BmsTextSensor : public text_sensor::TextSensor {
 class BmsBinarySensor : public binary_sensor::BinarySensor {
  public:
   void set_type(const std::string &t) { type_ = t; }
+  void set_index(uint8_t i) { index_ = i; }
   const std::string &type() const { return type_; }
+  uint8_t index() const { return index_; }
 
  protected:
   std::string type_;
+  uint8_t index_{0};
 };
 
 class BmsBridge;

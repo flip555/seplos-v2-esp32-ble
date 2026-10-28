@@ -61,7 +61,7 @@ words the layout is:
 | +c+t+4 | 1 | `n`, number of event bytes |
 | +c+t+5 | `n` | event bits, 8 per byte, LSB first |
 | … | ceil(c/8) | per-cell balance bits |
-| … | ceil(c/8) | per-cell broken/open bits |
+| … | ceil(c/8) | per-cell invalidation bits (vendor "cell invalidation") |
 
 For 16 cells / 6 temp words this is 16+4+1+1+1+1+1+1+1+8+2+2 = 39 bytes. A
 healthy discharging pack reads `00 ×24  01 03 08  00 ×12`: `01` = discharge,
@@ -78,8 +78,8 @@ System state (bitmask values are hex):
 | 0x10 | Standby |
 | 0x20 | Shutdown |
 
-The event bits are ordered as the vendor alarm table: byte 0 bit 0 is
-*voltage sensor invalidation*, bit 3 *button switch invalidation*, bit 5
+The event bits are ordered as the vendor alarm table (64 bits; `active_alarms`
+exposes the set ones by name). Byte 0 bit 0 is *voltage sensor invalidation*, bit 3 *button switch invalidation*, bit 5
 *charge switch invalidation*, bit 6 *discharge switch invalidation*, then cell
 and pack OV/UV, charge/discharge temperature warn+protect, ambient/power
 temperature, heating, overcurrent, short circuit and the remaining flags.
