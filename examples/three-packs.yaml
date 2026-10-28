@@ -76,21 +76,21 @@ bms_bridge:
     ble_client_id: pack1_client
     profile: seplos_v2_ble
     address: 0x00
-    update_interval: 10s
+    update_interval: 12s
   - id: hub2
     transport: ble
     ble_client_id: pack2_client
     profile: seplos_v2_ble
     address: 0x00
-    update_interval: 11s
-    poll_offset: 5s
+    update_interval: 12s
+    poll_offset: 4s
   - id: hub3
     transport: ble
     ble_client_id: pack3_client
     profile: seplos_v2_ble
     address: 0x00
     update_interval: 12s
-    poll_offset: 10s
+    poll_offset: 8s
 
 sensor:
   - platform: bms_bridge

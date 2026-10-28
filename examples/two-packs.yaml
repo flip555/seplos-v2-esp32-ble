@@ -73,7 +73,7 @@ bms_bridge:
     ble_client_id: pack2_client
     profile: seplos_v2_ble
     address: 0x00
-    update_interval: 11s
+    update_interval: 10s
     poll_offset: 5s
 
 sensor:

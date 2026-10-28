@@ -57,6 +57,8 @@ def gen(n):
     a("")
     a("external_components:\n  - source: github://flip555/seplos-v2-esp32-ble@main\n    components: [bms_bridge]\n")
     a("esp32:\n  board: esp32dev\n  framework:\n    type: esp-idf\n")
+    if n > 3:
+        a(f"esp32_ble:\n  max_connections: {n}\n")
     a("logger:\n  level: INFO\n  logs:\n    esp32_ble_client: WARN\n    bms_bridge.ble: WARN\n")
     a('api:\n  encryption:\n    key: "REPLACE_WITH_A_BASE64_KEY"\n')
     a("ota:\n  - platform: esphome\n")
@@ -70,9 +72,11 @@ def gen(n):
         a(f'  - mac_address: "{mac(i)}"\n    id: pack{i}_client')
     a("")
     a("bms_bridge:")
+    interval = 12 if n >= 3 else 10
+    step = max(1, interval // n)
     for i in range(1,n+1):
-        a(f"  - id: hub{i}\n    transport: ble\n    ble_client_id: pack{i}_client\n    profile: seplos_v2_ble\n    address: 0x00\n    update_interval: {9+i}s")
-        if i>1: a(f"    poll_offset: {(i-1)*5}s")
+        a(f"  - id: hub{i}\n    transport: ble\n    ble_client_id: pack{i}_client\n    profile: seplos_v2_ble\n    address: 0x00\n    update_interval: {interval}s")
+        if i>1: a(f"    poll_offset: {(i-1)*step}s")
     a("")
     a("sensor:")
     for i in range(1,n+1):

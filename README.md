@@ -124,10 +124,12 @@ naming — device `pack1_live` with entity `SOC` becomes
 `sensor.pack1_live_soc`. Paste the file as a single card in a dashboard.
 
 Three concurrent BLE connections is the reliable limit on a classic ESP32.
-Four works but is untested for long-run stability; use an ESP32-S3 and watch
-the `chunks`/`frames` counters if you try it. When running several packs,
-stagger `update_interval` and `poll_offset` so the packs never answer at the
-same moment.
+Four needs `esp32_ble: max_connections: 4` (the four-pack example sets it) and
+is still best-effort. Give every pack the same `update_interval` and stagger
+only `poll_offset` — the examples use 12 s with offsets 0/3/6/9 — otherwise
+different intervals drift back into alignment. Four links plus ~340 entities
+is a lot for a plain `esp32dev`: watch free heap, or use an ESP32-S3 with
+PSRAM for three or more packs.
 
 ## Documentation
 
