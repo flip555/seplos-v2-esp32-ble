@@ -109,7 +109,7 @@ cards:
               `;
             ]]]
       - type: custom:button-card
-        entity: sensor.pack1_live_soc
+        entity: sensor.pack1_live_pack_voltage
         variables:
           title: "Pack 1"
         show_name: false
@@ -1510,7 +1510,7 @@ cards:
               `;
             ]]]
       - type: custom:button-card
-        entity: sensor.pack2_live_soc
+        entity: sensor.pack2_live_pack_voltage
         variables:
           title: "Pack 2"
         show_name: false
