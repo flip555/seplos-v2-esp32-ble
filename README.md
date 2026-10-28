@@ -63,7 +63,7 @@ ota:
 
 wifi:
   ssid: !secret wifi_ssid
-  password: *** wifi_password
+  password: !secret wifi_password
 
 esp32_ble_tracker:
   scan_parameters:
