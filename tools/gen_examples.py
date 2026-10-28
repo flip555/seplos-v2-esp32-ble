@@ -80,7 +80,7 @@ def gen(n):
     interval = 12 if n >= 3 else 10
     step = max(1, interval // n)
     for i in range(1,n+1):
-        a(f"  - id: hub{i}\n    transport: ble\n    ble_client_id: pack{i}_client\n    profile: seplos_v2_ble\n    address: 0x00\n    update_interval: {interval}s")
+        a(f"  - id: hub{i}\n    transport: ble\n    ble_client_id: pack{i}_client\n    profile: seplos_v2_ble\n    address: 0x00\n    mac_slot: {i}\n    update_interval: {interval}s")
         if i>1: a(f"    poll_offset: {(i-1)*step}s")
     a("")
     a("sensor:")
@@ -115,6 +115,7 @@ def gen(n):
     a("")
     a("text:")
     for i in range(1,n+1):
+        a(f'  - platform: bms_bridge\n    bms_bridge_id: hub{i}\n    device_id: pack{i}_diag\n    type: mac\n    mode: text\n    name: "Pack MAC"')
         a(f'  - platform: bms_bridge\n    bms_bridge_id: hub{i}\n    device_id: pack{i}_diag\n    mode: text\n    name: "BLE command"')
     return "\n".join(L)+"\n"
 

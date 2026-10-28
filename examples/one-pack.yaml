@@ -58,6 +58,7 @@ bms_bridge:
     ble_client_id: pack1_client
     profile: seplos_v2_ble
     address: 0x00
+    mac_slot: 1
     update_interval: 10s
 
 sensor:
@@ -759,6 +760,12 @@ button:
     name: "Run command"
 
 text:
+  - platform: bms_bridge
+    bms_bridge_id: hub1
+    device_id: pack1_diag
+    type: mac
+    mode: text
+    name: "Pack MAC"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_diag

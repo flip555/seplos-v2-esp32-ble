@@ -5,6 +5,8 @@ over Bluetooth LE on an ESP32 and exposes typed entities to Home Assistant.
 
 ![Dashboard](assets/dashboard.png)
 
+**[Quick start →](docs/quickstart.md)** — one flash, then pick the pack MAC from Home Assistant.
+
 **[Documentation and setup guide → wiki](../../wiki)**
 
 ## What it does

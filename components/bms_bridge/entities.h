@@ -74,7 +74,13 @@ class BmsButton : public button::Button {
 
 class BmsCommandText : public text::Text {
  public:
-  void control(const std::string &value) override { this->publish_state(value); }
+  void set_hub(BmsBridge *hub) { hub_ = hub; }
+  void set_mac_mode(bool on) { mac_mode_ = on; }
+  void control(const std::string &value) override;
+
+ protected:
+  BmsBridge *hub_{nullptr};
+  bool mac_mode_{false};
 };
 
 }  // namespace bms_bridge

@@ -2,6 +2,7 @@
 
 #include "ble_transport.h"
 #include "esphome/core/log.h"
+#include "esphome/core/preferences.h"
 
 #include <algorithm>
 #include <cmath>
@@ -14,6 +15,24 @@ static const char *const TAG = "bms_bridge";
 static const uint32_t HEARTBEAT_MS = 300000;
 static const uint32_t STALL_MS = 60000;
 static const uint32_t STALL_RECOVER_MS = 3000;  // republish unchanged values every 5 min
+
+// "AA:BB:CC:DD:EE:FF" -> 0xAABBCCDDEEFF (the byte order ESPHome stores).
+static bool parse_mac(const std::string &s, uint64_t &out) {
+  unsigned b[6];
+  if (sscanf(s.c_str(), "%02x:%02x:%02x:%02x:%02x:%02x", &b[0], &b[1], &b[2], &b[3], &b[4], &b[5]) != 6)
+    return false;
+  out = ((uint64_t) b[0] << 40) | ((uint64_t) b[1] << 32) | ((uint64_t) b[2] << 24) | ((uint64_t) b[3] << 16) |
+        ((uint64_t) b[4] << 8) | (uint64_t) b[5];
+  return out != 0;
+}
+
+static std::string format_mac(uint64_t mac) {
+  char b[18];
+  snprintf(b, sizeof(b), "%02X:%02X:%02X:%02X:%02X:%02X", (unsigned) ((mac >> 40) & 0xFF),
+           (unsigned) ((mac >> 32) & 0xFF), (unsigned) ((mac >> 24) & 0xFF), (unsigned) ((mac >> 16) & 0xFF),
+           (unsigned) ((mac >> 8) & 0xFF), (unsigned) (mac & 0xFF));
+  return std::string(b);
+}
 
 float PackInfo::cell_min() const {
   float v = NAN;
@@ -61,6 +80,9 @@ void BmsBridge::setup() {
 
   // Collect advertisements for 30 s after boot so the scan text sensor is
   // useful without pressing anything.
+  this->load_saved_mac_();
+
+  // Collect advertisements for 30 s after boot so the scan text sensor is
   this->start_scan(30000);
   start_at_ = millis() + poll_offset_;
 
@@ -337,6 +359,9 @@ void BmsBridge::publish_(bool force) {
     }
   }
 
+  if (mac_text_ != nullptr && !mac_str_.empty() && (force || mac_text_->state != mac_str_))
+    mac_text_->publish_state(mac_str_);
+
   for (auto *b : binary_sensors_) {
     const std::string &k = b->type();
     bool v = false;
@@ -495,6 +520,56 @@ void BmsBridge::start_scan(uint32_t window_ms) {
   scan_window_ = window_ms;
   scanning_ = true;
   ESP_LOGI(TAG, "scan started (%u ms)", (unsigned) window_ms);
+}
+
+void BmsBridge::load_saved_mac_() {
+  if (ble_client_ == nullptr) return;
+  uint32_t key = fnv1a_hash_extend(2166136261u, "bms_bridge_mac_" + std::to_string(mac_slot_));
+  auto pref = global_preferences->make_preference<uint64_t>(key, true);
+  uint64_t mac = 0;
+  if (!pref.load(&mac) || mac == 0) return;
+  ble_client_->set_address(mac);
+  mac_str_ = format_mac(mac);
+  ESP_LOGI(TAG, "using stored MAC %s", mac_str_.c_str());
+  this->set_timeout(1500, [this]() {
+    if (ble_client_ != nullptr) {
+      ble_client_->set_enabled(true);
+      ble_client_->connect();
+    }
+  });
+}
+
+void BmsBridge::set_mac(const std::string &mac) {
+  uint64_t value = 0;
+  if (!parse_mac(mac, value)) {
+    this->set_output("invalid MAC (expected AA:BB:CC:DD:EE:FF)");
+    return;
+  }
+  uint32_t key = fnv1a_hash_extend(2166136261u, "bms_bridge_mac_" + std::to_string(mac_slot_));
+  auto pref = global_preferences->make_preference<uint64_t>(key, true);
+  pref.save(&value);
+  mac_str_ = format_mac(value);
+  ESP_LOGI(TAG, "stored MAC %s (slot %u)", mac_str_.c_str(), (unsigned) mac_slot_);
+  if (ble_client_ != nullptr) {
+    ble_client_->set_address(value);
+    ble_client_->disconnect();
+    this->set_timeout(600, [this]() {
+      if (ble_client_ != nullptr) {
+        ble_client_->set_enabled(true);
+        ble_client_->connect();
+      }
+    });
+  }
+  if (mac_text_ != nullptr) mac_text_->publish_state(mac_str_);
+  this->set_output(("MAC set: " + mac_str_).c_str());
+}
+
+void BmsCommandText::control(const std::string &value) {
+  if (mac_mode_ && hub_ != nullptr) {
+    hub_->set_mac(value);
+    return;
+  }
+  this->publish_state(value);
 }
 
 void BmsBridge::on_ble_disconnect() {

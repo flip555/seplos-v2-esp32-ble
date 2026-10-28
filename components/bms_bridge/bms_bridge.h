@@ -34,6 +34,7 @@ class BmsBridge : public Component {
   void set_allow_writes(bool on) { allow_writes_ = on; }
   void set_read_settings_on_connect(bool on) { read_settings_on_connect_ = on; }
   void set_settings_interval(uint32_t ms) { settings_interval_ms_ = ms; }
+  void set_mac_slot(uint32_t slot) { mac_slot_ = slot; }
   void set_ble_client(ble_client::BLEClient *c) { ble_client_ = c; }
   void set_poll_offset(uint32_t ms) { poll_offset_ = ms; }
 
@@ -41,11 +42,13 @@ class BmsBridge : public Component {
   void register_text_sensor(BmsTextSensor *t) { text_sensors_.push_back(t); }
   void register_binary_sensor(BmsBinarySensor *b) { binary_sensors_.push_back(b); }
   void register_command_text(BmsCommandText *t) { cmd_text_ = t; }
+  void register_mac_text(BmsCommandText *t) { mac_text_ = t; }
 
   void run_command(const std::string &cmd);
   void run_command_from_text();
   void set_output(const std::string &text);
   void request_cid(uint8_t cid2);
+  void set_mac(const std::string &mac);
 
   void on_bytes(const uint8_t *data, size_t len);
   void on_connected();
@@ -69,6 +72,7 @@ class BmsBridge : public Component {
 
  protected:
   void publish_(bool force = false);
+  void load_saved_mac_();
   void publish_stale_();
   float value_for_(const std::string &type, uint8_t index) const;
 
@@ -122,6 +126,9 @@ class BmsBridge : public Component {
   BleScanListener *scan_{nullptr};
   bool scan_registered_{false};
   BmsCommandText *cmd_text_{nullptr};
+  BmsCommandText *mac_text_{nullptr};
+  uint32_t mac_slot_{1};
+  std::string mac_str_;
   std::vector<BmsSensor *> sensors_;
   std::vector<BmsTextSensor *> text_sensors_;
   std::vector<BmsBinarySensor *> binary_sensors_;

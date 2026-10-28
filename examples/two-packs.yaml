@@ -67,12 +67,14 @@ bms_bridge:
     ble_client_id: pack1_client
     profile: seplos_v2_ble
     address: 0x00
+    mac_slot: 1
     update_interval: 10s
   - id: hub2
     transport: ble
     ble_client_id: pack2_client
     profile: seplos_v2_ble
     address: 0x00
+    mac_slot: 2
     update_interval: 10s
     poll_offset: 5s
 
@@ -1468,8 +1470,20 @@ text:
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_diag
+    type: mac
+    mode: text
+    name: "Pack MAC"
+  - platform: bms_bridge
+    bms_bridge_id: hub1
+    device_id: pack1_diag
     mode: text
     name: "BLE command"
+  - platform: bms_bridge
+    bms_bridge_id: hub2
+    device_id: pack2_diag
+    type: mac
+    mode: text
+    name: "Pack MAC"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_diag
