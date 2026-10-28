@@ -3,6 +3,8 @@
 Read-only ESPHome component that talks to Seplos / PACE V2 battery BMS units
 over Bluetooth LE on an ESP32 and exposes typed entities to Home Assistant.
 
+![Dashboard](assets/dashboard.png)
+
 **[Documentation and setup guide → wiki](../../wiki)**
 
 ## What it does
