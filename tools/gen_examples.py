@@ -109,6 +109,8 @@ def gen(n):
             a(f'  - platform: bms_bridge\n    bms_bridge_id: hub{i}\n    device_id: pack{i}_{dev}\n    type: {t}\n    name: "{t.replace("_"," ").capitalize()}"')
     a("")
     a("button:")
+    a('  - platform: restart\n    name: "Restart ESP"')
+    a('  - platform: safe_mode\n    name: "Safe mode"')
     for i in range(1,n+1):
         for t,nm in (("scan","Scan"),("settings","Read settings"),("alarms","Read alarms"),("run","Run command")):
             a(f'  - platform: bms_bridge\n    bms_bridge_id: hub{i}\n    device_id: pack{i}_diag\n    type: {t}\n    name: "{nm}"')

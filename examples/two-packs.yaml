@@ -1429,6 +1429,10 @@ text_sensor:
     name: "Active alarms"
 
 button:
+  - platform: restart
+    name: "Restart ESP"
+  - platform: safe_mode
+    name: "Safe mode"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_diag
