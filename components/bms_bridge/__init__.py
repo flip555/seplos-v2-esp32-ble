@@ -14,7 +14,6 @@ CONF_PROFILE = "profile"
 CONF_BLE_CLIENT_ID = "ble_client_id"
 CONF_ADDRESS = "address"
 CONF_UPDATE_INTERVAL = "update_interval"
-CONF_WEB_UI = "web_ui"
 CONF_ALLOW_WRITES = "allow_writes"
 CONF_POLL_OFFSET = "poll_offset"
 
@@ -29,7 +28,6 @@ CONFIG_SCHEMA = cv.Schema(
         cv.Optional(CONF_BLE_CLIENT_ID): cv.use_id(ble_client.BLEClient),
         cv.Optional(CONF_ADDRESS, default=0x00): cv.hex_uint8_t,
         cv.Optional(CONF_UPDATE_INTERVAL, default="10s"): cv.update_interval,
-        cv.Optional(CONF_WEB_UI, default=True): cv.boolean,
         cv.Optional(CONF_ALLOW_WRITES, default=False): cv.boolean,
         cv.Optional(CONF_POLL_OFFSET, default="0s"): cv.positive_time_period_milliseconds,
     }
@@ -44,7 +42,6 @@ async def to_code(config):
     cg.add(var.set_profile(config[CONF_PROFILE]))
     cg.add(var.set_address(config[CONF_ADDRESS]))
     cg.add(var.set_update_interval_ms(config[CONF_UPDATE_INTERVAL]))
-    cg.add(var.set_web_ui(config[CONF_WEB_UI]))
     cg.add(var.set_allow_writes(config[CONF_ALLOW_WRITES]))
     cg.add(var.set_poll_offset(config[CONF_POLL_OFFSET].total_milliseconds))
 

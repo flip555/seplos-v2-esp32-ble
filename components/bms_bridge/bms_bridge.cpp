@@ -2,7 +2,6 @@
 
 #include "ble_transport.h"
 #include "esphome/core/log.h"
-#include "web_ui.h"
 
 #include <algorithm>
 #include <cmath>
@@ -59,7 +58,6 @@ void BmsBridge::setup() {
       ESP_LOGI(TAG, "no ble_client configured: scan-only mode, see /bms/api/scan");
   }
 
-  if (web_ui_) register_web_ui(this);
 
   // Collect advertisements for 30 s after boot so the scan text sensor is
   // useful without pressing anything.
