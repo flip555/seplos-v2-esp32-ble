@@ -99,7 +99,6 @@ class BmsBridge : public Component {
   uint32_t rx_bytes_{0};
   uint32_t last_diag_{0};
   uint8_t start_samples_{0};
-  bool settings_read_once_{false};
   uint32_t poll_offset_{0};
   uint32_t start_at_{0};
   uint32_t last_frames_{0};

@@ -141,6 +141,8 @@ void BmsBridge::loop() {
       ble_backoff_ = false;
       ble_fail_count_ = 0;
       if (ble_client_ != nullptr) ble_client_->set_enabled(true);
+      rx_since_enable_ = false;
+      last_rx_ = millis();
       ESP_LOGI(TAG, "BLE retry window reopened");
     });
   }
@@ -447,6 +449,8 @@ void BmsBridge::on_ble_disconnect() {
     ble_backoff_ = false;
     ble_fail_count_ = 0;
     if (ble_client_ != nullptr) ble_client_->set_enabled(true);
+    rx_since_enable_ = false;
+    last_rx_ = millis();
     ESP_LOGI(TAG, "BLE retry window reopened");
   });
 }
@@ -498,6 +502,8 @@ void BmsBridge::run_command(const std::string &cmd) {
   }
   if (cmd == "connect") {
     ble_client_->set_enabled(true);
+    rx_since_enable_ = false;
+    last_rx_ = millis();
     this->set_output("connect requested");
   } else if (cmd == "disconnect") {
     ble_client_->set_enabled(false);
