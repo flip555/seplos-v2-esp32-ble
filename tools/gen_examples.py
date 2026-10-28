@@ -48,7 +48,7 @@ def mac(n): return "60:6E:41:00:00:%02X" % n
 def gen(n):
     L=[]; a=L.append
     a("# %d pack%s. Replace the MACs, the API key and the WiFi secrets." % (n, "" if n==1 else "s"))
-    a("substitutions:\n  name: van-bms\n  friendly_name: Van BMS\n")
+    a("substitutions:\n  name: seplos-bms\n  friendly_name: Seplos BMS\n")
     a("esphome:\n  name: ${name}\n  friendly_name: ${friendly_name}\n  devices:")
     for i in range(1,n+1):
         a(f'    - id: pack{i}_live\n      name: "Pack {i} Live"')

@@ -37,7 +37,7 @@ configuration, and [Configuration](../../wiki/Configuration) for every option.
 
 ```yaml
 esphome:
-  name: van-bms
+  name: seplos-bms
   devices:
     - id: pack1_live
       name: "Pack 1 Live"

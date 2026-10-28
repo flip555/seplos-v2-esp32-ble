@@ -1,7 +1,7 @@
 # 4 packs. Replace the MACs, the API key and the WiFi secrets.
 substitutions:
-  name: van-bms
-  friendly_name: Van BMS
+  name: seplos-bms
+  friendly_name: Seplos BMS
 
 esphome:
   name: ${name}
