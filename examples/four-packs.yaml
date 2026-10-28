@@ -190,8 +190,33 @@ sensor:
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_live
-    type: mos_temperature
-    name: "MOS temperature"
+    type: ambient_temperature
+    name: "Ambient temp"
+  - platform: bms_bridge
+    bms_bridge_id: hub1
+    device_id: pack1_live
+    type: power_temperature
+    name: "Power temp"
+  - platform: bms_bridge
+    bms_bridge_id: hub1
+    device_id: pack1_live
+    type: balancing_cells
+    name: "Balancing cells"
+  - platform: bms_bridge
+    bms_bridge_id: hub1
+    device_id: pack1_live
+    type: broken_cells
+    name: "Broken cells"
+  - platform: bms_bridge
+    bms_bridge_id: hub1
+    device_id: pack1_live
+    type: active_events
+    name: "Active events"
+  - platform: bms_bridge
+    bms_bridge_id: hub1
+    device_id: pack1_live
+    type: sys_state
+    name: "System state code"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_live
@@ -362,18 +387,6 @@ sensor:
     type: temperature
     index: 4
     name: "Temp 4"
-  - platform: bms_bridge
-    bms_bridge_id: hub1
-    device_id: pack1_live
-    type: temperature
-    index: 5
-    name: "Temp 5"
-  - platform: bms_bridge
-    bms_bridge_id: hub1
-    device_id: pack1_live
-    type: temperature
-    index: 6
-    name: "Temp 6"
   - platform: bms_bridge
     bms_bridge_id: hub1
     device_id: pack1_settings
@@ -642,8 +655,33 @@ sensor:
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_live
-    type: mos_temperature
-    name: "MOS temperature"
+    type: ambient_temperature
+    name: "Ambient temp"
+  - platform: bms_bridge
+    bms_bridge_id: hub2
+    device_id: pack2_live
+    type: power_temperature
+    name: "Power temp"
+  - platform: bms_bridge
+    bms_bridge_id: hub2
+    device_id: pack2_live
+    type: balancing_cells
+    name: "Balancing cells"
+  - platform: bms_bridge
+    bms_bridge_id: hub2
+    device_id: pack2_live
+    type: broken_cells
+    name: "Broken cells"
+  - platform: bms_bridge
+    bms_bridge_id: hub2
+    device_id: pack2_live
+    type: active_events
+    name: "Active events"
+  - platform: bms_bridge
+    bms_bridge_id: hub2
+    device_id: pack2_live
+    type: sys_state
+    name: "System state code"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_live
@@ -814,18 +852,6 @@ sensor:
     type: temperature
     index: 4
     name: "Temp 4"
-  - platform: bms_bridge
-    bms_bridge_id: hub2
-    device_id: pack2_live
-    type: temperature
-    index: 5
-    name: "Temp 5"
-  - platform: bms_bridge
-    bms_bridge_id: hub2
-    device_id: pack2_live
-    type: temperature
-    index: 6
-    name: "Temp 6"
   - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_settings
@@ -1094,8 +1120,33 @@ sensor:
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_live
-    type: mos_temperature
-    name: "MOS temperature"
+    type: ambient_temperature
+    name: "Ambient temp"
+  - platform: bms_bridge
+    bms_bridge_id: hub3
+    device_id: pack3_live
+    type: power_temperature
+    name: "Power temp"
+  - platform: bms_bridge
+    bms_bridge_id: hub3
+    device_id: pack3_live
+    type: balancing_cells
+    name: "Balancing cells"
+  - platform: bms_bridge
+    bms_bridge_id: hub3
+    device_id: pack3_live
+    type: broken_cells
+    name: "Broken cells"
+  - platform: bms_bridge
+    bms_bridge_id: hub3
+    device_id: pack3_live
+    type: active_events
+    name: "Active events"
+  - platform: bms_bridge
+    bms_bridge_id: hub3
+    device_id: pack3_live
+    type: sys_state
+    name: "System state code"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_live
@@ -1266,18 +1317,6 @@ sensor:
     type: temperature
     index: 4
     name: "Temp 4"
-  - platform: bms_bridge
-    bms_bridge_id: hub3
-    device_id: pack3_live
-    type: temperature
-    index: 5
-    name: "Temp 5"
-  - platform: bms_bridge
-    bms_bridge_id: hub3
-    device_id: pack3_live
-    type: temperature
-    index: 6
-    name: "Temp 6"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_settings
@@ -1546,8 +1585,33 @@ sensor:
   - platform: bms_bridge
     bms_bridge_id: hub4
     device_id: pack4_live
-    type: mos_temperature
-    name: "MOS temperature"
+    type: ambient_temperature
+    name: "Ambient temp"
+  - platform: bms_bridge
+    bms_bridge_id: hub4
+    device_id: pack4_live
+    type: power_temperature
+    name: "Power temp"
+  - platform: bms_bridge
+    bms_bridge_id: hub4
+    device_id: pack4_live
+    type: balancing_cells
+    name: "Balancing cells"
+  - platform: bms_bridge
+    bms_bridge_id: hub4
+    device_id: pack4_live
+    type: broken_cells
+    name: "Broken cells"
+  - platform: bms_bridge
+    bms_bridge_id: hub4
+    device_id: pack4_live
+    type: active_events
+    name: "Active events"
+  - platform: bms_bridge
+    bms_bridge_id: hub4
+    device_id: pack4_live
+    type: sys_state
+    name: "System state code"
   - platform: bms_bridge
     bms_bridge_id: hub4
     device_id: pack4_live
@@ -1718,18 +1782,6 @@ sensor:
     type: temperature
     index: 4
     name: "Temp 4"
-  - platform: bms_bridge
-    bms_bridge_id: hub4
-    device_id: pack4_live
-    type: temperature
-    index: 5
-    name: "Temp 5"
-  - platform: bms_bridge
-    bms_bridge_id: hub4
-    device_id: pack4_live
-    type: temperature
-    index: 6
-    name: "Temp 6"
   - platform: bms_bridge
     bms_bridge_id: hub4
     device_id: pack4_settings
@@ -1921,6 +1973,88 @@ sensor:
     type: setting_cell_heat_rec
     name: "Cell heating recovery"
 
+binary_sensor:
+  - platform: bms_bridge
+    bms_bridge_id: hub1
+    device_id: pack1_live
+    type: charge_switch
+    name: "Charge switch"
+  - platform: bms_bridge
+    bms_bridge_id: hub1
+    device_id: pack1_live
+    type: discharge_switch
+    name: "Discharge switch"
+  - platform: bms_bridge
+    bms_bridge_id: hub1
+    device_id: pack1_live
+    type: balancing
+    name: "Balancing"
+  - platform: bms_bridge
+    bms_bridge_id: hub1
+    device_id: pack1_live
+    type: alarm
+    name: "Alarm"
+  - platform: bms_bridge
+    bms_bridge_id: hub2
+    device_id: pack2_live
+    type: charge_switch
+    name: "Charge switch"
+  - platform: bms_bridge
+    bms_bridge_id: hub2
+    device_id: pack2_live
+    type: discharge_switch
+    name: "Discharge switch"
+  - platform: bms_bridge
+    bms_bridge_id: hub2
+    device_id: pack2_live
+    type: balancing
+    name: "Balancing"
+  - platform: bms_bridge
+    bms_bridge_id: hub2
+    device_id: pack2_live
+    type: alarm
+    name: "Alarm"
+  - platform: bms_bridge
+    bms_bridge_id: hub3
+    device_id: pack3_live
+    type: charge_switch
+    name: "Charge switch"
+  - platform: bms_bridge
+    bms_bridge_id: hub3
+    device_id: pack3_live
+    type: discharge_switch
+    name: "Discharge switch"
+  - platform: bms_bridge
+    bms_bridge_id: hub3
+    device_id: pack3_live
+    type: balancing
+    name: "Balancing"
+  - platform: bms_bridge
+    bms_bridge_id: hub3
+    device_id: pack3_live
+    type: alarm
+    name: "Alarm"
+  - platform: bms_bridge
+    bms_bridge_id: hub4
+    device_id: pack4_live
+    type: charge_switch
+    name: "Charge switch"
+  - platform: bms_bridge
+    bms_bridge_id: hub4
+    device_id: pack4_live
+    type: discharge_switch
+    name: "Discharge switch"
+  - platform: bms_bridge
+    bms_bridge_id: hub4
+    device_id: pack4_live
+    type: balancing
+    name: "Balancing"
+  - platform: bms_bridge
+    bms_bridge_id: hub4
+    device_id: pack4_live
+    type: alarm
+    name: "Alarm"
+
 text_sensor:
   - platform: bms_bridge
     bms_bridge_id: hub1
@@ -1978,6 +2112,11 @@ text_sensor:
     type: output
     name: "Output"
   - platform: bms_bridge
+    bms_bridge_id: hub1
+    device_id: pack1_diag
+    type: system_state
+    name: "System state"
+  - platform: bms_bridge
     bms_bridge_id: hub2
     device_id: pack2_diag
     type: profile
@@ -2032,6 +2171,11 @@ text_sensor:
     device_id: pack2_diag
     type: output
     name: "Output"
+  - platform: bms_bridge
+    bms_bridge_id: hub2
+    device_id: pack2_diag
+    type: system_state
+    name: "System state"
   - platform: bms_bridge
     bms_bridge_id: hub3
     device_id: pack3_diag
@@ -2088,6 +2232,11 @@ text_sensor:
     type: output
     name: "Output"
   - platform: bms_bridge
+    bms_bridge_id: hub3
+    device_id: pack3_diag
+    type: system_state
+    name: "System state"
+  - platform: bms_bridge
     bms_bridge_id: hub4
     device_id: pack4_diag
     type: profile
@@ -2142,6 +2291,11 @@ text_sensor:
     device_id: pack4_diag
     type: output
     name: "Output"
+  - platform: bms_bridge
+    bms_bridge_id: hub4
+    device_id: pack4_diag
+    type: system_state
+    name: "System state"
 
 button:
   - platform: bms_bridge

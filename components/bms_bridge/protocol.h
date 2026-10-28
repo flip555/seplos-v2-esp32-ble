@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cmath>
 #include <cstdint>
 #include <string>
 #include <vector>
@@ -31,15 +32,44 @@ struct PackInfo {
   float rated_capacity{0};
   uint16_t cycles{0};
   float port_voltage{0};
-  float mos_temperature{0};
+  // The temperature block carries the battery sensors first and then ambient
+  // and power/MOSFET as its last two words (16S profile: tempnum = 6).
+  float ambient_temperature{NAN};
+  float mos_temperature{NAN};
   std::vector<float> cell_voltages;
   std::vector<float> temperatures;
+
+  // Status-tail (Seplos v2 0x61), present only when the frame carries it.
+  bool tail_valid{false};
+  uint8_t sys_state{0};     // bitmask: 0x01 discharge, 0x02 charge, 0x04 float,
+                            //          0x08 fully charged, 0x10 standby, 0x20 shutdown
+  uint8_t switch_state{0};  // bit0 charge switch closed, bit1 discharge switch closed
+  uint8_t env_temp_warning{0};
+  uint8_t power_temp_warning{0};
+  uint8_t charge_current_warning{0};
+  std::vector<uint8_t> cell_warnings;    // one warning byte per cell
+  std::vector<uint8_t> temp_warnings;    // one warning byte per battery temp
+  std::vector<uint8_t> events;           // packed event bits, 8 per byte, LSB first
+  std::vector<uint8_t> balance_state;    // per cell, 0/1
+  std::vector<uint8_t> broken_state;     // per cell, 0/1
+
+  bool event(size_t bit) const {
+    size_t byte = bit / 8;
+    if (byte >= this->events.size()) return false;
+    return (this->events[byte] >> (bit % 8)) & 1u;
+  }
+  bool charge_switch_closed() const { return this->tail_valid && (this->switch_state & 0x01); }
+  bool discharge_switch_closed() const { return this->tail_valid && (this->switch_state & 0x02); }
 
   float cell_min() const;
   float cell_max() const;
   float cell_delta() const;
   float temp_min() const;
   float temp_max() const;
+  size_t active_event_count() const;
+  size_t balancing_count() const;
+  size_t broken_cell_count() const;
+  const char *sys_state_name() const;
 };
 
 class Protocol {

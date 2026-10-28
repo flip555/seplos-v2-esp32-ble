@@ -231,14 +231,26 @@ void SeplosV2::decode_status_(const std::vector<uint8_t> &p) {
   info_.cell_count = cells;
 
   size_t to = 3 + cells * 2;
-  uint8_t temps = p[to];
+  if (to >= p.size()) return;
+  uint8_t temp_words = p[to];
+  // The temperature block holds temp_words 16-bit values: the battery sensors
+  // first, then ambient and power/MOSFET as the last two words. Treating all
+  // of them as cell temperatures inflated the average and the temp count.
+  uint8_t battery_temps = temp_words >= 2 ? (uint8_t) (temp_words - 2) : temp_words;
   info_.temperatures.clear();
-  for (uint8_t i = 0; i < temps && to + 3 + i * 2 < p.size(); i++)
+  for (uint8_t i = 0; i < battery_temps && to + 3 + i * 2 < p.size(); i++)
     info_.temperatures.push_back((rd16(p, to + 1 + i * 2) - 2731) * 0.1f);
-  info_.temp_count = temps;
+  info_.temp_count = (uint8_t) info_.temperatures.size();
+  info_.ambient_temperature = NAN;
+  info_.mos_temperature = NAN;
+  if (temp_words >= 2) {
+    size_t amb = to + 1 + (size_t) battery_temps * 2;
+    if (amb + 1 < p.size()) info_.ambient_temperature = (rd16(p, amb) - 2731) * 0.1f;
+    if (amb + 3 < p.size()) info_.mos_temperature = (rd16(p, amb + 2) - 2731) * 0.1f;
+  }
 
-  size_t o = to + 1 + (size_t) temps * 2;
-  if (o + 18 > p.size()) return;
+  size_t o = to + 1 + (size_t) temp_words * 2;
+  if (o + 19 > p.size()) return;
   info_.current = (int16_t) rd16(p, o) * 0.01f;
   info_.total_voltage = rd16(p, o + 2) * 0.01f;
   info_.power = info_.total_voltage * info_.current;
@@ -249,13 +261,73 @@ void SeplosV2::decode_status_(const std::vector<uint8_t> &p) {
   info_.cycles = rd16(p, o + 13);
   info_.soh = rd16(p, o + 15) * 0.1f;
   info_.port_voltage = rd16(p, o + 17) * 0.01f;
-  // Everything after port voltage: the still-unmapped alarm/function tail.
+
+  // State tail. Layout (c = cells, t = temp_words):
+  //   c    battery warn bytes (one per cell)
+  //   t-2  temperature warn bytes (one per battery temp)
+  //   1    ambient temp warning
+  //   1    power temp warning
+  //   1    charge current warning
+  //   1    reserved (skipped by the vendor app too)
+  //   1    system state bitmask
+  //   1    switch state bitmask
+  //   1    N, number of event bytes
+  //   N    event bits (8 per byte, LSB first)
+  //   ceil(c/8) balance bits
+  //   ceil(c/8) broken-cell bits
+  size_t t0 = o + 19;
   this->tail_hex_.clear();
-  for (size_t i = o + 19; i < p.size(); i++) {
+  for (size_t i = t0; i < p.size(); i++) {
     char b[4];
     snprintf(b, sizeof(b), "%02X ", p[i]);
     this->tail_hex_ += b;
   }
+
+  info_.tail_valid = false;
+  info_.sys_state = 0;
+  info_.switch_state = 0;
+  info_.env_temp_warning = 0;
+  info_.power_temp_warning = 0;
+  info_.charge_current_warning = 0;
+  info_.cell_warnings.assign(cells, 0);
+  info_.temp_warnings.assign(battery_temps, 0);
+  info_.events.clear();
+  info_.balance_state.assign(cells, 0);
+  info_.broken_state.assign(cells, 0);
+
+  size_t k = t0;
+  bool ok = true;
+  for (uint8_t i = 0; i < cells && ok; i++, k++) {
+    if (k >= p.size()) { ok = false; break; }
+    info_.cell_warnings[i] = p[k];
+  }
+  for (uint8_t i = 0; i < battery_temps && ok; i++, k++) {
+    if (k >= p.size()) { ok = false; break; }
+    info_.temp_warnings[i] = p[k];
+  }
+  if (ok && k + 8 <= p.size()) {
+    info_.env_temp_warning = p[k++];
+    info_.power_temp_warning = p[k++];
+    info_.charge_current_warning = p[k++];
+    k++;  // reserved
+    info_.sys_state = p[k++];
+    info_.switch_state = p[k++];
+    uint8_t nevents = p[k++];
+    if (k + nevents <= p.size()) {
+      info_.events.assign(p.begin() + k, p.begin() + k + nevents);
+      k += nevents;
+      size_t bit_bytes = (cells + 7) / 8;
+      if (k + 2 * bit_bytes <= p.size()) {
+        for (size_t i = 0; i < cells; i++) {
+          size_t byte = i / 8;
+          info_.balance_state[i] = (p[k + byte] >> (i % 8)) & 1u;
+          info_.broken_state[i] = (p[k + bit_bytes + byte] >> (i % 8)) & 1u;
+        }
+        info_.tail_valid = true;
+      }
+    }
+  }
+
   info_.valid = true;
   identified_ = true;
   frames_++;
@@ -273,6 +345,49 @@ Protocol *create_protocol(const std::string &profile, uint8_t address) {
   if (profile == "seplos_v2_uart") return new SeplosV2(SeplosV2::MODE_UART_ASCII, address);
   return nullptr;
 }
+
+size_t PackInfo::active_event_count() const {
+  size_t n = 0;
+  for (uint8_t b : events)
+    for (int i = 0; i < 8; i++)
+      if (b & (1u << i)) n++;
+  return n;
+}
+
+size_t PackInfo::balancing_count() const {
+  size_t n = 0;
+  for (uint8_t b : balance_state)
+    if (b) n++;
+  return n;
+}
+
+size_t PackInfo::broken_cell_count() const {
+  size_t n = 0;
+  for (uint8_t b : broken_state)
+    if (b) n++;
+  return n;
+}
+
+const char *PackInfo::sys_state_name() const {
+  if (!this->tail_valid) return "Unknown";
+  switch (this->sys_state) {
+    case 0x01:
+      return "Discharge";
+    case 0x02:
+      return "Charge";
+    case 0x04:
+      return "Float";
+    case 0x08:
+      return "Fully charged";
+    case 0x10:
+      return "Standby";
+    case 0x20:
+      return "Shutdown";
+    default:
+      return "Unknown";
+  }
+}
+
 
 }  // namespace bms_bridge
 }  // namespace esphome

@@ -28,8 +28,10 @@
 Parsed in order:
 
 1. `cells-1` bytes of cell voltages (millivolts, 16-bit)
-2. one byte temperature count, then count × 16-bit values in tenths of Kelvin
-   (subtract 2731, divide by 10)
+2. one byte temperature count `t`, then `t` × 16-bit values in tenths of Kelvin
+   (subtract 2731, divide by 10). The block is **not** all cell sensors: the
+   first `t-2` are the battery temperatures and the last two are ambient and
+   power/MOSFET (16S profile: `t = 6`, i.e. 4 battery + ambient + power).
 3. current (signed 16-bit, 0.01 A)
 4. pack voltage (0.01 V)
 5. remaining capacity (0.01 Ah)
@@ -41,16 +43,46 @@ Parsed in order:
 11. SOH (0.1 %)
 12. port voltage (0.01 V)
 
-Everything after byte `o+19` is the unmapped state tail. In a healthy pack it
-is mostly zero with a few state bytes, for example:
+### State tail (39 bytes for 16 cells / 6 temp words)
 
-```
-00 ×24  01 03 08  00 ×12
-```
+Everything after byte `o+19` is the state tail. With `c` cells and `t` temp
+words the layout is:
 
-Observed correspondence with the RS485 status page: `01` = system state
-(discharge), `03` = both charge and discharge switches closed. It is **not**
-the alarm event table, which only exists in the RS485 teledata frame.
+| Offset | Size | Field |
+|---|---|---|
+| +0 | `c` | battery warning byte, one per cell |
+| +c | `t-2` | temperature warning byte, one per battery temp |
+| +c+t-2 | 1 | ambient temperature warning |
+| +c+t-1 | 1 | power temperature warning |
+| +c+t | 1 | charge current warning |
+| +c+t+1 | 1 | reserved |
+| +c+t+2 | 1 | system state (bitmask, table below) |
+| +c+t+3 | 1 | switch state (bit0 charge switch closed, bit1 discharge switch closed) |
+| +c+t+4 | 1 | `n`, number of event bytes |
+| +c+t+5 | `n` | event bits, 8 per byte, LSB first |
+| … | ceil(c/8) | per-cell balance bits |
+| … | ceil(c/8) | per-cell broken/open bits |
+
+For 16 cells / 6 temp words this is 16+4+1+1+1+1+1+1+1+8+2+2 = 39 bytes. A
+healthy discharging pack reads `00 ×24  01 03 08  00 ×12`: `01` = discharge,
+`03` = charge and discharge switches closed, `08` = eight event bytes, all zero.
+
+System state (bitmask values are hex):
+
+| Value | State |
+|---|---|
+| 0x01 | Discharge |
+| 0x02 | Charge |
+| 0x04 | Float |
+| 0x08 | Fully charged |
+| 0x10 | Standby |
+| 0x20 | Shutdown |
+
+The event bits are ordered as the vendor alarm table: byte 0 bit 0 is
+*voltage sensor invalidation*, bit 3 *button switch invalidation*, bit 5
+*charge switch invalidation*, bit 6 *discharge switch invalidation*, then cell
+and pack OV/UV, charge/discharge temperature warn+protect, ambient/power
+temperature, heating, overcurrent, short circuit and the remaining flags.
 
 ## Settings payload (0x47)
 

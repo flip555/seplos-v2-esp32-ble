@@ -4,6 +4,7 @@
 #include "esphome/components/ble_client/ble_client.h"
 #include "esphome/components/sensor/sensor.h"
 #include "esphome/components/text_sensor/text_sensor.h"
+#include "esphome/components/binary_sensor/binary_sensor.h"
 
 #include "entities.h"
 #include "ble_scan.h"
@@ -36,6 +37,7 @@ class BmsBridge : public Component {
 
   void register_sensor(BmsSensor *s) { sensors_.push_back(s); }
   void register_text_sensor(BmsTextSensor *t) { text_sensors_.push_back(t); }
+  void register_binary_sensor(BmsBinarySensor *b) { binary_sensors_.push_back(b); }
   void register_command_text(BmsCommandText *t) { cmd_text_ = t; }
 
   void run_command(const std::string &cmd);
@@ -116,6 +118,7 @@ class BmsBridge : public Component {
   BmsCommandText *cmd_text_{nullptr};
   std::vector<BmsSensor *> sensors_;
   std::vector<BmsTextSensor *> text_sensors_;
+  std::vector<BmsBinarySensor *> binary_sensors_;
 };
 
 }  // namespace bms_bridge
