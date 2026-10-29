@@ -18,7 +18,7 @@ namespace esphome {
 namespace bms_bridge {
 
 // Bumped when the component behaviour changes; exposed by the version entity.
-static const char *const BMS_BRIDGE_VERSION = "0.5.1";
+static const char *const BMS_BRIDGE_VERSION = "0.5.2";
 
 class BleTransport;
 

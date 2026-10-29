@@ -251,6 +251,10 @@ void BmsBridge::loop() {
       if (ble_client_ != nullptr) ble_client_->set_enabled(true);
       rx_since_enable_ = false;
       last_rx_ = millis();
+      // Start the 30 s window now; otherwise the check fires immediately
+      // (it was stamped before the 90 s pause) and disables the client
+      // again ~10 ms after reopening.
+      last_conn_check_ = millis();
       ESP_LOGI(TAG, "BLE retry window reopened");
     });
   }
@@ -386,6 +390,7 @@ void BmsBridge::on_bytes(const uint8_t *data, size_t len) {
 
 void BmsBridge::on_connected() {
   connected_ = true;
+  last_conn_check_ = millis();
   force_full_ = true;
   // The settings block is read on demand, or automatically when configured.
   last_settings_ = millis();
@@ -730,6 +735,7 @@ void BmsBridge::set_mac(const std::string &mac) {
       if (ble_client_ != nullptr) {
         ble_client_->set_enabled(true);
         ble_client_->connect();
+        last_conn_check_ = millis();
       }
     });
   }
@@ -746,6 +752,7 @@ void BmsCommandText::control(const std::string &value) {
 }
 
 void BmsBridge::on_ble_disconnect() {
+  last_conn_check_ = millis();
   if (ble_backoff_) return;
   if (++ble_fail_count_ < 5) return;
 
@@ -758,6 +765,7 @@ void BmsBridge::on_ble_disconnect() {
     if (ble_client_ != nullptr) ble_client_->set_enabled(true);
     rx_since_enable_ = false;
     last_rx_ = millis();
+    last_conn_check_ = millis();
     ESP_LOGI(TAG, "BLE retry window reopened");
   });
 }
