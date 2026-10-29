@@ -21,7 +21,11 @@ static const uint32_t STALL_HARD_MS = 30000;    // repeated stalls get a longer 
 // Last time any hub received bytes; used by the optional auto-reboot so a
 // single dead pack can never trigger it.
 static uint32_t g_last_frame_ms = 0;
+static uint32_t g_good_since_ms = 0;
 static bool g_reboot_pending = false;
+static uint8_t g_active_hubs = 0;
+static uint32_t g_slots[8] = {0};
+static uint8_t g_slot_count = 0;
 
 // "AA:BB:CC:DD:EE:FF" -> 0xAABBCCDDEEFF (the byte order ESPHome stores).
 static bool parse_mac(const std::string &s, uint64_t &out) {
@@ -31,6 +35,28 @@ static bool parse_mac(const std::string &s, uint64_t &out) {
   out = ((uint64_t) b[0] << 40) | ((uint64_t) b[1] << 32) | ((uint64_t) b[2] << 24) | ((uint64_t) b[3] << 16) |
         ((uint64_t) b[4] << 8) | (uint64_t) b[5];
   return out != 0;
+}
+
+
+// Extract CID2 from a hex frame: 7E len_hi len_lo addr cid2 ...
+static int frame_cid2(const std::string &hex) {
+  uint8_t b[8];
+  int n = 0;
+  for (size_t i = 0; i < hex.size() && n < 8;) {
+    if (hex[i] == ' ') {
+      i++;
+      continue;
+    }
+    if (i + 1 >= hex.size()) return -1;
+    char t[3] = {hex[i], hex[i + 1], 0};
+    char *end = nullptr;
+    long v = strtol(t, &end, 16);
+    if (end != t + 2) return -1;
+    b[n++] = (uint8_t) v;
+    i += 2;
+  }
+  if (n < 5 || b[0] != 0x7E) return -1;
+  return b[4];
 }
 
 static std::string format_mac(uint64_t mac) {
@@ -91,6 +117,16 @@ void BmsBridge::setup() {
   this->load_saved_mac_();
   this->load_cfg_nvs_();
 
+  if (ble_client_ != nullptr && ble_client_->get_address() != 0) g_active_hubs++;
+  bool slot_seen = false;
+  for (uint8_t i = 0; i < g_slot_count; i++)
+    if (g_slots[i] == mac_slot_) slot_seen = true;
+  if (slot_seen) {
+    ESP_LOGE(TAG, "duplicate mac_slot %u: give every hub a unique mac_slot", (unsigned) mac_slot_);
+  } else if (g_slot_count < 8) {
+    g_slots[g_slot_count++] = mac_slot_;
+  }
+
   // Collect advertisements for 30 s after boot so the scan text sensor is
   this->start_scan(30000);
   start_at_ = millis() + poll_offset_;
@@ -141,8 +177,8 @@ void BmsBridge::loop() {
   // configured window, and at most 3 times without an hour of recovery. A
   // single offline pack keeps the other hub's frames flowing, so it cannot
   // trigger this.
-  if (auto_reboot_ && !g_reboot_pending && ble_client_ != nullptr && g_last_frame_ms != 0 &&
-      millis() > 1200000 && (millis() - g_last_frame_ms) > auto_reboot_timeout_ms_) {
+  if (auto_reboot_ && !g_reboot_pending && ble_client_ != nullptr && g_active_hubs > 0 &&
+      g_last_frame_ms != 0 && millis() > 1200000 && (millis() - g_last_frame_ms) > auto_reboot_timeout_ms_) {
     uint32_t key = fnv1a_hash_extend(2166136261u, "bms_auto_reboot_count");
     auto pref = global_preferences->make_preference<uint8_t>(key, true);
     uint8_t count = 0;
@@ -163,7 +199,7 @@ void BmsBridge::loop() {
     }
   }
   // A full hour of live frames clears the boot-loop guard.
-  if (auto_reboot_ && millis() > 3600000 && (millis() - g_last_frame_ms) < 60000) {
+  if (auto_reboot_ && g_good_since_ms != 0 && (millis() - g_good_since_ms) > 3600000) {
     uint32_t key = fnv1a_hash_extend(2166136261u, "bms_auto_reboot_count");
     auto pref = global_preferences->make_preference<uint8_t>(key, true);
     uint8_t count = 0;
@@ -283,19 +319,24 @@ void BmsBridge::loop() {
 
   // Serialise requests: some modules wedge if the next poll is written before
   // the previous reply arrives. Send the first, then the second after a gap.
+  // The pair owns the link until the second request has gone out, so a manual
+  // or interval settings read cannot be injected between them.
   auto reqs = protocol_->poll_requests();
   if (!reqs.empty()) this->send_bytes(reqs[0]);
+  next_poll_allowed_ = now + 3000;
   if (reqs.size() > 1) {
     auto second = reqs[1];
     this->set_timeout(1500, [this, second]() {
-      if (ble_client_ != nullptr && protocol_ != nullptr) this->send_bytes(second);
+      if (ble_client_ != nullptr && protocol_ != nullptr && !request_active_) this->send_bytes(second);
     });
   }
 }
 
 void BmsBridge::on_bytes(const uint8_t *data, size_t len) {
-  last_rx_ = millis();
-  g_last_frame_ms = millis();
+  uint32_t now = millis();
+  last_rx_ = now;
+  if (g_last_frame_ms == 0 || (now - g_last_frame_ms) > 5000) g_good_since_ms = now;
+  g_last_frame_ms = now;
   rx_since_enable_ = true;
   rx_chunks_++;
   rx_bytes_ += len;
@@ -347,8 +388,10 @@ void BmsBridge::on_connected() {
   connected_ = true;
   force_full_ = true;
   // The settings block is read on demand, or automatically when configured.
+  last_settings_ = millis();
   if (read_settings_on_connect_) {
-    this->set_timeout(3000, [this]() {
+    // After the first poll pair (0x61, then 0x51 at +1.5 s).
+    this->set_timeout(6000, [this]() {
       if (connected_) this->request_cid(0x47);
     });
   }
@@ -650,19 +693,39 @@ void BmsBridge::load_saved_mac_() {
 }
 
 void BmsBridge::set_mac(const std::string &mac) {
-  uint64_t value = 0;
-  if (!parse_mac(mac, value)) {
-    this->set_output("invalid MAC (expected AA:BB:CC:DD:EE:FF)");
-    return;
-  }
   uint32_t key = fnv1a_hash_extend(2166136261u, "bms_bridge_mac_" + std::to_string(mac_slot_));
   auto pref = global_preferences->make_preference<uint64_t>(key, true);
+
+  if (mac == "clear" || mac == "none" || mac == "00:00:00:00:00:00") {
+    uint64_t zero = 0;
+    pref.save(&zero);
+    mac_str_.clear();
+    if (ble_client_ != nullptr) {
+      ble_client_->disconnect();
+      ble_client_->set_enabled(false);
+    }
+    if (mac_text_ != nullptr) mac_text_->publish_state("");
+    this->set_output("MAC cleared");
+    return;
+  }
+
+  uint64_t value = 0;
+  if (!parse_mac(mac, value)) {
+    this->set_output("invalid MAC (expected AA:BB:CC:DD:EE:FF or 'clear')");
+    return;
+  }
   pref.save(&value);
   mac_str_ = format_mac(value);
   ESP_LOGI(TAG, "stored MAC %s (slot %u)", mac_str_.c_str(), (unsigned) mac_slot_);
   if (ble_client_ != nullptr) {
+    if (ble_client_->get_address() == 0) g_active_hubs++;
     ble_client_->set_address(value);
     ble_client_->disconnect();
+    // A fresh link must not be judged by the previous link's stall state.
+    rx_since_enable_ = false;
+    last_rx_ = millis();
+    stall_recovering_ = false;
+    stall_count_ = 0;
     this->set_timeout(600, [this]() {
       if (ble_client_ != nullptr) {
         ble_client_->set_enabled(true);
@@ -729,6 +792,8 @@ void BmsBridge::request_cid(uint8_t cid2) {
   }
   ble_transport_->send(f.data(), f.size());
   next_poll_allowed_ = millis() + 2500;
+  request_active_ = true;
+  this->set_timeout(2500, [this]() { request_active_ = false; });
   if (cid2 == 0x47) last_settings_ = millis();
   char b[24];
   snprintf(b, sizeof(b), "sent cid 0x%02X", cid2);
@@ -761,6 +826,20 @@ void BmsBridge::run_command(const std::string &cmd) {
     this->set_output(ble_transport_ != nullptr ? ble_transport_->services_summary() : "no transport");
   } else if (cmd.rfind("send ", 0) == 0) {
     if (ble_transport_ != nullptr) {
+      if (!allow_writes_) {
+        int cid = frame_cid2(cmd.substr(5));
+        if (cid < 0) {
+          this->set_output("send: not a 7E frame");
+          return;
+        }
+        // Read-only by default: status, device info, cell info, alarms, settings.
+        if (cid != 0x61 && cid != 0x51 && cid != 0x42 && cid != 0x44 && cid != 0x47) {
+          char b[48];
+          snprintf(b, sizeof(b), "read-only: cid 0x%02X blocked", cid);
+          this->set_output(b);
+          return;
+        }
+      }
       ble_transport_->send_hex(cmd.substr(5));
       this->set_output("sent " + cmd.substr(5));
     }

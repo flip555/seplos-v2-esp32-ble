@@ -101,4 +101,4 @@ The console accepts `connect`, `disconnect`, `pair`, `dump` and `send <hex>`.
 |---|---|---|
 | `auto_reboot_timeout` | min | 5-120 |
 
-Both are NVS-backed and override the YAML values at boot.
+Both are NVS-backed and override the YAML values at boot. `Pack MAC` accepts `clear` to erase the stored MAC.

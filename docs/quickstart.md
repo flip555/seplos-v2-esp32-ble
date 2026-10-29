@@ -69,7 +69,7 @@ step 3 (`AA:BB:CC:DD:EE:FF`). On submit the component:
 2. points the BLE client at it,
 3. reconnects.
 
-The value survives reboots and OTA updates. Press **Scan** again any time to
+The value survives reboots and OTA updates; enter `clear` to erase it. Press **Scan** again any time to
 re-check what is nearby.
 
 **When it is re-read:** at every boot the stored MAC wins over the YAML value.

@@ -18,7 +18,7 @@ namespace esphome {
 namespace bms_bridge {
 
 // Bumped when the component behaviour changes; exposed by the version entity.
-static const char *const BMS_BRIDGE_VERSION = "0.5.0";
+static const char *const BMS_BRIDGE_VERSION = "0.5.1";
 
 class BleTransport;
 
@@ -96,6 +96,7 @@ class BmsBridge : public Component {
   uint32_t settings_interval_ms_{0};
   uint32_t last_settings_{0};
   uint32_t next_poll_allowed_{0};
+  bool request_active_{false};
   bool connected_{false};
 
   struct AdvHit {
