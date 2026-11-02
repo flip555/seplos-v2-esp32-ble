@@ -13,7 +13,7 @@ namespace esphome {
 namespace bms_bridge {
 
 static const char *const TAG = "bms_bridge";
-// 0x51 CAN protocol code (1..6) -> label. The 0x63 write uses 2 x this code.
+// 0x51 CAN protocol code (1..6) -> label. The 0x63 write uses the same value.
 static const char *const CAN_PROTOCOL_NAMES[] = {"Pylontech", "Growatt", "Victron", "SMA", "GINL", "Studer"};
 static const uint32_t HEARTBEAT_MS = 300000;
 static const uint32_t STALL_MS = 60000;
@@ -740,8 +740,8 @@ void BmsBridge::set_can_protocol(const std::string &name) {
     return;
   }
 
-  // 0x63 carries 2 x the value reported by 0x51 (Victron: 3 -> 6).
-  auto frame = protocol_->build_can_protocol_switch((uint8_t) (code * 2));
+  // 0x63 carries the same 1..6 value reported by 0x51 (Victron: 3 -> 3).
+  auto frame = protocol_->build_can_protocol_switch(code);
   if (frame.empty()) {
     this->set_output("CAN protocol: unsupported by this profile");
     return;
@@ -756,7 +756,7 @@ void BmsBridge::set_can_protocol(const std::string &name) {
   can_protocol_deadline_ = millis() + 6000;
   char b[96];
   snprintf(b, sizeof(b), "CAN protocol -> %s (0x63 payload %u), verifying", name.c_str(),
-           (unsigned) (code * 2));
+           (unsigned) code);
   this->set_output(b);
 
   // Refresh 0x51 so the select shows the device's actual value, not the

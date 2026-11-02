@@ -127,6 +127,6 @@ it sends one `0x63` frame and then requests `0x51` again; the new value is
 published only after the device confirms it. Protocol switching is deliberately
 not gated by `allow_writes`; that option still gates other configuration writes.
 
-The wire encoding differs between the two commands: `0x51` reports `1..6`,
-while `0x63` expects `2 x` that value (Victron: `3` in `0x51`, `6` in `0x63`).
-See [protocol.md](protocol.md#can-protocol-switch-0x63).
+Both commands use the same `1..6` value (Victron is `3` in both). The APK's
+even-numbered enum is wrong for this firmware; see
+[protocol.md](protocol.md#can-protocol-switch-0x63).

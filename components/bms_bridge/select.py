@@ -9,7 +9,7 @@ DEPENDENCIES = ["bms_bridge", "select"]
 BmsSelect = bms_bridge_ns.class_("BmsSelect", select.Select)
 CONF_TYPE = "type"
 
-# Order matters: 0x51 reports 1..6 and 0x63 expects 2 x that value.
+# Order matters: 0x51 reports 1..6 and 0x63 expects the same value.
 CAN_PROTOCOLS = ["Pylontech", "Growatt", "Victron", "SMA", "GINL", "Studer"]
 
 CONFIG_SCHEMA = select.select_schema(BmsSelect).extend(

@@ -19,7 +19,7 @@
 | `0x61` | response | live status: cells, temperatures, current, voltage, capacity, SOC, SOH, cycles, port voltage |
 | `0x51` | response | device info: model, hardware and software version |
 | `0x47` | response | settings block: two header bytes then 16-bit big-endian words |
-| `0x63` | request | CAN protocol switch: one payload byte, `2 x` the `0x51` protocol code |
+| `0x63` | request | CAN protocol switch: one payload byte, the same `1..6` code as `0x51` |
 | `0x44` | request | alarm block — **no response observed over BLE** |
 | `0xA2` / `0xA3` | push | unsolicited state change |
 | `0x81` | response | error |
@@ -119,21 +119,25 @@ not in `0x47`:
 | 32 | CAN protocol (`1..6`) |
 | 33 | RS485 protocol (`1..6`) |
 
-`0x63` writes the CAN protocol. Its payload is exactly one byte, and it is
-**twice** the `0x51` value:
+`0x63` writes the CAN protocol. Its payload is exactly one byte, using the same
+`1..6` value that `0x51` reports:
 
-| Protocol | `0x51` value | `0x63` payload |
-|---|---|---|
-| Pylontech | 1 | 2 |
-| Growatt | 2 | 4 |
-| Victron | 3 | 6 |
-| SMA | 4 | 8 |
-| GINL | 5 | 10 |
-| Studer | 6 | 12 |
+| Protocol | `0x51` value / `0x63` payload |
+|---|---|
+| Pylontech | 1 |
+| Growatt | 2 |
+| Victron | 3 |
+| SMA | 4 |
+| GINL | 5 |
+| Studer | 6 |
 
-Sending the `0x51` value directly to `0x63` selects the wrong protocol. The
-official app only sends `0x63` when the user taps an item; it does not seed the
-picker from `0x51` and does not re-read to confirm. This component reads the
+The Android APK's `PROTOCOL_CAN` enum maps the same list to `2, 4, 6, 8, 10,
+12`, which does not match the vendor `canProtocol` XML or the live firmware.
+Use the `1..6` values; sending the APK's even values selects the wrong protocol
+(for example `6` selects Studer, not Victron).
+
+The official app only sends `0x63` when the user taps an item; it does not seed
+the picker from `0x51` and does not re-read to confirm. This component reads the
 current value from every `0x51` poll, sends `0x63` only on an explicit change,
 then requests `0x51` again and publishes the value the device actually reports.
 

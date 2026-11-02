@@ -95,7 +95,7 @@ class Protocol {
   // Current CAN protocol code (1..6) as reported by the device info frame
   // (0x51, payload byte 32). 0 means unknown.
   virtual uint8_t can_protocol_code() const { return 0; }
-  // 0x63 protocol switch. The wire value is 2 x the 0x51 code.
+  // 0x63 protocol switch. The wire value is the same 1..6 code as 0x51.
   virtual std::vector<uint8_t> build_can_protocol_switch(uint8_t code) const { return {}; }
   // Last non-telemetry message seen, for read-only diagnostics.
   virtual uint8_t last_cid() const { return 0; }
