@@ -138,6 +138,11 @@ void BmsBridge::setup() {
 }
 
 void BmsBridge::loop() {
+  // The MAC text entity is a diagnostic, so show the YAML fallback too even
+  // while the link is offline and no frames arrive.
+  if (mac_text_ != nullptr && !mac_str_.empty() && mac_text_->state != mac_str_)
+    mac_text_->publish_state(mac_str_);
+
   if (millis() - last_diag_ > 30000) {
     last_diag_ = millis();
     ESP_LOGI(TAG, "hub %s: chunks=%u bytes=%u frames=%u buf=%u crc=%u drops=%u valid=%d",
@@ -776,12 +781,17 @@ void BmsBridge::load_saved_mac_() {
     if (ble_client_->get_address() == 0) {
       ble_client_->set_enabled(false);
       ESP_LOGW(TAG, "no MAC configured: set the 'Pack MAC' text entity");
+      return;
     }
+    mac_str_ = format_mac(ble_client_->get_address());
+    ESP_LOGI(TAG, "using YAML MAC %s", mac_str_.c_str());
+    if (mac_text_ != nullptr) mac_text_->publish_state(mac_str_);
     return;
   }
   ble_client_->set_address(mac);
   mac_str_ = format_mac(mac);
   ESP_LOGI(TAG, "using stored MAC %s", mac_str_.c_str());
+  if (mac_text_ != nullptr) mac_text_->publish_state(mac_str_);
   this->set_timeout(1500, [this]() {
     if (ble_client_ != nullptr) {
       ble_client_->set_enabled(true);
