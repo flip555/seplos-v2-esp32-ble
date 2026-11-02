@@ -13,6 +13,8 @@ namespace esphome {
 namespace bms_bridge {
 
 static const char *const TAG = "bms_bridge";
+// 0x51 CAN protocol code (1..6) -> label. The 0x63 write uses 2 x this code.
+static const char *const CAN_PROTOCOL_NAMES[] = {"Pylontech", "Growatt", "Victron", "SMA", "GINL", "Studer"};
 static const uint32_t HEARTBEAT_MS = 300000;
 static const uint32_t STALL_MS = 60000;
 static const uint32_t STALL_RECOVER_MS = 3000;  // republish unchanged values every 5 min
@@ -282,6 +284,7 @@ void BmsBridge::loop() {
   }
 
   if (protocol_ == nullptr) return;
+  this->publish_selects_();
   uint32_t now = millis();
 
   // Publish when new frames arrive, not on a timer. Publishing immediately
@@ -669,6 +672,96 @@ void BmsSwitch::write_state(bool state) {
 void BmsNumber::control(float value) {
   this->publish_state(value);
   if (hub_ != nullptr && type_ == "auto_reboot_timeout") hub_->set_auto_reboot_timeout_min(value);
+}
+
+void BmsSelect::control(const std::string &value) {
+  if (hub_ != nullptr && type_ == "can_protocol") hub_->set_can_protocol(value);
+}
+
+std::string BmsBridge::can_protocol_name() const {
+  if (protocol_ == nullptr) return "";
+  uint8_t code = protocol_->can_protocol_code();
+  if (code >= 1 && code <= 6) return CAN_PROTOCOL_NAMES[code - 1];
+  return "";
+}
+
+void BmsBridge::publish_selects_() {
+  if (protocol_ == nullptr) return;
+  if (selects_.empty() && can_protocol_expected_ == 0) return;
+  // Manufacturer data arrives every poll; no need to rebuild the label at
+  // loop rate. A pending write is checked every pass until it resolves.
+  if (can_protocol_expected_ == 0 && (millis() - last_select_check_) < 1000) return;
+  last_select_check_ = millis();
+  const uint8_t code = protocol_->can_protocol_code();
+  const std::string name = this->can_protocol_name();
+  for (auto *s : selects_) {
+    if (s->type() != "can_protocol") continue;
+    if (!name.empty() && !s->matches(name)) s->publish_state(name);
+  }
+
+  if (can_protocol_expected_ == 0) return;
+  if (code == can_protocol_expected_) {
+    this->set_output(("CAN protocol confirmed: " + name).c_str());
+    can_protocol_expected_ = 0;
+  } else if ((int32_t) (millis() - can_protocol_deadline_) >= 0) {
+    char b[96];
+    snprintf(b, sizeof(b), "CAN protocol write not confirmed; reads %s",
+             name.empty() ? "unknown" : name.c_str());
+    this->set_output(b);
+    can_protocol_expected_ = 0;
+  }
+}
+
+void BmsBridge::set_can_protocol(const std::string &name) {
+  if (protocol_ == nullptr || ble_transport_ == nullptr || !connected_) {
+    this->set_output("CAN protocol: no link");
+    return;
+  }
+  if (!allow_writes_) {
+    this->set_output("CAN protocol: read-only (set allow_writes: true)");
+    this->publish_selects_();
+    return;
+  }
+
+  uint8_t code = 0;
+  for (uint8_t i = 0; i < 6; i++) {
+    if (name == CAN_PROTOCOL_NAMES[i]) {
+      code = (uint8_t) (i + 1);
+      break;
+    }
+  }
+  if (code == 0) {
+    this->set_output("CAN protocol: unknown option");
+    return;
+  }
+  if (protocol_->can_protocol_code() == code && can_protocol_expected_ == 0) {
+    this->set_output(("CAN protocol already " + name).c_str());
+    this->publish_selects_();
+    return;
+  }
+
+  // 0x63 carries 2 x the value reported by 0x51 (Victron: 3 -> 6).
+  auto frame = protocol_->build_can_protocol_switch((uint8_t) (code * 2));
+  if (frame.empty()) {
+    this->set_output("CAN protocol: unsupported by this profile");
+    return;
+  }
+  // Own the link for a moment so a scheduled poll cannot be written between
+  // the switch command and its 0x51 confirmation.
+  next_poll_allowed_ = millis() + 2500;
+  request_active_ = true;
+  this->set_timeout(2500, [this]() { request_active_ = false; });
+  this->send_bytes(frame);
+  can_protocol_expected_ = code;
+  can_protocol_deadline_ = millis() + 6000;
+  char b[96];
+  snprintf(b, sizeof(b), "CAN protocol -> %s (0x63 payload %u), verifying", name.c_str(),
+           (unsigned) (code * 2));
+  this->set_output(b);
+
+  // Refresh 0x51 so the select shows the device's actual value, not the
+  // requested one. The normal poll also carries it, but this is quicker.
+  this->set_timeout(1200, [this]() { this->request_cid(0x51); });
 }
 
 void BmsBridge::load_saved_mac_() {

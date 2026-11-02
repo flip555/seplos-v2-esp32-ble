@@ -23,6 +23,10 @@ class SeplosV2 : public Protocol {
   bool identified() const override { return identified_; }
   std::string settings_json() const override;
   std::vector<uint8_t> build_request(uint8_t cid2) const override { return this->build_(cid2, {}); }
+  uint8_t can_protocol_code() const override { return can_protocol_; }
+  std::vector<uint8_t> build_can_protocol_switch(uint8_t code) const override {
+    return this->build_(0x63, {code});
+  }
   uint8_t last_cid() const override { return last_cid_; }
   std::string last_raw_hex() const override { return last_raw_; }
   const std::vector<uint16_t> &settings_words() const override { return settings_words_; }
@@ -49,6 +53,8 @@ class SeplosV2 : public Protocol {
   PackInfo info_;
   bool identified_{false};
   std::string model_, hw_, sw_;
+  uint8_t can_protocol_{0};   // 0x51 payload byte 32 (1..6)
+  uint8_t rs485_protocol_{0}; // 0x51 payload byte 33 (1..6)
   uint8_t last_cid_{0};
   std::string last_raw_;
   std::vector<uint16_t> settings_words_;

@@ -242,6 +242,10 @@ void SeplosV2::decode_settings_(const std::vector<uint8_t> &p) {
 
 void SeplosV2::decode_manufacturer_(const std::vector<uint8_t> &p) {
   if (p.size() < 36) return;
+  // The 0x51 payload carries the active inverter protocols after the version:
+  // byte 32 = CAN, byte 33 = RS485 (1..6). They are not part of 0x47.
+  can_protocol_ = p[32];
+  rs485_protocol_ = p[33];
   auto txt = [&](size_t a, size_t b) {
     std::string s;
     for (size_t i = a; i < b && i < p.size(); i++) {

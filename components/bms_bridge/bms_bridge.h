@@ -18,7 +18,7 @@ namespace esphome {
 namespace bms_bridge {
 
 // Bumped when the component behaviour changes; exposed by the version entity.
-static const char *const BMS_BRIDGE_VERSION = "0.5.2";
+static const char *const BMS_BRIDGE_VERSION = "0.6.0";
 
 class BleTransport;
 
@@ -50,8 +50,11 @@ class BmsBridge : public Component {
   void register_mac_text(BmsCommandText *t) { mac_text_ = t; }
   void register_switch(BmsSwitch *s) { switches_.push_back(s); }
   void register_number(BmsNumber *n) { numbers_.push_back(n); }
+  void register_select(BmsSelect *s) { selects_.push_back(s); }
   void set_auto_reboot_from_ui(bool on);
   void set_auto_reboot_timeout_min(float minutes);
+  void set_can_protocol(const std::string &name);
+  std::string can_protocol_name() const;
 
   void run_command(const std::string &cmd);
   void run_command_from_text();
@@ -81,6 +84,7 @@ class BmsBridge : public Component {
 
  protected:
   void publish_(bool force = false);
+  void publish_selects_();
   void load_saved_mac_();
   void load_cfg_nvs_();
   void publish_stale_();
@@ -140,6 +144,10 @@ class BmsBridge : public Component {
   BmsCommandText *mac_text_{nullptr};
   std::vector<BmsSwitch *> switches_;
   std::vector<BmsNumber *> numbers_;
+  std::vector<BmsSelect *> selects_;
+  uint8_t can_protocol_expected_{0};
+  uint32_t can_protocol_deadline_{0};
+  uint32_t last_select_check_{0};
   uint32_t mac_slot_{1};
   std::string mac_str_;
   bool auto_reboot_{false};

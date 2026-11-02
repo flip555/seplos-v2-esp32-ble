@@ -102,3 +102,32 @@ The console accepts `connect`, `disconnect`, `pair`, `dump` and `send <hex>`.
 | `auto_reboot_timeout` | min | 5-120 |
 
 Both are NVS-backed and override the YAML values at boot. `Pack MAC` accepts `clear` to erase the stored MAC.
+
+## Selects
+
+| `type` | Options | Source |
+|---|---|---|
+| `can_protocol` | Pylontech, Growatt, Victron, SMA, GINL, Studer | `0x51` byte 32, written with `0x63` |
+
+```yaml
+bms_bridge:
+  - id: hub1
+    # ...
+    allow_writes: true   # required for the select to change anything
+
+select:
+  - platform: bms_bridge
+    bms_bridge_id: hub1
+    type: can_protocol
+    name: "CAN protocol"
+```
+
+The select publishes the protocol the BMS reports in every `0x51` poll, so it
+reflects external changes and power cycles rather than a cached value. Changing
+it sends one `0x63` frame and then requests `0x51` again; the new value is
+published only after the device confirms it. With `allow_writes` left at the
+default (`false`) the entity is present and readable, but changes are refused.
+
+The wire encoding differs between the two commands: `0x51` reports `1..6`,
+while `0x63` expects `2 x` that value (Victron: `3` in `0x51`, `6` in `0x63`).
+See [protocol.md](protocol.md#can-protocol-switch-0x63).

@@ -19,6 +19,7 @@
 | `0x61` | response | live status: cells, temperatures, current, voltage, capacity, SOC, SOH, cycles, port voltage |
 | `0x51` | response | device info: model, hardware and software version |
 | `0x47` | response | settings block: two header bytes then 16-bit big-endian words |
+| `0x63` | request | CAN protocol switch: one payload byte, `2 x` the `0x51` protocol code |
 | `0x44` | request | alarm block — **no response observed over BLE** |
 | `0xA2` / `0xA3` | push | unsolicited state change |
 | `0x81` | response | error |
@@ -107,4 +108,32 @@ pack's own RS485 values):
 Words 20 and onward carry charge/discharge high/low warning and protection
 temperatures; the component exposes the first 18 words after the temperature
 block, at indices 20–37.
+
+## CAN protocol switch (0x63)
+
+The active inverter protocol is reported in the **`0x51` device-info** payload,
+not in `0x47`:
+
+| Payload byte | Meaning |
+|---|---|
+| 32 | CAN protocol (`1..6`) |
+| 33 | RS485 protocol (`1..6`) |
+
+`0x63` writes the CAN protocol. Its payload is exactly one byte, and it is
+**twice** the `0x51` value:
+
+| Protocol | `0x51` value | `0x63` payload |
+|---|---|---|
+| Pylontech | 1 | 2 |
+| Growatt | 2 | 4 |
+| Victron | 3 | 6 |
+| SMA | 4 | 8 |
+| GINL | 5 | 10 |
+| Studer | 6 | 12 |
+
+Sending the `0x51` value directly to `0x63` selects the wrong protocol. The
+official app only sends `0x63` when the user taps an item; it does not seed the
+picker from `0x51` and does not re-read to confirm. This component reads the
+current value from every `0x51` poll, sends `0x63` only on an explicit change,
+then requests `0x51` again and publishes the value the device actually reports.
 
