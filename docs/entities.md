@@ -102,3 +102,31 @@ The console accepts `connect`, `disconnect`, `pair`, `dump` and `send <hex>`.
 | `auto_reboot_timeout` | min | 5-120 |
 
 Both are NVS-backed and override the YAML values at boot. `Pack MAC` accepts `clear` to erase the stored MAC.
+
+## Selects
+
+| `type` | Options | Source |
+|---|---|---|
+| `can_protocol` | Pylontech, Growatt, Victron, SMA, GINL, Studer | `0x51` byte 32, written with `0x63` |
+
+```yaml
+bms_bridge:
+  - id: hub1
+    # ...
+
+select:
+  - platform: bms_bridge
+    bms_bridge_id: hub1
+    type: can_protocol
+    name: "CAN protocol"
+```
+
+The select publishes the protocol the BMS reports in every `0x51` poll, so it
+reflects external changes and power cycles rather than a cached value. Changing
+it sends one `0x63` frame and then requests `0x51` again; the new value is
+published only after the device confirms it. Protocol switching is deliberately
+not gated by `allow_writes`; that option still gates other configuration writes.
+
+Both commands use the same `1..6` value (Victron is `3` in both). The APK's
+even-numbered enum is wrong for this firmware; see
+[protocol.md](protocol.md#can-protocol-switch-0x63).

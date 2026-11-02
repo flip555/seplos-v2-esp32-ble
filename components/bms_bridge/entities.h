@@ -7,6 +7,7 @@
 #include "esphome/components/text/text.h"
 #include "esphome/components/switch/switch.h"
 #include "esphome/components/number/number.h"
+#include "esphome/components/select/select.h"
 
 #include <cmath>
 #include <string>
@@ -101,6 +102,19 @@ class BmsNumber : public number::Number {
   void set_hub(BmsBridge *hub) { hub_ = hub; }
   void set_type(const std::string &t) { type_ = t; }
   void control(float value) override;
+
+ protected:
+  BmsBridge *hub_{nullptr};
+  std::string type_;
+};
+
+class BmsSelect : public select::Select {
+ public:
+  void set_hub(BmsBridge *hub) { hub_ = hub; }
+  void set_type(const std::string &t) { type_ = t; }
+  const std::string &type() const { return type_; }
+  bool matches(const std::string &value) const { return this->current_option().str() == value; }
+  void control(const std::string &value) override;
 
  protected:
   BmsBridge *hub_{nullptr};

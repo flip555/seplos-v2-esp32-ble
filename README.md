@@ -1,6 +1,6 @@
 # Seplos V2 BLE bridge for ESPHome
 
-Read-only ESPHome component that talks to Seplos / PACE V2 battery BMS units
+Read-only-by-default ESPHome component that talks to Seplos / PACE V2 battery BMS units
 over Bluetooth LE on an ESP32 and exposes typed entities to Home Assistant.
 
 ![Dashboard](assets/dashboard.png)
@@ -14,11 +14,13 @@ over Bluetooth LE on an ESP32 and exposes typed entities to Home Assistant.
 - Pack voltage, current, power, SOC, SOH, cycles, capacity, port voltage
 - Every cell voltage and temperature probe, plus min/max/delta and derived energy
 - Device identity and the settings block, decoded and read-only
+- Optional read-verified CAN protocol select (always writable)
 - Multiple packs on one ESP32, grouped as sub-devices
 - Diagnostics: per-hub frame counters and CRC-failure capture
 - Stall recovery: cycles the BLE link if a module stops notifying
 
-Configuration writes are deliberately not implemented.
+Configuration writes are deliberately not implemented, with one explicit
+exception: the CAN protocol select. `allow_writes` still gates other settings.
 
 ## Requirements
 
@@ -94,8 +96,10 @@ PSRAM for three or more packs.
 
 ## Status
 
-Read-only by design. Configuration writes and alarm events are tracked in the
-[issue tracker](../../issues). Contributions and detailed reports are welcome.
+Read-only by default. The only write currently implemented is the CAN protocol
+select; `allow_writes` remains for other configuration writes. Alarm events are
+tracked in the [issue tracker](../../issues). Contributions and detailed
+reports are welcome.
 
 ## Licence
 

@@ -19,6 +19,7 @@
 | `0x61` | response | live status: cells, temperatures, current, voltage, capacity, SOC, SOH, cycles, port voltage |
 | `0x51` | response | device info: model, hardware and software version |
 | `0x47` | response | settings block: two header bytes then 16-bit big-endian words |
+| `0x63` | request | CAN protocol switch: one payload byte, the same `1..6` code as `0x51` |
 | `0x44` | request | alarm block — **no response observed over BLE** |
 | `0xA2` / `0xA3` | push | unsolicited state change |
 | `0x81` | response | error |
@@ -107,4 +108,36 @@ pack's own RS485 values):
 Words 20 and onward carry charge/discharge high/low warning and protection
 temperatures; the component exposes the first 18 words after the temperature
 block, at indices 20–37.
+
+## CAN protocol switch (0x63)
+
+The active inverter protocol is reported in the **`0x51` device-info** payload,
+not in `0x47`:
+
+| Payload byte | Meaning |
+|---|---|
+| 32 | CAN protocol (`1..6`) |
+| 33 | RS485 protocol (`1..6`) |
+
+`0x63` writes the CAN protocol. Its payload is exactly one byte, using the same
+`1..6` value that `0x51` reports:
+
+| Protocol | `0x51` value / `0x63` payload |
+|---|---|
+| Pylontech | 1 |
+| Growatt | 2 |
+| Victron | 3 |
+| SMA | 4 |
+| GINL | 5 |
+| Studer | 6 |
+
+The Android APK's `PROTOCOL_CAN` enum maps the same list to `2, 4, 6, 8, 10,
+12`, which does not match the vendor `canProtocol` XML or the live firmware.
+Use the `1..6` values; sending the APK's even values selects the wrong protocol
+(for example `6` selects Studer, not Victron).
+
+The official app only sends `0x63` when the user taps an item; it does not seed
+the picker from `0x51` and does not re-read to confirm. This component reads the
+current value from every `0x51` poll, sends `0x63` only on an explicit change,
+then requests `0x51` again and publishes the value the device actually reports.
 
