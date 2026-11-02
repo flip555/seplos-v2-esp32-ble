@@ -113,7 +113,6 @@ Both are NVS-backed and override the YAML values at boot. `Pack MAC` accepts `cl
 bms_bridge:
   - id: hub1
     # ...
-    allow_writes: true   # required for the select to change anything
 
 select:
   - platform: bms_bridge
@@ -125,8 +124,8 @@ select:
 The select publishes the protocol the BMS reports in every `0x51` poll, so it
 reflects external changes and power cycles rather than a cached value. Changing
 it sends one `0x63` frame and then requests `0x51` again; the new value is
-published only after the device confirms it. With `allow_writes` left at the
-default (`false`) the entity is present and readable, but changes are refused.
+published only after the device confirms it. Protocol switching is deliberately
+not gated by `allow_writes`; that option still gates other configuration writes.
 
 The wire encoding differs between the two commands: `0x51` reports `1..6`,
 while `0x63` expects `2 x` that value (Victron: `3` in `0x51`, `6` in `0x63`).

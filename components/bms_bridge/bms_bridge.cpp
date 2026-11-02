@@ -722,11 +722,6 @@ void BmsBridge::set_can_protocol(const std::string &name) {
     this->set_output("CAN protocol: no link");
     return;
   }
-  if (!allow_writes_) {
-    this->set_output("CAN protocol: read-only (set allow_writes: true)");
-    this->publish_selects_();
-    return;
-  }
 
   uint8_t code = 0;
   for (uint8_t i = 0; i < 6; i++) {
